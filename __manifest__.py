@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "PlaySMS Connector",
-    'summary': "Send SMS with PlaySMS",
+    'name': "GatewayAPI SMS Connector",
+    'summary': "Send SMS with GatewayAPI",
     'author': "Walther Barnett",
-    'website': "https://github.com/waltherB/sms-playsms-http/playsms-connector",
+    'website': "https://github.com/waltherB/gatewayapi_sms",
     'license': 'AGPL-3',
     'category': 'Technical',
     'version': '17.0.1.0.0',
