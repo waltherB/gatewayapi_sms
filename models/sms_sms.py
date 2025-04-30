@@ -72,33 +72,36 @@ class Sms(models.Model):
     def _send_sms_with_gatewayapi(self):
         self.ensure_one()
         if not self.number:
-            return "wrong_number_format"
+            return {"uuid": self.uuid, "state": "wrong_number_format"}
+
         iap_account_sms = self.env['iap.account']._get_sms_account()
         headers = {
-            'Authorization': (
-                f'Token {iap_account_sms.gatewayapi_api_token}'
-            ),
+            'Authorization': f'Token {iap_account_sms.gatewayapi_api_token}',
             'Content-Type': 'application/json',
         }
-        url = (
-            iap_account_sms.gatewayapi_base_url.rstrip('/') + '/mobile/single'
-        )
+        url = iap_account_sms.gatewayapi_base_url.rstrip('/') + '/mobile/single'
         payload = self._prepare_gatewayapi_payload(iap_account_sms)
         response = requests.post(url, json=payload, headers=headers)
-        response_content = response.json()
-        _logger.debug(
-            f"GatewayAPI responded with: {response_content}"
-        )
+
+        try:
+            response_content = response.json()
+        except Exception:
+            _logger.error(f"GatewayAPI non-JSON response: {response.text}")
+            self.sms_api_error = response.text
+            return {"uuid": self.uuid, "state": "server_error"}
+
+        _logger.debug(f"GatewayAPI responded with: {response_content}")
+
         if response.status_code == 202 and 'msg_id' in response_content:
             _logger.info("SMS sent successfully")
             self.sms_api_error = False
-            return "success"
+            return {"uuid": self.uuid, "state": "success"}
+
         error_msg = response_content.get("error") or \
-            response_content.get("detail") or \
-            str(response_content)
+            response_content.get("detail") or str(response_content)
         _logger.warning(f"Failed to send SMS: {error_msg}")
         self.sms_api_error = error_msg
-        return error_msg
+        return {"uuid": self.uuid, "state": "server_error"}
 
     def _split_batch(self):
         if self._is_sent_with_gatewayapi():
