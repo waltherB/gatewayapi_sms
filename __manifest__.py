@@ -18,5 +18,4 @@
         'views/sms_sms.xml',
         'views/sms_resend.xml'
     ],
-    'images': ['static/description/banner.png'],
 }
