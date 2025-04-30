@@ -17,6 +17,16 @@ class IapAccount(models.Model):
         selection_add=[("sms_api_gatewayapi", "GatewayAPI")],
         ondelete={"sms_api_gatewayapi": "cascade"},
     )
+    gatewayapi_base_url = fields.Char(
+        string="GatewayAPI Base URL",
+        default="https://messaging.gatewayapi.com",
+        help="Base URL for GatewayAPI endpoints. Default: https://messaging.gatewayapi.com"
+    )
+    gatewayapi_sender = fields.Char(
+        string="Sender Name",
+        default="Odoo",
+        help="Sender name to use for outgoing SMS. This will appear as the sender on recipients' phones."
+    )
     gatewayapi_api_token = fields.Char(
         help="GatewayAPI API Token",
         password=True
@@ -92,7 +102,7 @@ class IapAccount(models.Model):
                 f'Token {iap_account_sms.gatewayapi_api_token}'
             )
         }
-        url = 'https://gatewayapi.com/rest/me'
+        url = (iap_account_sms.gatewayapi_base_url.rstrip('/') + '/rest/me')
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         response_content = response.json()

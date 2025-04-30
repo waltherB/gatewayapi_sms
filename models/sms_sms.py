@@ -16,7 +16,7 @@ class Sms(models.Model):
     def _prepare_gatewayapi_payload(self, iap_account):
         self.ensure_one()
         return {
-            "sender": iap_account.service_name or "Odoo",
+            "sender": iap_account.gatewayapi_sender or iap_account.service_name or "Odoo",
             "recipient": int(self.number),
             "message": self.body,
         }
@@ -80,7 +80,9 @@ class Sms(models.Model):
             ),
             'Content-Type': 'application/json',
         }
-        url = 'https://messaging.gatewayapi.com/mobile/single'
+        url = (
+            iap_account_sms.gatewayapi_base_url.rstrip('/') + '/mobile/single'
+        )
         payload = self._prepare_gatewayapi_payload(iap_account_sms)
         response = requests.post(url, json=payload, headers=headers)
         response_content = response.json()
