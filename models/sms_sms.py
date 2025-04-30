@@ -112,6 +112,11 @@ class Sms(models.Model):
             yield from super()._split_batch()
 
     def _postprocess_iap_sent_sms(self, results, unlink_failed=False, unlink_sent=True):
+        # Defensive: ensure all 'state' values are strings
+        for result in results:
+            if not isinstance(result.get('state'), str):
+                _logger.error(f"Result with non-string state: {result}")
+                result['state'] = str(result.get('state'))
         results_uuids = [result['uuid'] for result in results]
         all_sms_sudo = self.env['sms.sms'].sudo().search([('uuid', 'in', results_uuids)]).with_context(sms_skip_msg_notification=True)
 
