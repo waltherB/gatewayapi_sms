@@ -17,6 +17,10 @@ class IapAccount(models.Model):
         selection_add=[("sms_api_gatewayapi", "GatewayAPI")],
         ondelete={"sms_api_gatewayapi": "cascade"},
     )
+    service_name = fields.Char(
+        default="sms",
+        help="Service Name must be 'sms' for GatewayAPI integration."
+    )
     gatewayapi_base_url = fields.Char(
         string="GatewayAPI Base URL",
         default="https://messaging.gatewayapi.com",

@@ -12,7 +12,9 @@
                     name="group_sms_api_gatewayapi"
                     invisible="provider != 'sms_api_gatewayapi'"
                 >
-                    <field name="service_name"/>
+                    <field name="service_name" 
+                        placeholder="sms" 
+                        help="Service Name must be 'sms' for GatewayAPI integration."/>
                     <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_api_token" string="API Token" required="provider == 'sms_api_gatewayapi'"/>
