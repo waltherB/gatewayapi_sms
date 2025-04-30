@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <!-- CSP V3  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-e8b14daa-629b-401d-b0ff-c65a4d53edac' www.youtube.com youtube.com w.chatlio.com m.stripe.network cdn.matomo.cloud js.stripe.com ss.gatewayapi.com *.chatlio.com *.pusher.com *.pusherapp.com connect.facebook.net snap.licdn.com js-eu1.hs-scripts.com gatewayapi.matomo.cloud js-eu1.hs-analytics.net js-eu1.hscollectedforms.net js-eu1.usemessages.com js-eu1.hs-banner.com www.googletagmanager.com policy.app.cookieinformation.com zapier.com static.zdassets.com ekr.zdassets.com ekr.zendesk.com *.zendesk.com *.zopim.com zendesk-eu.my.sentry.io
+  ; style-src 'self' 'unsafe-inline' 'unsafe-hashes' policy.app.cookieinformation.com w.chatlio.com cdn.jsdelivr.net cdn.zapier.com; media-src 'self' w.chatlio.com static.zdassets.com; connect-src 'self' policy.app.cookieinformation.com consent.app.cookieinformation.com gatewayapi-chat.nimta.com m.stripe.network js.stripe.com fblhffkdhfcg.statuspage.io m.stripe.com ss.gatewayapi.com *.chatlio.com ws://ws.pusherapp.com *.pusher.com ekr.zdassets.com wss://pod-18-sunco-ws.zendesk.com *.zopim.com wss://*.zopim.com wss://*.zendesk.com *.pusherapp.com sentry.ocx.dev www.google-analytics.com api-cdn.chatlio.com gatewayapi.matomo.cloud w.chatlio.com cdn.jsdelivr.net px.ads.linkedin.com region1.analytics.google.com region1.google-analytics.com  stats.g.doubleclick.net  gatewayapi.zendesk.com *.zendesk.com api-eu1.hubspot.com forms-eu1.hscollectedforms.net www.googletagmanager.com www.google.com hook.eu1.make.com api.zapier.com; img-src 'self' 'unsafe-hashes' gatewayapi.zendesk.com www.gravatar.com v2assets.zopim.io static.zdassets.com gatewayapi.matomo.cloud *.ads.linkedin.com stats.g.doubleclick.net www.google.dk track-eu1.hubspot.com forms-eu1.hsforms.com www.facebook.com *.chatlio.com www.google-analytics.com avatars.slack-edge.com www.googletagmanager.com cdn.jsdelivr.net zapier-images.imgix.net onlinecityio.zendesk.com data:; font-src 'self'; frame-src ss.gatewayapi.com js.stripe.com youtube.com www.youtube.com policy.app.cookieinformation.com googletagmanager.com www.googletagmanager.com/ onlinecityio.zendesk.com; manifest-src 'self'; base-uri 'self'; form-action 'self' hook.eu1.make.com/pyovzp0bqp5jvjjhijoxb3annfer31uh" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#fafcff">
+
+  <link rel="preload prefetch" href="https://gatewayapi.com/_/dist/fonts/CircularStd-Black.woff2" as="font"
+        crossorigin="anonymous">
+  <link rel="preload prefetch" href="https://gatewayapi.com/_/dist/fonts/CircularStd-Medium.woff2" as="font"
+        crossorigin="anonymous">
+  <link rel="preload prefetch" href="https://gatewayapi.com/_/dist/fonts/CircularStd-Book.woff2" as="font"
+        crossorigin="anonymous">
+
+  <style type="text/css">
+
+  .hidden {
+    display: none;
+  }
+
+  #page.site #nav-res.nav-res {
+    display: none;
+  }
+
+  #page.site section#code-examples.section.programmers-container.programmers-section {
+    display: none;
+  }
+
+  #page.site section#pricing.container.pricing {
+    display: none;
+  }
+
+  body.faq-template-default.single-faq #wrapper-footer.wrapper {
+    display: none;
+  }
+
+</style>
+  <style type="text/css">
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Black'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-Black.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Black Italic'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-BlackItalic.woff2') format('woff2');
+    font-weight: 800;
+    font-style: italic;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Medium'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-Medium.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Medium Italic'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-MediumItalic.woff2') format('woff2');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Medium'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Medium Italic'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-MediumItalic.woff2') format('woff2');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Book'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-Book.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+  @font-face {
+    font-family: "CircularStd";
+    src: local('Circular Std Book Italic'),
+    url('https://gatewayapi.com/_/dist/fonts/CircularStd-BookItalic.woff2') format('woff2');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+    unicode-range: U+000-5FF;
+  }
+
+</style>
+
+  <link rel="stylesheet" type="text/css" href="https://gatewayapi.com/_/dist/styles/main-1744724478722.css" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'/>
+<link rel="stylesheet" type="text/css" href="https://gatewayapi.com/_/dist/styles/flexcontent-1744724478722.css" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'/>
+<link rel="stylesheet" type="text/css" href="https://gatewayapi.com/_/dist/styles/banner-1744724478722.css" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'/>
+
+  <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+<link rel="alternate" hreflang="da-dk" href="https://gatewayapi.com/da/ikkefundet/" />
+<link rel="alternate" hreflang="x-default" href="https://gatewayapi.com/notfound/" />
+<link rel="alternate" hreflang="de-de" href="https://gatewayapi.com/de/nichtgefunden/" />
+
+	<!-- This site is optimized with the Yoast SEO plugin v23.5 - https://yoast.com/wordpress/plugins/seo/ -->
+	<title>404 Error | Page Not Found - GatewayAPI</title>
+	<meta name="description" content="The page you are looking for might have been removed, changed its name or is temporarily unavailable." />
+	<link rel="canonical" href="https://gatewayapi.com/notfound/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="404 Error | Page Not Found - GatewayAPI" />
+	<meta property="og:description" content="The page you are looking for might have been removed, changed its name or is temporarily unavailable." />
+	<meta property="og:url" content="https://gatewayapi.com/notfound/" />
+	<meta property="og:site_name" content="GatewayAPI" />
+	<meta property="article:publisher" content="https://www.facebook.com/gatewayapi/" />
+	<meta property="article:modified_time" content="2023-06-13T11:44:19+00:00" />
+	<meta property="og:image" content="https://gatewayapi.com/wp-content/uploads/2020/04/SoMe-Crawler-Gatewayapi.jpg" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/jpeg" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="@gatewayapicom" />
+	<meta name="twitter:label1" content="Est. reading time" />
+	<meta name="twitter:data1" content="1 minute" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://gatewayapi.com/notfound/","url":"https://gatewayapi.com/notfound/","name":"404 Error | Page Not Found - GatewayAPI","isPartOf":{"@id":"https://gatewayapi.com/#website"},"datePublished":"2020-05-27T09:26:59+00:00","dateModified":"2023-06-13T11:44:19+00:00","description":"The page you are looking for might have been removed, changed its name or is temporarily unavailable.","breadcrumb":{"@id":"https://gatewayapi.com/notfound/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://gatewayapi.com/notfound/"]}]},{"@type":"BreadcrumbList","@id":"https://gatewayapi.com/notfound/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://gatewayapi.com/"},{"@type":"ListItem","position":2,"name":"Not found"}]},{"@type":"WebSite","@id":"https://gatewayapi.com/#website","url":"https://gatewayapi.com/","name":"GatewayAPI","description":"Rock solid SMS Gateway API","publisher":{"@id":"https://gatewayapi.com/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://gatewayapi.com/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https://gatewayapi.com/#organization","name":"GatewayAPI","url":"https://gatewayapi.com/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https://gatewayapi.com/#/schema/logo/image/","url":"https://gatewayapi.com/wp-content/uploads/2020/11/gatewayapi-cover-fullsize.jpg","contentUrl":"https://gatewayapi.com/wp-content/uploads/2020/11/gatewayapi-cover-fullsize.jpg","width":1640,"height":624,"caption":"GatewayAPI"},"image":{"@id":"https://gatewayapi.com/#/schema/logo/image/"},"sameAs":["https://www.facebook.com/gatewayapi/","https://x.com/gatewayapicom","https://www.linkedin.com/company/gatewayapi/","https://www.youtube.com/channel/UCzlmnvHtQni1u4intWvEyxQ/videos?disable_polymer=1"]}]}</script>
+	<!-- / Yoast SEO plugin. -->
+
+
+<meta name="generator" content="WPML ver:4.6.13 stt:12,1,3,27,65;" />
+<script type="text/javascript" nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac">
+window._chatlio = window._chatlio || [];
+window._chatlio_widget_id = '5c69c12f-2814-466f-6e24-83e8cbd910b7';
+</script><link rel="icon" href="https://gatewayapi.com/wp-content/uploads/2024/12/logo_mark-GatewayAPI-original-spacey_1-150x150.png" sizes="32x32" />
+<link rel="icon" href="https://gatewayapi.com/wp-content/uploads/2024/12/logo_mark-GatewayAPI-original-spacey_1-300x300.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://gatewayapi.com/wp-content/uploads/2024/12/logo_mark-GatewayAPI-original-spacey_1-300x300.png" />
+<meta name="msapplication-TileImage" content="https://gatewayapi.com/wp-content/uploads/2024/12/logo_mark-GatewayAPI-original-spacey_1-300x300.png" />
+<link rel="stylesheet" type="text/css" href="https://gatewayapi.com/_/dist/styles/notfound-1744724478722.css" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'/>
+
+  <script nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac">
+    window.ICL_LANGUAGE_CODE = 'en';
+    window.asset_path = 'https://gatewayapi.com/_/dist';
+    window.current_url = 'https://gatewayapi.com/notfound';
+    window.signupUrl = 'https://onlinecity-id.io/gatewayapi/signup/?locale=en';
+    window.loginUrl = 'https://onlinecity-id.io/gatewayapi/?locale=en';
+  </script>
+
+</head>
+
+<body class="page-template page-template-404 404 page page-id-4546 notfound app-data index-data singular-data page-data page-4546-data page-notfound-data 404-data" data-icl-language-code="en">
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://ss.gatewayapi.com/ns.html?id=GTM-KV8W3HS" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<script nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'>window.loadScriptFiles = []</script><script  type="text/javascript" src="https://gatewayapi.com/_/dist/vendors/jquery.min.js" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'></script>
+
+<script type="application/json" data-template="marketingprices">
+  {"outbound_sms_standard":{"title":"Outgoing SMS, Standard","text":"<p>Fast &amp; reliable delivery of your messages<\/p>\n","levels":[{"level":"level1","title":"As low as","text":"You send large volumes of messages every month and you need a professional platform with an exceptionally high uptime."},{"level":"level2","title":"50K-1M per month","text":"SMS is an essential part of your communication and you regularly send SMS messages to a large audience."},{"level":"level3","title":"5-50K per month","text":"SMS is part of your communication and you regularly send SMS messages to a medium-sized audience."},{"level":"level4","title":"0-5K per month","text":"SMS is part of your communication and you regularly send SMS messages to a small\/medium-sized audience."}]},"outbound_sms_premium":{"title":"Outgoing SMS, Premium","text":"<p>Send SMS messages in the most optimized and secure way on all networks.<\/p>\n<p><a href=\"https:\/\/gatewayapi.com\/pricing\/#standard-premium-sms\" rel=\"noopener\">Learn more about outgoing SMS<\/a><\/p>\n"},"inbound_sms":{"title":"Incoming SMS","text":"<p>Receive SMS messages on your webhook from over 180 countries.<\/p>\n<p><a href=\"https:\/\/gatewayapi.com\/virtual-numbers\/\" target=\"_blank\" rel=\"noopener\">Learn more about incoming SMS<\/a><\/p>\n"},"keyword":{"title":"Keyword","text":"<p>Two-way communication via keywords, which you can use in your campaigns.<\/p>\n<p><a href=\"https:\/\/gatewayapi.com\/virtual-numbers\/\">Explore your options<\/a><\/p>\n","signup_text":"Setup fee","subscription_text":"Per month"},"virtual_number":{"title":"Virtual numbers","text":"<p>Two-way communication via your own virtual number, which you can use in your campaigns.<\/p>\n<p><a href=\"https:\/\/gatewayapi.com\/virtual-numbers\/\">Explore your options<\/a><\/p>\n","signup_text":"Setup fee","subscription_text":"Per month"},"hlr":{"title":"Number Lookup","text":"<p>Use our Number Lookup service to test availability before SMS broadcasts.<\/p>\n<p><a href=\"https:\/\/gatewayapi.com\/docs\/apis\/rest\/#hlr-and-number-lookup\" target=\"_blank\" rel=\"noopener\">Read documentation<\/a><\/p>\n","signup_text":"Per request","subscription_text":""}}</script>
+
+<div class="site" id="page">
+
+      <nav class="navbar navbar-expand-lg" itemscope itemtype="http://schema.org/WebSite">
+
+  <div class="container" id="mainNavbarContainer">
+
+    <button class="navbar-toggler-extended" type="button" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-burger"><span></span><span></span><span></span></div>
+    </button>
+
+          <a href="https://gatewayapi.com/" class="navbar-brand custom-logo-link" rel="home">
+                  <img width="205" height="36" src="https://gatewayapi.com/wp-content/uploads/2020/09/GatewayAPI_Logo_RGB_Colour.svg"
+               class="img-fluid"
+               alt="GatewayAPI">
+              </a>
+    
+    <div id="navbarNavDropdown" class="collapse navbar-collapse">
+
+  <ul id="main-menu" class="navbar-nav"><li>
+  <a href="#" target="_self" class="services-nav-link nav-link" aria-label="Services">
+    Services
+  </a>
+</li><li>
+  <a href="#" target="_self" class="developers-nav-link nav-link" aria-label="Developers">
+    Developers
+  </a>
+</li><li>
+  <a href="https://gatewayapi.com/pricing/" target="_self" class="link-nav-link nav-link" aria-label="Pricing">
+    Pricing
+  </a>
+</li><li>
+  <a href="https://gatewayapi.com/blog/" target="_self" class="link-nav-link nav-link" aria-label="News">
+    News
+  </a>
+</li></ul>
+</div>
+    <div class="primary-menu-dropdown primary-menu-services column-count-3" style="display:none">
+  <div class="primary-menu column-count-3">
+        <ul class="column-1">
+      <li class="item " >
+  <a href="https://gatewayapi.com/standard-premium-sms/" target="_self" title="Standard & Premium SMS">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Standard & Premium SMS" src="https://gatewayapi.com/wp-content/uploads/2020/09/standard-premium-sms.svg">
+      </div>
+      <h4>Standard & Premium SMS</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Only first-rate SMS messages. Choose between Standard SMS or Premium SMS with encryption.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/virtual-numbers/" target="_self" title="Virtual Numbers">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Virtual Numbers" src="https://gatewayapi.com/wp-content/uploads/2020/03/virtual-number.svg">
+      </div>
+      <h4>Virtual Numbers</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Acquire virtual numbers to enable payments, donations or signups for competitions via SMS.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/docs/apis/rest/#hlr-and-number-lookup" target="_blank" title="Lookup">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Lookup" src="https://gatewayapi.com/wp-content/uploads/2020/03/lookup.svg">
+      </div>
+      <h4>Lookup</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Use our Number Lookup service to test availability before SMS broadcasts.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/solutions/email-to-sms-sms-to-email/" target="_self" title="Email to/from SMS">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Email to/from SMS" src="https://gatewayapi.com/wp-content/uploads/2020/03/email-to-and-from-sms.svg">
+      </div>
+      <h4>Email to/from SMS</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Receive SMS messages in your email inbox and send emails that convert to SMS messages.</p>
+    </div>
+  </a>
+</li><li class="item d-lg-none" >
+  <a href="https://gatewayapi.com/pricing/" target="_self" title="Pricing">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Pricing" src="https://gatewayapi.com/wp-content/uploads/2020/09/pricing.svg">
+      </div>
+      <h4>Pricing</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Read more about our price structure, possible country restrictions and add-on services.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/pricing/#country-restrictions" target="_self" title="Country Restrictions">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Country Restrictions" src="https://gatewayapi.com/wp-content/uploads/2022/10/country-requirement-3.svg">
+      </div>
+      <h4>Country Restrictions</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>See possible restrictions for over 200 countries</p>
+    </div>
+  </a>
+</li><li class="item d-lg-none" >
+  <a href="https://gatewayapi.com/blog/" target="_self" title="News">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="News" src="https://gatewayapi.com/wp-content/uploads/2020/09/news-blog.svg">
+      </div>
+      <h4>News</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Latest news, tips & tricks, customer cases and in-depth technical posts.</p>
+    </div>
+  </a>
+</li>    </ul>
+        <ul class="column-2">
+      <li class="item " >
+  <a href="https://gatewayapi.com/eu-setup/" target="_self" title="EU Setup">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="EU Setup" src="https://gatewayapi.com/wp-content/uploads/2024/06/icon-eu_setup.svg">
+      </div>
+      <h4>EU Setup</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Learn more about the EU setup where hosting and ownership are entirely within the EU.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/global-sms-api/" target="_self" title="SMS APIs">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="SMS APIs" src="https://gatewayapi.com/wp-content/uploads/2024/02/sms-api.svg">
+      </div>
+      <h4>SMS APIs</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Use GatewayAPI's powerful SMS APIs to send messages globally.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/sms-marketing/" target="_self" title="SMS Marketing">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="SMS Marketing" src="https://gatewayapi.com/wp-content/uploads/2024/02/sms-marketing-phone-megpahone.svg">
+      </div>
+      <h4>SMS Marketing</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Explore the opportunities and results SMS can bring to your marketing mix.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/email-api/" target="_self" title="Email API">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Email API" src="https://gatewayapi.com/wp-content/uploads/2024/12/support_email-svg.svg">
+      </div>
+      <h4>Email API</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Get access to our email API with high scalability and full GDPR compliance.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/security-and-compliance/" target="_self" title="Security & Compliance">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Security & Compliance" src="https://gatewayapi.com/wp-content/uploads/2022/08/gdpr-compliance.svg">
+      </div>
+      <h4>Security & Compliance</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Learn more about our leading security & compliance features. Your data are safe with us.</p>
+    </div>
+  </a>
+</li>    </ul>
+        <ul class="column-3">
+      <li class="headline " >
+  <a href="#" target="_self" title="Popular integrations">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Popular integrations" src="https://gatewayapi.com/_/dist/images/blank.gif">
+      </div>
+      <h4>Popular integrations</h4>
+      <div class="label"></div>
+    </div>
+    <div class="text-row">
+      <p></p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/integrations/wordpress-sms-plugin/" target="_self" title="WordPress">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="WordPress" src="https://gatewayapi.com/wp-content/uploads/2021/01/integration-wordpress.svg">
+      </div>
+      <h4>WordPress</h4>
+      <div class="label label-purple"></div>
+    </div>
+    <div class="text-row">
+      <p>Use our WordPress SMS plugin to send SMS messages to your customers easily.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/integrations/make/" target="_self" title="Make">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Make" src="https://gatewayapi.com/wp-content/uploads/2022/03/integration-make_formerly_integromat-icon.svg">
+      </div>
+      <h4>Make</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Use Make to set up advanced integrations and automations between thousands of services.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/integrations/zapier/" target="_self" title="Zapier">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Zapier" src="https://gatewayapi.com/wp-content/uploads/2021/01/integration-zapier-1.svg">
+      </div>
+      <h4>Zapier</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>No-code platform for setting up integrations and automations between your favorite tools. </p>
+    </div>
+  </a>
+</li><li class="button " >
+  <a href="https://gatewayapi.com/integrations/" target="_self" title="See all integrations" class="btn btn-success">
+    See all integrations
+  </a>
+</li>    </ul>
+      </div>
+</div>
+<div class="primary-menu-dropdown primary-menu-developers column-count-2" style="display:none">
+  <div class="primary-menu column-count-2">
+        <ul class="column-1">
+      <li class="item " >
+  <a href="https://gatewayapi.com/docs/" target="_self" title="Documentation">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Documentation" src="https://gatewayapi.com/wp-content/uploads/2021/05/api-reference.svg">
+      </div>
+      <h4>Documentation</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>View our API-options and learn how to connect with GatewayAPI.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/help-center/introduction/" target="_self" title="Help Center">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Help Center" src="https://gatewayapi.com/wp-content/uploads/2021/05/quickstart.svg">
+      </div>
+      <h4>Help Center</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Learn how to quickly get started using your GatewayAPI account.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://status.gatewayapi.com/" target="_self" title="Status Page">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Status Page" src="https://gatewayapi.com/wp-content/uploads/2021/05/status-page.svg">
+      </div>
+      <h4>Status Page</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Watch the status of our APIs as well as secondary services.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/support/" target="_self" title="Support">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Support" src="https://gatewayapi.com/wp-content/uploads/2021/05/support.svg">
+      </div>
+      <h4>Support</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Browse our FAQ or get in contact with our support team.</p>
+    </div>
+  </a>
+</li><li class="item d-lg-none" >
+  <a href="https://gatewayapi.com/the-team/" target="_self" title="The Team">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="The Team" src="https://gatewayapi.com/wp-content/uploads/2020/03/sms-customer-clubs.svg">
+      </div>
+      <h4>The Team</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Meet the team behind GatewayAPI and find contact info.</p>
+    </div>
+  </a>
+</li><li class="item " >
+  <a href="https://gatewayapi.com/#code-examples" target="_self" title="Code Examples">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Code Examples" src="https://gatewayapi.com/wp-content/uploads/2022/10/api-reference.svg">
+      </div>
+      <h4>Code Examples</h4>
+      <div class="label label-blue"></div>
+    </div>
+    <div class="text-row">
+      <p>Connect to GatewayAPI with your preferred coding language.</p>
+    </div>
+  </a>
+</li>    </ul>
+        <ul class="column-2">
+      <li class="headline " >
+  <a href="#" target="_self" title="Quickstart Videos">
+    <div class="title-row">
+      <div class="title-row-image-container">
+        <img loading="lazy" alt="Quickstart Videos" src="https://gatewayapi.com/_/dist/images/blank.gif">
+      </div>
+      <h4>Quickstart Videos</h4>
+      <div class="label"></div>
+    </div>
+    <div class="text-row">
+      <p></p>
+    </div>
+  </a>
+</li><li class="item video " >
+  <a href="#" target="_self" title="How to send SMS messages with PHP." data-video="https://www.youtube.com/embed/jTgNxpvM6cQ?rel=0">
+    <div class="video-row">
+      <img loading="lazy" alt="How to send SMS messages with PHP." src="https://gatewayapi.com/wp-content/uploads/2021/08/thumbnail-send_sms_with_php-low_res.jpg">
+    </div>
+    <div class="text-row">
+      <p>How to send SMS messages with PHP.</p>
+    </div>
+  </a>
+</li><li class="item video " >
+  <a href="#" target="_self" title="How to send SMS messages using WordPress." data-video="https://www.youtube.com/embed/wcOslBVUJXw?rel=0">
+    <div class="video-row">
+      <img loading="lazy" alt="How to send SMS messages using WordPress." src="https://gatewayapi.com/wp-content/uploads/2021/08/thumbnail-wordpress_plugin-low_res.jpg">
+    </div>
+    <div class="text-row">
+      <p>How to send SMS messages using WordPress.</p>
+    </div>
+  </a>
+</li>    </ul>
+      </div>
+</div>
+
+<script nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac">
+  jQuery(($) => {
+    const theMenu = $('.primary-menu-dropdown.column-count-3')
+    const theParent = theMenu.closest('.container').parent();
+
+    theMenu.each(function() {
+      const wrapper = $('<div class="wrapper">')
+      $(this).wrap(wrapper)
+      $(this).data('my-wrapper', $(this).closest('.wrapper'));
+    })
+
+    moveToParent = () => {
+      theMenu.each(function() {
+        $(this).appendTo(theParent);
+      })
+    }
+
+    moveToInner = () => {
+      theMenu.each(function() {
+        $(this).appendTo($(this).data('my-wrapper'));
+      })
+    }
+
+    // listen to resize and move the menu out of the container if needed - between 992 and 1200px
+    $(window).on('resize', () => {
+      if (window.innerWidth >= 992 && window.innerWidth <= 1200) {
+        moveToParent()
+      } else {
+        moveToInner()
+      }
+    }).trigger('resize')
+
+    // when the menu opens, equal height the two first columns list items
+    $(document).on('gatewayapi.menuopen', function(ev) {
+      const outer = $(ev.target);
+      console.log(outer.get(0));
+      if (!outer.hasClass('column-count-3')) return;
+      outer.find('.column-1, .column-2').find('.item').css('height', 'auto');
+
+      setTimeout(() => {
+        const column1 = outer.find('.column-1 .item:visible a');
+        const column2 = outer.find('.column-2 .item:visible a');
+        column1.each(function(i) {
+          const height = Math.max($(this).outerHeight() ?? 0, column2.eq(i).outerHeight() ?? 0);
+          column1.eq(i).css('height', height);
+          column2.eq(i).css('height', height);
+        });
+      })
+    })
+  })
+</script>
+
+
+
+
+
+    <div id="secondaryNav" class="collapse navbar-collapse hero-menu">
+
+  <div class="hero-menu-wrapper">
+
+    <div id="tertiaryNav" class="">
+      <ul id="menu-tertiary-menu" class="list-inline">
+
+        <li class="list-inline-item">
+
+          <a class="nav-link status-none"
+             href="https://status.gatewayapi.com/"
+             aria-label="Status" target="_blank" rel="noreferrer" title="">Status</a>
+
+        </li>
+
+        <li class="list-inline-item list-inline-item-seperator"><span class="lii-seperator"></span></li>
+
+        <li class="list-inline-item">
+
+          <a data-icl-language-code="en" class="nav-link" href="https://gatewayapi.com/help-center/" aria-label="Help Center" target="">Help Center</a>
+        </li>
+
+        <li class="list-inline-item list-inline-item-seperator"><span class="lii-seperator"></span></li>
+
+        <li class="list-inline-item">
+
+          <a data-icl-language-code="en" class="nav-link" href="https://gatewayapi.com/the-team/" aria-label="The team" target="">The Team</a>
+        </li>
+
+      </ul>
+    </div>
+    <ul class="navbar-nav ml-auto">
+
+      
+      <li class="header-flag">
+        <a href="#" id="language-button">
+          <img src="https://gatewayapi.com/_/dist/images/flags/48/gb.svg" alt="">
+        </a>
+        <div class="popup-message language-popup-message">
+	<h4>Select language</h4>
+
+	<!-- Language menu goes here -->
+	<ul class="languagelist">
+		<li id ="en"><a href="https://gatewayapi.com/notfound/">English</a></li><li id ="de"><a href="https://gatewayapi.com/de/nichtgefunden/">German</a></li><li id ="da"><a href="https://gatewayapi.com/da/ikkefundet/">Danish</a></li>	</ul>
+</div>
+      </li>
+
+      <li>
+
+        <a data-icl-language-code="en" class="btn btn-login btn-outline-white" href="https://onlinecity-id.io/gatewayapi/?locale=en" target="" rel="noreferrer" aria-label="Log in" title="Log in">Log in</a>
+      </li>
+
+      <li>
+
+        <a data-icl-language-code="en" class="btn btn-success btn-signup" href="https://onlinecity-id.io/gatewayapi/signup/?locale=en" target="" rel="noreferrer" aria-label="Sign up" title="Sign up">
+<div class="inner"><div class="textbefore">Sign up</div><div class="textafter hidden">with OC<svg id="cta-ocid-icon" xmlns="http://www.w3.org/2000/svg" width="15.112" height="12.968" viewBox="0 0 15.112 12.968">
+  <g id="Group_1034" data-name="Group 1034">
+    <path id="Path_1608" data-name="Path 1608" d="M12.92,12.968a1.865,1.865,0,0,1-1.92-1.8V1.8A1.865,1.865,0,0,1,12.92,0a6.2,6.2,0,0,1,6.385,5.982v1a6.2,6.2,0,0,1-6.385,5.982m0-11.671a.521.521,0,0,0-.536.5v9.37a.52.52,0,0,0,.536.5,4.855,4.855,0,0,0,5-4.685v-1a4.856,4.856,0,0,0-5-4.685" transform="translate(-4.193)" fill="#19c0ff"/>
+    <path id="Path_1609" data-name="Path 1609" d="M2.307,12.968A2.24,2.24,0,0,1,0,10.807V2.161A2.241,2.241,0,0,1,2.307,0,2.241,2.241,0,0,1,4.614,2.161v8.645a2.24,2.24,0,0,1-2.307,2.161m0-11.671a.9.9,0,0,0-.923.865v8.645a.9.9,0,0,0,.923.865.9.9,0,0,0,.923-.865V2.161A.9.9,0,0,0,2.307,1.3" transform="translate(0 0)" fill="#19c0ff"/>
+  </g>
+</svg>
+</div><div class="bg hidden"></div></div></a>
+      </li>
+
+    </ul>
+
+  </div>
+
+</div>
+
+    <div id="hero-shape"></div>
+
+  </div>
+
+  
+</nav><!-- .site-navigation -->
+
+
+<div class="nav-res" id="nav-res">
+  <div class="nav-res-top">
+    <div class="nav-res-language">
+      <ul>
+        <li>
+          <a href="#" id="navreschangelang">
+            <img src="https://gatewayapi.com/_/dist/images/flags/48/gb.svg" alt="">
+          </a>
+          <div class="popup-message language-popup-message">
+            <h4>Select language</h4>
+            <ul class="languagelist">
+              <li id ="en"><a href="https://gatewayapi.com/notfound/">English</a></li><li id ="de"><a href="https://gatewayapi.com/de/nichtgefunden/">German</a></li><li id ="da"><a href="https://gatewayapi.com/da/ikkefundet/">Danish</a></li>            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="nav-res-statuspage">
+      <div class="nav-res-statuspage-inner">
+        <a class="nav-link" href="https://status.gatewayapi.com/" aria-label="Status" target="_blank" rel="noreferrer">Status</a>
+      </div>
+    </div>
+  </div>
+  <div class="nav-res-mobile-menu">
+
+  </div>
+
+
+  <div class="nav-res-bottom">
+
+    <a data-icl-language-code="en" class="btn btn-success btn-signup" href="https://onlinecity-id.io/gatewayapi/signup/?locale=en" target="" rel="noreferrer" aria-label="Sign up" title="Sign up">Sign up</a><a data-icl-language-code="en" class="btn btn-login btn-info" href="https://onlinecity-id.io/gatewayapi/?locale=en" target="" rel="noreferrer" aria-label="Log in" title="Log in">Log in</a>
+
+    <ul class="list-inline">
+    <li class="list-inline-item">
+
+    <a data-icl-language-code="en" class="nav-link" href="https://gatewayapi.com/the-team/" aria-label="The team" target="">The team</a>
+    </li>
+
+    <li class="list-inline-item list-inline-item-seperator"><span class="lii-seperator"></span></li>
+
+    <li class="list-inline-item">
+
+    <a data-icl-language-code="en" href="#mobile-menu-openchat" target="_self" class="nav-link">Contact us</a>
+    </li>
+    </ul>
+
+  </div>
+</div>
+  
+  <div class="page-404">
+
+    <div class="container-fluid p-0 m-0">
+      <div class="row p-0 m-0">
+
+        <div class="page-404--left col-xl-6 col-lg-12 p-0 m-0">
+
+          <div class="page-404--left_inner">
+
+            <img src="https://gatewayapi.com/_/dist/images/logo-white.svg" class="page-404--left_logo">
+
+            <h1>404</h1>
+
+            <div class="mt-4 mb-5">
+              We can't seem to connect<br/>to the page you were looking for.
+            </div>
+
+            <div class="mt-5 page-404--left_buttons">
+
+              <a href="https://gatewayapi.com/" target="_self" class="btn btn-success mr-3"
+                 aria-label="Go to homepage">Go to homepage</a>
+              <a href="#openchat" target="_self" class="btn btn-link"
+                 aria-label="Live chat">Live chat</a>
+
+            </div>
+
+          </div>
+
+          <img src="https://gatewayapi.com/_/dist/images/broken-antenna.svg" class="page-404--left_antenna">
+
+        </div>
+
+        <div class="page-404--right col-xl-6 col-lg-12 p-0 m-0">
+
+          <div class="page-404--right_inner">
+
+
+            <div class="page-404--right_msg">
+              Hey! 👋 Thank you for visiting us!
+            </div>
+
+            <div class="page-404--right_msg">
+              The page you are looking for might have been removed, changed its name or is temporarily unavailable.
+            </div>
+
+            <div class="page-404--right_reply">
+              Okay! Thanks for the info! 🙏
+            </div>
+
+            <div class="page-404--right_msg">
+              Just click the green button to go right back to the home page.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+    <div class="wrapper" id="wrapper-footer">
+  <hr id="footerhr">
+</div>
+<footer class="site-footer">
+
+  <div class="container">
+
+    <div class="row">
+
+      <div class="col-12">
+
+        <div class="site-footer-container site-footer-container__logo">
+          <div class="site-footer-row">
+            <div class="site-footer-logo-container">
+                              <img width="1" height="38" src="https://gatewayapi.com/wp-content/uploads/2020/09/footer-logo.svg"
+                     alt="GatewayAPI">
+                          </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="container">
+<div class="site-footer-container site-footer__columns">
+
+  
+  
+    
+    <div class="site-footer__column">
+      <div class="site-footer__column__header">Let&#039;s stay connected</div>
+
+      
+        <ul class="site-footer__column__list site-footer__column__list--icons">
+
+          
+            
+                          <li>
+                <a class="social-icon" rel="noreferrer" aria-label="Facebook"
+                   href="https://www.facebook.com/gatewayapi/" target="_blank">
+                  <img loading="lazy" alt="Facebook"
+                       width="15"
+                       height="28"
+                       src="https://gatewayapi.com/wp-content/uploads/2020/09/facebook.svg"
+                       class="">
+                </a>
+              </li>
+            
+          
+            
+                          <li>
+                <a class="social-icon" rel="noreferrer" aria-label="LinkedIn"
+                   href="https://www.linkedin.com/company/gatewayapi/" target="_blank">
+                  <img loading="lazy" alt="LinkedIn"
+                       width="28"
+                       height="28"
+                       src="https://gatewayapi.com/wp-content/uploads/2020/09/linkedin.svg"
+                       class="">
+                </a>
+              </li>
+            
+          
+            
+                          <li>
+                <a class="social-icon" rel="noreferrer" aria-label="YouTube"
+                   href="https://www.youtube.com/channel/UCzlmnvHtQni1u4intWvEyxQ/videos?disable_polymer=1 " target="_blank">
+                  <img loading="lazy" alt="YouTube"
+                       width="40"
+                       height="28"
+                       src="https://gatewayapi.com/wp-content/uploads/2020/09/youtube.svg"
+                       class="">
+                </a>
+              </li>
+            
+          
+        </ul>
+
+      
+    </div>
+  
+    
+    <div class="site-footer__column">
+      <div class="site-footer__column__header">Information</div>
+
+      
+        <ul class="site-footer__column__list site-footer__column__list--text">
+
+          
+            
+                          <li><a href="https://gatewayapi.com/cookie-policy/" target="">Cookie policy</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/security-and-compliance/" target="">Security & Compliance</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/blog/" target="">News</a></li>
+            
+          
+        </ul>
+
+      
+    </div>
+  
+    
+    <div class="site-footer__column">
+      <div class="site-footer__column__header">Menu</div>
+
+      
+        <ul class="site-footer__column__list site-footer__column__list--text has-columns">
+
+          
+            
+                          <li><a href="https://gatewayapi.com/standard-premium-sms/" target="">Products</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/support/" target="">Support</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/docs/" target="_blank">Developers</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/the-team/" target="">About</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/pricing/" target="">Pricing</a></li>
+            
+          
+            
+                          <li><a href="https://gatewayapi.com/security-and-compliance/" target="">Privacy</a></li>
+            
+          
+        </ul>
+
+      
+    </div>
+  
+</div>
+</div>
+  <div class="container-fluid footer-bottom m-auto">
+
+<!-- <div class="site-footer-container site-footer-container__bottom">-->
+<!-- <div class="site-footer-row">-->
+      <div class="site-footer-bottom" id="colophon">
+                  <div class="site-info">
+            
+                          <p>All rights reserved. Copyright © ONLINECITY.IO - GatewayAPI is an <a href="https://onlinecity.io" target="_blank">ONLINECITY.IO</a> brand</p>
+                      </div>
+              </div>
+<!--</div>-->
+
+<!--</div>-->
+  </div>
+
+</footer>
+  <script type="text/javascript" id="sage/main.js-js-extra" nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac">
+/* <![CDATA[ */
+var general = {"fileversion":"1744724478722","theme_file_uri":"https:\/\/gatewayapi.com\/_","text_strings":{"select_language":"Select language","select_countries":"Select countries","inbound_description_text":"SMS unit prices for inbound, i.e. mobile originate (MO) traffic. ","search":"Search","chatlio_leave_a_message":"Leave a message","chatlio_chat_with_us":"Chat with support"},"chatlio_widget_configuration":{"noAnswerWithEmail":"Oops! Sorry no one has responded yet. We have your email on file if you need to leave. But you are welcome to wait.","noAnswerWithoutEmail":"Oops! Sorry no one has responded yet. If you leave your email, we will get back to you. You are also welcome to wait.","onlineTitle":"How can we help you?","offlineTitle":"Contact Us","agentLabel":"Support","onlineMessagePlaceholder":"Type message here...","offlineGreeting":"Sorry we are away, but we would love to hear from you and chat soon!","offlineEmailPlaceholder":"Email","offlineMessagePlaceholder":"Your message here","offlineNamePlaceholder":"Name (optional but helpful)","offlineSendButton":"Send","offlineThankYouMessage":"Thank you for your message. We will be in touch soon!","requireInfoGreeting":"Enter your name and email to start chatting!","requireInfoSubmitBtn":"Start","requestScreenshotText":"The supporter has requested a screenshot of your browser. Click below to confirm.","requestScreenshotAllowLabel":"Take screenshot","requestScreenshotDeclineLabel":"Decline","defaultOkBtnLabel":"Ok","defaultSendBtnLabel":"Send","defaultCancelBtnLabel":"Cancel","defaultYesBtnLabel":"Yes","defaultNoBtnLabel":"No","conversationEndLabel":"Our chat session has ended. Thank you for chatting!","conversationRatingLabel":"How would you rate this chat?","conversationRatingThankYou":"Thank you for rating our chat session!","conversationRatingPlaceholder":"How can we improve?","conversationEndTranscriptPlaceholder":"Email to send transcript of chat","conversationEndConfirmationQuestion":"Are you sure you want to end this chat?","conversationTranscriptSentThankYou":"Thanks! You will receive your transcript shortly.","conversationEndMenuLinkLabel":"End Chat","autoResponseMessage":"Do you have a question? Just type it below. We are online and ready to answer!"}};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://gatewayapi.com/_/dist/scripts/main-1744724478722.js" id="sage/main.js-js" nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac"></script>
+</div>
+
+<script async type="text/javascript" src="https://gatewayapi.com/_/dist/scripts/notfound-1744724478722.js" nonce='e8b14daa-629b-401d-b0ff-c65a4d53edac'></script>
+  <!-- Google Tag Manager -->
+  <script type="text/javascript" nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac" id="gtmScript">!function(){"use strict";function l(e){for(var t=e,r=0,n=document.cookie.split(";");r<n.length;r++){var o=n[r].split("=");if(o[0].trim()===t)return o[1]}}function s(e){return localStorage.getItem(e)}function u(e){return window[e]}function d(e,t){e=document.querySelector(e);return t?null==e?void 0:e.getAttribute(t):null==e?void 0:e.textContent}var e=window,t=document,r="script",n="dataLayer",o="KV8W3HS",a="https://ss.gatewayapi.com",i="",c="vamjfrol",E="stapeUserId",I="",v="",g=!1;try{var g=!!E&&(m=navigator.userAgent,!!(m=new RegExp("Version/([0-9._]+)(.*Mobile)?.*Safari.*").exec(m)))&&16.4<=parseFloat(m[1]),A="stapeUserId"===E,f=g&&!A?function(e,t,r){void 0===t&&(t="");var n={cookie:l,localStorage:s,jsVariable:u,cssSelector:d},t=Array.isArray(t)?t:[t];if(e&&n[e])for(var o=n[e],a=0,i=t;a<i.length;a++){var c=i[a],c=r?o(c,r):o(c);if(c)return c}else console.warn("invalid uid source",e)}(E,I,v):void 0;g=g&&(!!f||A)}catch(e){console.error(e)}var m=e,E=(m[n]=m[n]||[],m[n].push({"gtm.start":(new Date).getTime(),event:"gtm.js"}),t.getElementsByTagName(r)[0]),I="dataLayer"===n?"":"&l="+n,v=f?"&bi="+encodeURIComponent(f):"",A=t.createElement(r),e=g?"kp"+c:c,n=!g&&i?i:a;A.async=!0,A.setAttribute('nonce', 'e8b14daa-629b-401d-b0ff-c65a4d53edac'),A.src=n+"/"+e+".js?st="+o+I+v+"",null!=(f=E.parentNode)&&f.insertBefore(A,E)}();</script>
+  <!-- End Google Tag Manager -->
+  <!-- Cookieinformation.com -->
+  <script
+    nonce="e8b14daa-629b-401d-b0ff-c65a4d53edac"
+    type="text/javascript"
+    src="https://policy.app.cookieinformation.com/uc.js"
+    data-culture="EN"
+    data-gcm-version="2.0">
+  </script>
+  <!-- Cookieinformation.com -->
+  </body>
+
+</html>
