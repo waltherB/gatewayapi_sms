@@ -32,8 +32,7 @@ class IapAccount(models.Model):
         help="Sender name to use for outgoing SMS. This will appear as the sender on recipients' phones."
     )
     gatewayapi_api_token = fields.Char(
-        help="GatewayAPI API Token",
-        password=True
+        help="GatewayAPI API Token"
     )
     gatewayapi_check_min_tokens = fields.Boolean(
         string="Check for minimum credits",
