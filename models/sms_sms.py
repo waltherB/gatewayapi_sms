@@ -25,42 +25,16 @@ class Sms(models.Model):
         """ This method tries to send SMS after checking the number (presence and
         formatting). """
         if self._is_sent_with_gatewayapi():
-            # copied from super and modified
             try:
-                result = self._send_sms_with_gatewayapi()
-                iap_results = [
-                    {'uuid': sms.uuid, 'state': result}
-                    for sms in self
-                ]
-                # iap_results format:
-                # :return: return of /iap/sms/1/send controller which is a list of dict [{
-                #     'res_id': integer: ID of sms.sms,
-                #     'state':  string: 'insufficient_credit',
-                #     'credit': integer: number of credits spent to send this SMS,
-                # }]
+                results = [sms._send_sms_with_gatewayapi() for sms in self]
             except Exception as e:
-                _logger.warning(
-                    'Sent batch %s SMS: %s: failed with exception %s',
-                    len(self.ids), self.ids, e
-                )
+                _logger.warning('Sent batch %s SMS: %s: failed with exception %s', len(self.ids), self.ids, e)
                 if raise_exception:
                     raise
-                self._postprocess_iap_sent_sms(
-                    [
-                        {'res_id': sms.id, 'state': 'server_error'}
-                        for sms in self
-                    ],
-                    unlink_failed=unlink_failed, unlink_sent=unlink_sent)
+                results = [{'uuid': sms.uuid, 'state': 'server_error'} for sms in self]
             else:
-                _logger.info(
-                    'Send batch %s SMS: %s: gave %s',
-                    len(self.ids), self.ids, iap_results
-                )
-                self._postprocess_iap_sent_sms(
-                    iap_results,
-                    unlink_failed=unlink_failed,
-                    unlink_sent=unlink_sent
-                )
+                _logger.info('Send batch %s SMS: %s: gave %s', len(self.ids), self.ids, results)
+            self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
         else:
             return super()._send(
                 unlink_failed=unlink_failed, unlink_sent=unlink_sent,
