@@ -45,7 +45,7 @@
                         <div class="text-muted mb-2">
                             When enabled, you will receive an e-mail notification if your credits fall below the minimum.
                         </div>
-                        <group attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}">
+                        <group invisible="gatewayapi_check_min_tokens == False">
                             <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                             <field name="gatewayapi_min_tokens" nolabel="1"/>
                             <label for="gatewayapi_cron_interval_number" string="Check interval" class="fw-bold"/>
