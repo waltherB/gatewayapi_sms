@@ -12,13 +12,17 @@
                     name="group_sms_api_gatewayapi"
                     invisible="provider != 'sms_api_gatewayapi'"
                 >
-                    <field name="service_name" 
-                        placeholder="sms" 
-                        help="Service Name must be 'sms' for GatewayAPI integration."/>
+                    <label for="service_name"/>
+                    <field name="service_name" string="Service Name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
+                    <label for="gatewayapi_base_url"/>
                     <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
+                    <label for="gatewayapi_sender"/>
                     <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
+                    <label for="gatewayapi_api_token"/>
                     <field name="gatewayapi_api_token" string="API Token" required="provider == 'sms_api_gatewayapi'"/>
-                    <field name="gatewayapi_balance" readonly="1"/>
+                    <label for="gatewayapi_balance"/>
+                    <field name="gatewayapi_balance" string="Balance" readonly="1"/>
+                    <label for="gatewayapi_check_min_tokens"/>
                     <field name="gatewayapi_check_min_tokens"/>
                     <div class="o_form_label">
                         When enabled, you will receive an e-mail notification if your credits fall below the minimum.
@@ -28,8 +32,8 @@
                         <field name="gatewayapi_cron_interval_number"/>
                         <field name="gatewayapi_cron_interval_type"/>
                     </group>
-                    <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
                     <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight"/>
+                    <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
                 </group>
             </xpath>
 
