@@ -19,11 +19,8 @@
                     <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_api_token" string="API Token" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_balance" readonly="1"/>
-                    <field name="gatewayapi_check_min_tokens"/>
+                    <field name="gatewayapi_check_min_tokens" help="When enabled, you will receive an e-mail notification if your credits fall below the minimum."/>
                     <field name="gatewayapi_min_tokens" modifiers='{"invisible": [["gatewayapi_check_min_tokens", "=", false]]}'/>
-                    <field name="gatewayapi_token_notification_action" domain="[('name', '=', 'Check and send e-mail')]" modifiers='{"invisible": [["gatewayapi_check_min_tokens", "=", false]]}'/>
-                    <field name="gatewayapi_cron_interval_number" modifiers='{"invisible": [["gatewayapi_check_min_tokens", "=", false]]}'/>
-                    <field name="gatewayapi_cron_interval_type" modifiers='{"invisible": [["gatewayapi_check_min_tokens", "=", false]]}'/>
                     <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
                     <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight"/>
                 </group>
