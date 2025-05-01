@@ -4,7 +4,7 @@
         <!-- NOTIFY WHEN LOW ON CREDITS -->
         <record id="model_iap_account_action_low_tokens" model="ir.actions.server">
             <field name="name">Check and send e-mail</field>
-            <field name="model_id" ref="iap.model_iap_account"/>
+            <field name="model_id" ref="model_iap_account"/>
             <field name="state">next_activity</field>
             <field name="activity_type_id" ref="mail.mail_activity_data_todo"></field>
             <field name="activity_summary">GatewayAPI low on credits</field>
