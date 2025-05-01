@@ -45,7 +45,7 @@
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='provider']" position="after">
+            <xpath expr="//field[@name='name']" position="after">
                 <field name="gatewayapi_balance"/>
             </xpath>
         </field>
