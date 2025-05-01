@@ -35,10 +35,15 @@ class IapAccount(models.Model):
         help="GatewayAPI API Token",
         password=True
     )
+    gatewayapi_check_min_tokens = fields.Boolean(
+        string="Check for minimum credits",
+        default=False,
+        help="Enable to check for minimum credits and trigger notifications."
+    )
     gatewayapi_min_tokens = fields.Integer(
         string="Minimum credits",
-        help="Minimum credit level for alerting purposes. "
-             "If it is a negative number, e.g. -1, the alarming is disabled."
+        default=0,
+        help="Minimum credit level for alerting purposes. Only used if 'Check for minimum credits' is enabled."
     )
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
@@ -49,6 +54,22 @@ class IapAccount(models.Model):
     gatewayapi_connection_status = fields.Char(
         string="Connection status",
         help="Status of the last connection test."
+    )
+    gatewayapi_cron_interval_number = fields.Integer(
+        string="Credit check interval",
+        default=1,
+        help="How often to check the credit balance (number of intervals)."
+    )
+    gatewayapi_cron_interval_type = fields.Selection(
+        [
+            ("minutes", "Minutes"),
+            ("hours", "Hours"),
+            ("days", "Days"),
+            ("weeks", "Weeks"),
+        ],
+        string="Interval type",
+        default="days",
+        help="Unit for the credit check interval."
     )
 
     @api.model
@@ -153,3 +174,22 @@ class IapAccount(models.Model):
         else:
             _logger.info("GatewayAPI connection test successful")
             iap_account.gatewayapi_connection_status = "OK"
+
+    def _update_gatewayapi_cron(self):
+        cron = self.env.ref('gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False)
+        if cron:
+            cron.write({
+                'interval_number': self.gatewayapi_cron_interval_number or 1,
+                'interval_type': self.gatewayapi_cron_interval_type or 'days',
+            })
+
+    @api.model
+    def create(self, vals):
+        rec = super().create(vals)
+        rec._update_gatewayapi_cron()
+        return rec
+
+    def write(self, vals):
+        res = super().write(vals)
+        self._update_gatewayapi_cron()
+        return res
