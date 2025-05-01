@@ -12,18 +12,24 @@
                     name="group_sms_api_gatewayapi"
                     invisible="provider != 'sms_api_gatewayapi'"
                 >
-                    <label for="service_name"/>
-                    <field name="service_name" string="Service Name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
-                    <label for="gatewayapi_base_url"/>
-                    <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
-                    <label for="gatewayapi_sender"/>
-                    <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
-                    <label for="gatewayapi_api_token"/>
-                    <field name="gatewayapi_api_token" string="API Token" required="provider == 'sms_api_gatewayapi'"/>
-                    <label for="gatewayapi_balance"/>
-                    <field name="gatewayapi_balance" string="Balance" readonly="1"/>
-                    <label for="gatewayapi_check_min_tokens"/>
-                    <field name="gatewayapi_check_min_tokens"/>
+                    <group col="2">
+                        <group>
+                            <div class="o_form_label"><b>Service Name</b></div>
+                            <div class="o_form_label"><b>GatewayAPI Base URL</b></div>
+                            <div class="o_form_label"><b>Sender Name</b></div>
+                            <div class="o_form_label"><b>API Token</b></div>
+                            <div class="o_form_label"><b>Balance</b></div>
+                            <div class="o_form_label"><b>Check for minimum credits</b></div>
+                        </group>
+                        <group>
+                            <field name="service_name" string="Service Name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
+                            <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_api_token" string="API Token" password="True" widget="password" options='{"show_password": true}' required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_balance" string="Balance" readonly="1"/>
+                            <field name="gatewayapi_check_min_tokens"/>
+                        </group>
+                    </group>
                     <div class="o_form_label">
                         When enabled, you will receive an e-mail notification if your credits fall below the minimum.
                     </div>
@@ -32,7 +38,7 @@
                         <field name="gatewayapi_cron_interval_number"/>
                         <field name="gatewayapi_cron_interval_type"/>
                     </group>
-                    <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight"/>
+                    <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight" style="width:auto; min-width:0; display:inline-block;"/>
                     <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
                 </group>
             </xpath>
