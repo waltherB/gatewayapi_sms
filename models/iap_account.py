@@ -23,8 +23,8 @@ class IapAccount(models.Model):
     )
     gatewayapi_base_url = fields.Char(
         string="GatewayAPI Base URL",
-        default="https://messaging.gatewayapi.com",
-        help="Base URL for GatewayAPI endpoints. Default: https://messaging.gatewayapi.com"
+        default="https://gatewayapi.eu",
+        help="Base URL for GatewayAPI endpoints. Default: https://gatewayapi.eu"
     )
     gatewayapi_sender = fields.Char(
         string="Sender Name",
@@ -106,7 +106,8 @@ class IapAccount(models.Model):
                 f'Token {iap_account_sms.gatewayapi_api_token}'
             )
         }
-        url = (iap_account_sms.gatewayapi_base_url.rstrip('/') + '/rest/me')
+        base_url = iap_account_sms.gatewayapi_base_url or 'https://gatewayapi.eu'
+        url = base_url.rstrip('/') + '/rest/me'
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         response_content = response.json()

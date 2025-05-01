@@ -53,7 +53,8 @@ class Sms(models.Model):
             'Authorization': f'Token {iap_account_sms.gatewayapi_api_token}',
             'Content-Type': 'application/json',
         }
-        url = iap_account_sms.gatewayapi_base_url.rstrip('/') + '/mobile/single'
+        base_url = iap_account_sms.gatewayapi_base_url or 'https://gatewayapi.eu'
+        url = base_url.rstrip('/') + '/mobile/single'
         payload = self._prepare_gatewayapi_payload(iap_account_sms)
         response = requests.post(url, json=payload, headers=headers)
 
