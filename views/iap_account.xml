@@ -18,8 +18,11 @@
                     <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
                     <field name="gatewayapi_api_token" string="API Token" required="provider == 'sms_api_gatewayapi'"/>
-                    <field name="gatewayapi_min_tokens"/>
-                    <field name="gatewayapi_token_notification_action" invisible="gatewayapi_min_tokens &lt; 0"/>
+                    <field name="gatewayapi_check_min_tokens"/>
+                    <field name="gatewayapi_min_tokens" attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}"/>
+                    <field name="gatewayapi_token_notification_action" domain="[('model_id.model', '=', 'iap.account')]" attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}"/>
+                    <field name="gatewayapi_cron_interval_number" attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}"/>
+                    <field name="gatewayapi_cron_interval_type" attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}"/>
                     <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
                     <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight"/>
                 </group>
