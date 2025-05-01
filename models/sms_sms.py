@@ -5,6 +5,7 @@ import logging
 import requests
 
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.DEBUG)
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -49,25 +50,28 @@ class Sms(models.Model):
             return {"uuid": self.uuid, "state": "wrong_number_format"}
 
         iap_account_sms = self.env['iap.account']._get_sms_account()
-        headers = {
-            'Authorization': f'Token {iap_account_sms.gatewayapi_api_token}',
-            'Content-Type': 'application/json',
-        }
+        sender = iap_account_sms.gatewayapi_sender or iap_account_sms.service_name or "Odoo"
+        token = iap_account_sms.gatewayapi_api_token
         base_url = iap_account_sms.gatewayapi_base_url or 'https://gatewayapi.eu'
-        url = base_url.rstrip('/') + '/mobile/single'
-        payload = self._prepare_gatewayapi_payload(iap_account_sms)
-        response = requests.post(url, json=payload, headers=headers)
-
+        url = base_url.rstrip('/') + '/rest/mtsms'
+        payload = {
+            "sender": sender,
+            "message": self.body,
+            "recipients": [{"msisdn": int(self.number)}],
+        }
+        _logger.debug(f"Sending SMS to GatewayAPI: url={url}, payload={payload}")
         try:
+            response = requests.post(url, json=payload, auth=(token, ""))
+            response.raise_for_status()
             response_content = response.json()
-        except Exception:
-            _logger.error(f"GatewayAPI non-JSON response: {response.text}")
-            self.sms_api_error = response.text
+        except Exception as e:
+            _logger.error(f"GatewayAPI error: {e}, response: {getattr(e, 'response', None)}")
+            self.sms_api_error = str(e)
             return {"uuid": self.uuid, "state": "server_error"}
 
         _logger.debug(f"GatewayAPI responded with: {response_content}")
-
-        if response.status_code == 202 and 'msg_id' in response_content:
+        # Success if response contains 'ids' or similar
+        if response.status_code in (200, 201) and response_content.get('ids'):
             _logger.info("SMS sent successfully")
             self.sms_api_error = False
             return {"uuid": self.uuid, "state": "success"}
