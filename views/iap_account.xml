@@ -14,44 +14,44 @@
                 >
                     <group col="1">
                         <group>
-                            <div class="o_form_label"><b>Service Name</b></div>
-                            <field name="service_name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
+                            <label for="service_name" string="Service Name" class="fw-bold"/>
+                            <field name="service_name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration.'" nolabel="1"/>
                         </group>
                         <group>
-                            <div class="o_form_label"><b>GatewayAPI Base URL</b></div>
-                            <field name="gatewayapi_base_url" required="provider == 'sms_api_gatewayapi'"/>
+                            <label for="gatewayapi_base_url" string="GatewayAPI Base URL" class="fw-bold"/>
+                            <field name="gatewayapi_base_url" required="provider == 'sms_api_gatewayapi'" nolabel="1"/>
                         </group>
                         <group>
-                            <div class="o_form_label"><b>Sender Name</b></div>
-                            <field name="gatewayapi_sender" required="provider == 'sms_api_gatewayapi'"/>
+                            <label for="gatewayapi_sender" string="Sender Name" class="fw-bold"/>
+                            <field name="gatewayapi_sender" required="provider == 'sms_api_gatewayapi'" nolabel="1"/>
                         </group>
                         <group>
-                            <div class="o_form_label"><b>API Token</b></div>
-                            <field name="gatewayapi_api_token" password="True" widget="password" options='{"show_password": true}' required="provider == 'sms_api_gatewayapi'"/>
+                            <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                            <field name="gatewayapi_api_token" password="True" widget="password" options='{"show_password": true}' required="provider == 'sms_api_gatewayapi'" nolabel="1"/>
                         </group>
                         <group>
-                            <div class="o_form_label"><b>Balance</b></div>
-                            <field name="gatewayapi_balance" readonly="1"/>
+                            <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>
+                            <field name="gatewayapi_balance" readonly="1" nolabel="1"/>
                         </group>
                         <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight" style="width:auto; min-width:0; display:inline-block;"/>
                         <group>
-                            <div class="o_form_label"><b>Connection Status</b></div>
-                            <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True"/>
+                            <label for="gatewayapi_connection_status" string="Connection Status" class="fw-bold"/>
+                            <field name="gatewayapi_connection_status" invisible="gatewayapi_connection_status == False" readonly="True" nolabel="1"/>
                         </group>
                         <group>
-                            <div class="o_form_label"><b>Check for minimum credits</b></div>
-                            <field name="gatewayapi_check_min_tokens"/>
+                            <label for="gatewayapi_check_min_tokens" string="Check for minimum credits" class="fw-bold"/>
+                            <field name="gatewayapi_check_min_tokens" nolabel="1"/>
                         </group>
                         <div class="o_form_label">
                             When enabled, you will receive an e-mail notification if your credits fall below the minimum.
                         </div>
                         <group modifiers='{"invisible": [["gatewayapi_check_min_tokens", "=", false]]}'>
-                            <div class="o_form_label"><b>Minimum credits</b></div>
-                            <field name="gatewayapi_min_tokens"/>
-                            <div class="o_form_label"><b>Interval</b></div>
-                            <field name="gatewayapi_cron_interval_number"/>
-                            <div class="o_form_label"><b>Type</b></div>
-                            <field name="gatewayapi_cron_interval_type"/>
+                            <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
+                            <field name="gatewayapi_min_tokens" nolabel="1"/>
+                            <label for="gatewayapi_cron_interval_number" string="Interval" class="fw-bold"/>
+                            <field name="gatewayapi_cron_interval_number" nolabel="1"/>
+                            <label for="gatewayapi_cron_interval_type" string="Type" class="fw-bold"/>
+                            <field name="gatewayapi_cron_interval_type" nolabel="1"/>
                         </group>
                     </group>
                 </group>
