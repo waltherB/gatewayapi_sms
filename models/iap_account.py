@@ -70,6 +70,12 @@ class IapAccount(models.Model):
         default="days",
         help="Unit for the credit check interval."
     )
+    gatewayapi_balance = fields.Float(
+        string="Balance",
+        compute="_compute_gatewayapi_balance",
+        store=False,
+        help="Current GatewayAPI credit balance."
+    )
 
     @api.model
     def check_gatewayapi_credit_balance(self):
@@ -192,3 +198,14 @@ class IapAccount(models.Model):
         res = super().write(vals)
         self._update_gatewayapi_cron()
         return res
+
+    @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
+    def _compute_gatewayapi_balance(self):
+        for rec in self:
+            if rec.provider == 'sms_api_gatewayapi' and rec.gatewayapi_api_token:
+                try:
+                    rec.gatewayapi_balance = float(rec.get_current_credit_balance())
+                except Exception:
+                    rec.gatewayapi_balance = 0.0
+            else:
+                rec.gatewayapi_balance = 0.0
