@@ -15,23 +15,23 @@
                     <group col="1">
                         <group>
                             <div class="o_form_label"><b>Service Name</b></div>
-                            <field name="service_name" string="Service Name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
+                            <field name="service_name" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
                         </group>
                         <group>
                             <div class="o_form_label"><b>GatewayAPI Base URL</b></div>
-                            <field name="gatewayapi_base_url" string="GatewayAPI Base URL" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_base_url" required="provider == 'sms_api_gatewayapi'"/>
                         </group>
                         <group>
                             <div class="o_form_label"><b>Sender Name</b></div>
-                            <field name="gatewayapi_sender" string="Sender Name" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_sender" required="provider == 'sms_api_gatewayapi'"/>
                         </group>
                         <group>
                             <div class="o_form_label"><b>API Token</b></div>
-                            <field name="gatewayapi_api_token" string="API Token" password="True" widget="password" options='{"show_password": true}' required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_api_token" password="True" widget="password" options='{"show_password": true}' required="provider == 'sms_api_gatewayapi'"/>
                         </group>
                         <group>
                             <div class="o_form_label"><b>Balance</b></div>
-                            <field name="gatewayapi_balance" string="Balance" readonly="1"/>
+                            <field name="gatewayapi_balance" readonly="1"/>
                         </group>
                         <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight" style="width:auto; min-width:0; display:inline-block;"/>
                         <group>
