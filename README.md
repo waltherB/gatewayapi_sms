@@ -83,7 +83,13 @@ pip install phonenumbers requests
 
 | Configuration | Test Connection | Notification | Balance |
 |---------------|----------------|--------------|---------|
-| ![Config](static/description/screenshot_01_config.png) | ![Test](static/description/screenshot_02_test_connection.png) | ![Notif](static/description/screenshot_03_notification.png) | ![Balance](static/description/screenshot_04_balance.png) |
+| ![Configuration](static/description/screenshot_01_config.png) | ![Test Connection](static/description/screenshot_02_test_connection.png) | ![Notification](static/description/screenshot_03_notification.png) | ![Balance](static/description/screenshot_04_balance.png) |
+
+### Example: Low Credits Notification Activity
+
+This is what the admin will see in the Odoo activity stream when credits fall below the minimum threshold:
+
+![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
 
 ---
 
