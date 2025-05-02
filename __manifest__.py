@@ -21,5 +21,18 @@
     'images': [
         'static/description/banner.svg',
         'static/description/icon.svg',
+        'static/description/screenshot_01_config.png',
+        'static/description/screenshot_02_test_connection.png',
+        'static/description/screenshot_03_notification.png',
+        'static/description/screenshot_04_balance.png',
     ],
+    'description': '''
+GatewayAPI SMS Connector for Odoo 17
+------------------------------------
+Send SMS via GatewayAPI directly from Odoo. Features include:
+- Secure API Token management with show/hide toggle
+- Credit balance monitoring and notifications
+- Easy configuration and integration
+- Scheduled credit checks and admin alerts
+''',
 }
