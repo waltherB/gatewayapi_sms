@@ -17,13 +17,16 @@ When you set the Provider of an IAP account to **GatewayAPI**, the following sec
 
 After filling in the required fields, it is recommended to *Test Connection*. The result will be displayed in the *Connection status* field.
 
+**API Token Visibility:**
+You can now toggle the visibility of your API Token using the eye (show) and eye-slash (hide) buttons next to the token field. By default, the token is hidden (masked). Clicking the eye icon will reveal the token, and clicking the eye-slash icon will hide it again. This is controlled by the `show_token` field and the `action_toggle_show_token` server action.
+
 If you would like to be notified when your credits/tokens start running low, set a desired minimum amount of tokens. To disable notifications or if you have unlimited credits, set the field to a negative number (e.g. -1). This field is only used for notification purposes. If you decide to fill this field, the *Token notification action* field will appear. This field can accept any server action which will be executed daily (by default) via cron job, if your current token level is lower than the minimum amount you have set.
 
 If you would like to change the interval of the credit balance check you can access the action by:
 
 - Settings > Technical > Automation > Scheduled action
-- Select the action named “GatewayAPI: Check credit balance”.
+- Select the action named "GatewayAPI: Check credit balance".
 
-There's a default notification action that creates an activity for the admin under the SMS IAP, notifying them to “Buy more credits".
+There's a default notification action that creates an activity for the admin under the SMS IAP, notifying them to "Buy more credits".
 
 This module is strongly inspired by the following module: https://github.com/rokpremrl/smsapisi-odoo
