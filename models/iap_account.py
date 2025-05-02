@@ -182,11 +182,16 @@ class IapAccount(models.Model):
         else:
             _logger.info("GatewayAPI connection test successful")
             iap_account.gatewayapi_connection_status = "OK"
-            # Force form reload
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'reload',
-            }
+            # Explicitly update the balance
+            try:
+                iap_account.gatewayapi_balance = float(iap_account.get_current_credit_balance())
+            except Exception:
+                iap_account.gatewayapi_balance = 0.0
+        # Force form reload
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
 
     def _update_gatewayapi_cron(self):
         cron = self.env.ref('gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False)
