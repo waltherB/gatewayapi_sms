@@ -33,7 +33,7 @@ This module is strongly inspired by the following module: https://github.com/rok
 
 ### From Odoo Apps Store
 1. Download the module ZIP from the Odoo Apps Store.
-2. Extract the ZIP and place the `gatewayapi_sms` folder in your Odoo `addons` directory.
+2. Extract the ZIP and place the `gatewayapi_sms` folder in your Odoo `custom addons` directory.
 3. Restart your Odoo server.
 4. Activate Developer Mode in Odoo.
 5. Go to Apps, click 'Update Apps List', then search for 'GatewayAPI SMS Connector' and install it.
