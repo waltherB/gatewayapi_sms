@@ -28,3 +28,29 @@ You can set how often Odoo checks your GatewayAPI credit balance directly in the
 There's a default notification action that creates an activity for the admin under the SMS IAP, notifying them to "Buy more credits".
 
 This module is strongly inspired by the following module: https://github.com/rokpremrl/smsapisi-odoo
+
+## Installation
+
+### From Odoo Apps Store
+1. Download the module ZIP from the Odoo Apps Store.
+2. Extract the ZIP and place the `gatewayapi_sms` folder in your Odoo `addons` directory.
+3. Restart your Odoo server.
+4. Activate Developer Mode in Odoo.
+5. Go to Apps, click 'Update Apps List', then search for 'GatewayAPI SMS Connector' and install it.
+
+### From GitHub
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/waltherB/gatewayapi_sms.git
+   ```
+2. Move the `gatewayapi_sms` folder to your Odoo `addons` directory.
+3. Ensure the following Python dependencies are installed:
+   - `phonenumbers`
+   - `requests`
+   You can install them with:
+   ```sh
+   pip install phonenumbers requests
+   ```
+4. Restart your Odoo server.
+5. Activate Developer Mode in Odoo.
+6. Go to Apps, click 'Update Apps List', then search for 'GatewayAPI SMS Connector' and install it.
