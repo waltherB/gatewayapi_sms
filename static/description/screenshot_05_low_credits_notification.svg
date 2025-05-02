@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="180" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Inter', Arial, sans-serif;">
+  <rect width="600" height="180" fill="#f8f8fa"/>
+  <rect x="30" y="30" width="540" height="120" rx="12" fill="#fff" stroke="#d3d3e0" stroke-width="1.5"/>
+  <circle cx="60" cy="90" r="22" fill="#7c7bad"/>
+  <text x="60" y="96" text-anchor="middle" font-size="18" fill="#fff" font-weight="bold">A</text>
+  <text x="100" y="60" font-size="16" fill="#333" font-weight="bold">To-Do: GatewayAPI low on credits</text>
+  <text x="100" y="90" font-size="14" fill="#555">Buy more SMS credits with provider GatewayAPI</text>
+  <rect x="100" y="110" width="90" height="26" rx="6" fill="#e6e6f7"/>
+  <text x="145" y="128" text-anchor="middle" font-size="13" fill="#7c7bad">Assigned to: admin</text>
+  <rect x="470" y="110" width="80" height="26" rx="6" fill="#f7dada"/>
+  <text x="510" y="128" text-anchor="middle" font-size="13" fill="#b94a48">Due: Today</text>
+</svg> 

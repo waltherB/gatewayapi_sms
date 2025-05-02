@@ -100,6 +100,10 @@ The email notification for low credits is not a traditional email, but rather an
 - The admin will see a new activity in the Odoo chatter (and in their activity dashboard) with the above summary and note.
 - The activity is not a direct email, but Odoo can be configured to send email reminders for pending activities, so the admin may receive an email with the same content if reminders are enabled.
 
+Example:
+
+![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
+
 ---
 
 ## Credits
