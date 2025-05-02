@@ -182,6 +182,11 @@ class IapAccount(models.Model):
         else:
             _logger.info("GatewayAPI connection test successful")
             iap_account.gatewayapi_connection_status = "OK"
+            # Force form reload
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'reload',
+            }
 
     def _update_gatewayapi_cron(self):
         cron = self.env.ref('gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False)

@@ -41,7 +41,7 @@
                         <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight" style="width:auto; min-width:0; display:inline-block;"/>
                         <group>
                             <label for="gatewayapi_connection_status" string="Connection Status" class="fw-bold"/>
-                            <field name="gatewayapi_connection_status" nolabel="1" invisible="gatewayapi_connection_status == False" readonly="True"/>
+                            <field name="gatewayapi_connection_status" nolabel="1" readonly="True"/>
                         </group>
                         <group>
                             <label for="gatewayapi_check_min_tokens" string="Check for minimum credits" class="fw-bold"/>
