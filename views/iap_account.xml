@@ -27,7 +27,12 @@
                         </group>
                         <group>
                             <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-                            <field name="gatewayapi_api_token" nolabel="1" widget="password" options="{'show_password': true}" required="provider == 'sms_api_gatewayapi'"/>
+                            <div class="o_row">
+                                <field name="gatewayapi_api_token" password="False" invisible="not show_token" nolabel="1"/>
+                                <field name="gatewayapi_api_token" password="True" invisible="show_token" nolabel="1"/>
+                                <button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="show_token" title="Show Token"/>
+                                <button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="not show_token" title="Hide Token"/>
+                            </div>
                         </group>
                         <group>
                             <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>

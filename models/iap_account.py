@@ -76,6 +76,7 @@ class IapAccount(models.Model):
         store=False,
         help="Current GatewayAPI credit balance."
     )
+    show_token = fields.Boolean(default=False, help="Show or hide the API token in the form.")
 
     @api.model
     def check_gatewayapi_credit_balance(self):
@@ -209,3 +210,7 @@ class IapAccount(models.Model):
                     rec.gatewayapi_balance = 0.0
             else:
                 rec.gatewayapi_balance = 0.0
+
+    def action_toggle_show_token(self):
+        for rec in self:
+            rec.show_token = not rec.show_token
