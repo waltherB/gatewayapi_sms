@@ -87,6 +87,21 @@ pip install phonenumbers requests
 
 ---
 
+## Low Credits Notification
+
+The email notification for low credits is not a traditional email, but rather an Odoo activity that appears in the admin's activity stream. This is configured in your module as follows:
+
+- When your GatewayAPI credits fall below the minimum threshold, the system triggers the server action `model_iap_account_action_low_tokens`.
+- This action creates a To-Do activity for the admin user with:
+  - **Summary:** "GatewayAPI low on credits"
+  - **Note:** "Buy more SMS credits with provider GatewayAPI"
+
+**What the notification looks like:**
+- The admin will see a new activity in the Odoo chatter (and in their activity dashboard) with the above summary and note.
+- The activity is not a direct email, but Odoo can be configured to send email reminders for pending activities, so the admin may receive an email with the same content if reminders are enabled.
+
+---
+
 ## Credits
 
 - Inspired by [smsapisi-odoo/smsapisi_connector](https://github.com/waltherB/smsapisi-odoo/tree/17.0/smsapisi_connector)
