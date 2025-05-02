@@ -133,7 +133,9 @@ class IapAccount(models.Model):
                 f'Token {iap_account_sms.gatewayapi_api_token}'
             )
         }
-        base_url = iap_account_sms.gatewayapi_base_url or 'https://gatewayapi.eu'
+        base_url = iap_account_sms.gatewayapi_base_url
+        if not base_url or base_url == 'False':
+            base_url = 'https://gatewayapi.eu'
         url = base_url.rstrip('/') + '/rest/me'
         response = requests.get(url, headers=headers)
         response.raise_for_status()
