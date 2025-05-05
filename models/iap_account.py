@@ -136,7 +136,15 @@ class IapAccount(models.Model):
         base_url = iap_account_sms.gatewayapi_base_url
         if not base_url or str(base_url).lower() == 'false':
             base_url = 'https://gatewayapi.eu'
+        # Ensure the URL is valid
+        if not (
+            base_url.startswith('http://') or base_url.startswith('https://')
+        ):
+            raise UserWarning(
+                'GatewayAPI Base URL must start with http:// or https://'
+            )
         url = base_url.rstrip('/') + '/rest/me'
+        _logger.debug(f"GatewayAPI credit balance check URL: {url}")
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         response_content = response.json()
