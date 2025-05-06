@@ -230,10 +230,10 @@ class IapAccount(models.Model):
             })
 
     @api.model
-    def create(self, vals):
-        rec = super().create(vals)
-        rec._update_gatewayapi_cron()
-        return rec
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._update_gatewayapi_cron()
+        return records
 
     def write(self, vals):
         res = super().write(vals)
