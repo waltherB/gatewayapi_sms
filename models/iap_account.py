@@ -134,6 +134,7 @@ class IapAccount(models.Model):
             )
         }
         base_url = iap_account_sms.gatewayapi_base_url
+        _logger.debug(f"Raw base_url value before validation: {base_url!r}")
         if not base_url or str(base_url).lower() == 'false':
             base_url = 'https://gatewayapi.eu'
         # Ensure the URL is valid
