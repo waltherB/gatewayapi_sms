@@ -70,7 +70,7 @@
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position="after">
-                <field name="gatewayapi_balance"/>
+                <field name="gatewayapi_balance_display"/>
             </xpath>
         </field>
     </record>

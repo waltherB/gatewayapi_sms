@@ -76,6 +76,15 @@ class IapAccount(models.Model):
         store=False,
         help="Current GatewayAPI credit balance."
     )
+    gatewayapi_currency = fields.Char(
+        string="Currency",
+        help="Currency for GatewayAPI credit balance."
+    )
+    gatewayapi_balance_display = fields.Char(
+        string="Balance",
+        compute="_compute_gatewayapi_balance_display",
+        store=False
+    )
     show_token = fields.Boolean(default=False, help="Show or hide the API token in the form.")
 
     @api.model
@@ -126,7 +135,7 @@ class IapAccount(models.Model):
                     f"{iap_account.gatewayapi_min_tokens} credits"
                 )
 
-    def get_current_credit_balance(self):
+    def get_current_credit_balance(self, full_response=False):
         iap_account_sms = self.env['iap.account']._get_sms_account()
         headers = {
             'Authorization': (
@@ -153,6 +162,8 @@ class IapAccount(models.Model):
             f"GatewayAPI credit balance check responded with: "
             f"{response_content}"
         )
+        if full_response:
+            return response_content
         if 'credit' in response_content:
             return response_content['credit']
         else:
@@ -234,11 +245,25 @@ class IapAccount(models.Model):
         for rec in self:
             if rec.provider == 'sms_api_gatewayapi' and rec.gatewayapi_api_token:
                 try:
-                    rec.gatewayapi_balance = float(rec.get_current_credit_balance())
+                    response = rec.get_current_credit_balance(full_response=True)
+                    rec.gatewayapi_balance = float(response.get('credit', 0.0))
+                    rec.gatewayapi_currency = response.get('currency', '')
                 except Exception:
                     rec.gatewayapi_balance = 0.0
+                    rec.gatewayapi_currency = ''
             else:
                 rec.gatewayapi_balance = 0.0
+                rec.gatewayapi_currency = ''
+
+    def _compute_gatewayapi_balance_display(self):
+        for rec in self:
+            if rec.provider == 'sms_api_gatewayapi' and rec.gatewayapi_api_token:
+                if rec.gatewayapi_currency:
+                    rec.gatewayapi_balance_display = f"{rec.gatewayapi_balance:.2f} {rec.gatewayapi_currency}"
+                else:
+                    rec.gatewayapi_balance_display = f"{rec.gatewayapi_balance:.2f}"
+            else:
+                rec.gatewayapi_balance_display = "0 Credits"
 
     def action_toggle_show_token(self):
         for rec in self:
