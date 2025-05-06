@@ -234,3 +234,14 @@ class IapAccount(models.Model):
     def action_toggle_show_token(self):
         for rec in self:
             rec.show_token = not rec.show_token
+
+    def name_get(self):
+        result = []
+        for rec in self:
+            if rec.provider == 'sms_api_gatewayapi':
+                base_url = rec.gatewayapi_base_url or 'https://gatewayapi.eu'
+                name = f"GatewayAPI {base_url}"
+                result.append((rec.id, name))
+            else:
+                result.append((rec.id, super(IapAccount, rec).name_get()[0][1]))
+        return result
