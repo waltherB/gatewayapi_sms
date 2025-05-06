@@ -164,7 +164,6 @@ class IapAccount(models.Model):
         return self.get("sms")
 
     def gatewayapi_connection_test(self):
-        """Test connection by checking current credit balance and writing a status message to gatewayapi_connection_status"""
         iap_account = self._get_sms_account()
         if iap_account.id != self.id or self.provider != "sms_api_gatewayapi":
             _logger.warning(
@@ -176,27 +175,36 @@ class IapAccount(models.Model):
             iap_account.get_current_credit_balance()
         except UserWarning as e:
             _logger.warning(
-                f"GatewayAPI returned an error while attempting to get current "
+                "GatewayAPI returned an error while attempting to get current "
                 f"credit balance: {e}"
             )
             iap_account.gatewayapi_connection_status = str(e)
-        except Exception as e:
-            _logger.warning(
-                f"An exception occurred while attempting to get current credit "
-                f"balance: {e}"
+            iap_account.gatewayapi_balance = 0.0
+        except Exception:
+            _logger.exception(
+                "An exception occurred while attempting to get current credit balance"
             )
             iap_account.gatewayapi_connection_status = _(
                 u"Unexpected error. Check server log for more info."
             )
+            iap_account.gatewayapi_balance = 0.0
         else:
             _logger.info("GatewayAPI connection test successful")
             iap_account.gatewayapi_connection_status = "OK"
-            # Explicitly update the balance
             try:
-                iap_account.gatewayapi_balance = float(iap_account.get_current_credit_balance())
+                iap_account.gatewayapi_balance = float(
+                    iap_account.get_current_credit_balance()
+                )
             except Exception:
+                _logger.exception(
+                    "Failed to update GatewayAPI balance after successful connection test"
+                )
                 iap_account.gatewayapi_balance = 0.0
-        # Force form reload
+        _logger.debug(
+            "Final connection status: %s, balance: %s",
+            iap_account.gatewayapi_connection_status,
+            iap_account.gatewayapi_balance,
+        )
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',
