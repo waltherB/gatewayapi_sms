@@ -3,6 +3,7 @@
 from odoo import fields, models, tools
 import logging
 import requests
+import re
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
@@ -54,11 +55,30 @@ class Sms(models.Model):
         token = iap_account_sms.gatewayapi_api_token
         base_url = iap_account_sms.gatewayapi_base_url or 'https://gatewayapi.eu'
         url = base_url.rstrip('/') + '/rest/mtsms'
+
+        # Emoji detection regex (covers most emoji ranges)
+        emoji_pattern = re.compile(
+            "[\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+            "\U00002700-\U000027BF"  # Dingbats
+            "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+            "\U00002600-\U000026FF"  # Misc symbols
+            "]+", flags=re.UNICODE)
+
+        encoding = None
+        if emoji_pattern.search(self.body):
+            encoding = "UCS2"
+
         payload = {
             "sender": sender,
             "message": self.body,
             "recipients": [{"msisdn": int(self.number)}],
         }
+        if encoding:
+            payload["encoding"] = encoding
+
         _logger.debug(f"Sending SMS to GatewayAPI: url={url}, payload={payload}")
         try:
             response = requests.post(url, json=payload, auth=(token, ""))
