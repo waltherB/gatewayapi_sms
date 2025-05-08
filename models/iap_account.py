@@ -464,31 +464,45 @@ class IapAccount(models.Model):
             'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
         )
         if cron:
-            # Direct approach: Set to run immediately
-            # We'll use server time since this should be immediate regardless of timezone
+            # Direct approach: Set to run immediately 
+            # Explicitly create a date/time for TODAY within one minute
             now = datetime.now()
-            next_run = now + timedelta(seconds=30)  # Run 30 seconds from now
             
-            _logger.info(
-                f"Forcing immediate credit check run at {next_run}"
+            # Get current date
+            year = now.year
+            month = now.month
+            day = now.day
+            
+            # Create a datetime object for today plus 1 minute
+            next_run = datetime(
+                year, month, day,
+                now.hour, now.minute + 1, 0
             )
             
-            # Update the cron's nextcall to run immediately
-            cron.write({
+            # Log current settings before change
+            _logger.info(
+                f"Before update - Current cron nextcall: {cron.nextcall}, "
+                f"Current server time: {now}"
+            )
+            
+            # Force the cron to run TODAY, not tomorrow
+            _logger.info(
+                f"Forcing immediate credit check run at {next_run} (today)"
+            )
+            
+            # Update the cron's nextcall to run today
+            cron.sudo().write({
                 'nextcall': next_run,
                 'active': True
             })
             
+            # Read back the value to verify it was set correctly
+            cron.invalidate_cache()
+            _logger.info(f"After update - New cron nextcall: {cron.nextcall}")
+            
             # Ensure the service is active
             if not cron.active:
                 cron.toggle_active()
-                
-            # Log additional information for diagnosis
-            _logger.info(
-                f"Updated cron job (ID: {cron.id}). "
-                f"Current time: {now}, "
-                f"Next run set for: {next_run}"
-            )
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
