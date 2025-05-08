@@ -13,6 +13,14 @@ class IapAccount(models.Model):
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
+    # Add a computed field to indicate if this is a GatewayAPI account
+    is_gatewayapi = fields.Boolean(
+        string="Is GatewayAPI",
+        compute="_compute_is_gatewayapi",
+        store=True,
+        help="Indicates if this account is configured for GatewayAPI"
+    )
+    
     service_name = fields.Char(
         default="sms",
         help="Service Name must be 'sms' for GatewayAPI integration."
@@ -82,6 +90,45 @@ class IapAccount(models.Model):
         store=False
     )
     show_token = fields.Boolean(default=False, help="Show or hide the API token in the form.")
+
+    @api.depends('gatewayapi_base_url', 'gatewayapi_api_token')
+    def _compute_is_gatewayapi(self):
+        """Compute whether this account is configured for GatewayAPI"""
+        for rec in self:
+            rec.is_gatewayapi = bool(rec.gatewayapi_base_url and rec.gatewayapi_api_token)
+
+    @api.model
+    def get_gatewayapi_account(self):
+        """Get or create a GatewayAPI account"""
+        account = self.search([('service_name', '=', 'sms'), ('gatewayapi_base_url', '!=', False)], limit=1)
+        if not account:
+            # Create a new GatewayAPI account
+            account = self.create({
+                'name': 'GatewayAPI',
+                'service_name': 'sms',
+                'gatewayapi_base_url': 'https://gatewayapi.eu',
+                'gatewayapi_sender': 'Odoo',
+            })
+            _logger.info("Created new GatewayAPI account with ID %s", account.id)
+        return account
+
+    @api.model
+    def _get_sms_account(self):
+        """Override to return the GatewayAPI account if configured"""
+        account = self.get("sms")
+        # If account has GatewayAPI configuration, return it
+        if account.gatewayapi_base_url and account.gatewayapi_api_token:
+            return account
+        # Try to find a GatewayAPI account
+        gatewayapi_account = self.search([
+            ('service_name', '=', 'sms'), 
+            ('gatewayapi_base_url', '!=', False),
+            ('gatewayapi_api_token', '!=', False)
+        ], limit=1)
+        if gatewayapi_account:
+            return gatewayapi_account
+        # Fall back to the default account
+        return account
 
     @api.model
     def check_gatewayapi_credit_balance(self):
@@ -165,10 +212,6 @@ class IapAccount(models.Model):
         else:
             error_msg = response_content.get('error', 'Unknown error')
             raise UserWarning(error_msg)
-
-    @api.model
-    def _get_sms_account(self):
-        return self.get("sms")
 
     def gatewayapi_connection_test(self):
         iap_account = self._get_sms_account()

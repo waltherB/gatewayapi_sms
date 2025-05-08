@@ -5,11 +5,17 @@
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_form" />
         <field name="arch" type="xml">
+            <!-- Add is_gatewayapi field for filtering -->
+            <xpath expr="//field[@name='service_name']" position="after">
+                <field name="is_gatewayapi" invisible="1"/>
+            </xpath>
+            
             <!-- GatewayAPI settings -->
             <xpath expr="//group[@name='account']" position="after">
                 <group
                     string="GatewayAPI account"
                     name="group_sms_api_gatewayapi"
+                    attrs="{'invisible': [('service_name', '!=', 'sms')]}"
                 >
                     <group col="1">
                         <group>
@@ -84,10 +90,11 @@
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">gatewayapi_base_url != False</attribute>
+                <attribute name="decoration-info">is_gatewayapi == True</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
                 <field name="gatewayapi_base_url" invisible="1"/>
+                <field name="is_gatewayapi" invisible="1"/>
             </xpath>
         </field>
     </record>
@@ -108,8 +115,9 @@
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('gatewayapi_base_url', '!=', False)]</field>
+        <field name="domain">[('is_gatewayapi', '=', True)]</field>
         <field name="context">{
+            'default_name': 'GatewayAPI',
             'default_service_name': 'sms',
             'default_gatewayapi_base_url': 'https://gatewayapi.eu',
             'default_gatewayapi_sender': 'Odoo',
