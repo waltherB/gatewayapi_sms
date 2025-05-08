@@ -10,7 +10,7 @@
                 <group
                     string="GatewayAPI account"
                     name="group_sms_api_gatewayapi"
-                    attrs="{'invisible': [('service_name', '!=', 'sms')]}"
+                    invisible="service_name != 'sms'"
                 >
                     <group col="1">
                         <group>
@@ -28,10 +28,10 @@
                         <group>
                             <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
                             <div class="o_row">
-                                <field name="gatewayapi_api_token" password="False" invisible="not show_token" nolabel="1"/>
-                                <field name="gatewayapi_api_token" password="True" invisible="show_token" nolabel="1"/>
-                                <button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="show_token" title="Show Token"/>
-                                <button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="not show_token" title="Hide Token"/>
+                                <field name="gatewayapi_api_token" password="False" invisible="show_token == False" nolabel="1"/>
+                                <field name="gatewayapi_api_token" password="True" invisible="show_token == True" nolabel="1"/>
+                                <button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="show_token == True" title="Show Token"/>
+                                <button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="show_token == False" title="Hide Token"/>
                             </div>
                         </group>
                         <group>
