@@ -61,9 +61,6 @@
                         <div class="text-muted mb-2">
                             When enabled, you will receive a notification if your credits fall below the minimum.
                         </div>
-                        
-                        <!-- Add field with safe approach -->
-                        <field name="gatewayapi_notification_channel_id" invisible="1"/>
                                                 
                         <group invisible="gatewayapi_check_min_tokens == False">
                             <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
@@ -72,17 +69,6 @@
                             <field name="gatewayapi_cron_interval_number" nolabel="1"/>
                             <label for="gatewayapi_cron_interval_type" string="Interval type" class="fw-bold"/>
                             <field name="gatewayapi_cron_interval_type" nolabel="1"/>
-                        </group>
-                        
-                        <!-- Add notification channel section safely -->
-                        <group>
-                            <label for="gatewayapi_notification_channel_id" string="Notification Channel" class="fw-bold"/>
-                            <field name="gatewayapi_notification_channel_id" nolabel="1" 
-                                  options="{'no_create_edit': False, 'no_quick_create': False}"/>
-                            <div class="text-muted mb-2" colspan="2">
-                                Select an existing channel or leave empty to create a new one automatically. 
-                                This channel will receive low credits alerts.
-                            </div>
                         </group>
                     </group>
                 </group>

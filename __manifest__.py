@@ -6,7 +6,7 @@
     'website': "https://github.com/waltherB/gatewayapi_sms",
     'license': 'AGPL-3',
     'category': 'Technical',
-    'version': '17.0.2.0.0',
+    'version': '17.0.2.0.1',
     'icon': 'static/description/icon.png',
     'depends': ['base', "sms", "iap_alternative_provider", "phone_validation"],
     'external_dependencies': {
@@ -36,4 +36,5 @@ Send SMS via GatewayAPI directly from Odoo. Features include:
 - Easy configuration and integration
 - Scheduled credit checks and admin alerts
 ''',
+    'post_init_hook': 'post_init_hook',
 }
