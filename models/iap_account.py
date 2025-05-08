@@ -13,27 +13,18 @@ class IapAccount(models.Model):
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
-    # Add provider selection option for GatewayAPI if iap_alternative_provider is installed
-    def _get_provider_selection(self):
-        selection = self.env['iap.account']._fields['provider'].selection
-        if selection:
-            # Add our provider to the existing selection options
-            if ('sms_api_gatewayapi', 'GatewayAPI') not in selection:
-                selection.append(('sms_api_gatewayapi', 'GatewayAPI'))
-        return selection
-
-    # Override provider field to add GatewayAPI option
+    # Instead of trying to dynamically modify the selection options,
+    # we should use the inherent extensibility of selection fields in Odoo
     provider = fields.Selection(
-        selection=_get_provider_selection,
-        string='Provider',
-        help="IAP Provider"
+        selection_add=[('sms_api_gatewayapi', 'GatewayAPI')],
+        ondelete={'sms_api_gatewayapi': 'set default'}
     )
 
     # Add a computed field to indicate if this is a GatewayAPI account
     is_gatewayapi = fields.Boolean(
         string="Is GatewayAPI",
         compute="_compute_is_gatewayapi",
-        store=False,
+        store=False,  # Changed to False to avoid upgrade issues
         help="Indicates if this account is configured for GatewayAPI"
     )
     
