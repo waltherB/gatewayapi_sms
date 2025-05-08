@@ -58,12 +58,14 @@ pip install phonenumbers requests
 
 ## Configuration
 
-1. Go to **Settings > Technical > IAP > IAP Accounts**.
-2. Set the Provider to **GatewayAPI**.
+1. Go to **Settings > Technical > GatewayAPI SMS Accounts** or **IAP > IAP Accounts**.
+2. Click **Create GatewayAPI Account** to create a new account.
 3. Fill in the required fields:
+   - **Name**: Give your account a name (e.g., "GatewayAPI")
    - **Service Name**: Must be `sms`.
+   - **GatewayAPI Base URL**: Default is `https://gatewayapi.eu`
+   - **Sender Name**: Set your preferred sender name.
    - **API Token**: Obtain from your GatewayAPI dashboard.
-   - **Sender Name**: (Optional) Set your sender name.
    - **Minimum Credits**: Set a threshold for low credit notifications.
    - **Credit Check Interval**: Configure how often to check your balance.
 4. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
