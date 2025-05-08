@@ -6,7 +6,7 @@
     'website': "https://github.com/waltherB/gatewayapi_sms",
     'license': 'AGPL-3',
     'category': 'Technical',
-    'version': '17.0.2.0.3',
+    'version': '17.0.2.0.4',
     'icon': 'static/description/icon.png',
     'depends': ['base', "sms", "iap_alternative_provider", "phone_validation"],
     'external_dependencies': {
