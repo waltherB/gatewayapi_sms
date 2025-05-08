@@ -17,7 +17,7 @@ class IapAccount(models.Model):
     is_gatewayapi = fields.Boolean(
         string="Is GatewayAPI",
         compute="_compute_is_gatewayapi",
-        store=True,
+        store=False,
         help="Indicates if this account is configured for GatewayAPI"
     )
     
