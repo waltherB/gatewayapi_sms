@@ -77,16 +77,14 @@
         }</field>
     </record>
 
-    <!-- Add create button to IAP Account list view -->
+    <!-- Modified tree view with highlighting for GatewayAPI accounts -->
     <record id="iap_account_view_tree" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.tree</field>
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//tree" position="before">
-                <header>
-                    <button name="%(action_create_gatewayapi_account)d" string="Create GatewayAPI Account" type="action" class="btn-primary"/>
-                </header>
+            <xpath expr="//tree" position="attributes">
+                <attribute name="decoration-info">gatewayapi_base_url != False</attribute>
             </xpath>
         </field>
     </record>
@@ -121,6 +119,14 @@
                 This will create an account for sending SMS via GatewayAPI.
             </p>
         </field>
+    </record>
+
+    <!-- Add Create button to the GatewayAPI accounts action -->
+    <record id="action_gatewayapi_accounts_form_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="iap.iap_account_view_form"/>
+        <field name="act_window_id" ref="action_gatewayapi_accounts"/>
     </record>
 
     <!-- Menu item for GatewayAPI Accounts -->
