@@ -60,6 +60,12 @@ class IapAccount(models.Model):
         help="Minimum credit level for alerting purposes. "
              "Only used if 'Check for minimum credits' is enabled."
     )
+    gatewayapi_notification_channel_id = fields.Many2one(
+        'mail.channel',
+        string="Notification Channel",
+        help="Discussion channel to post low credit notifications to. "
+             "Leave empty to create a new channel or use an existing one.",
+    )
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
         string="Credits notification action",
@@ -305,11 +311,9 @@ class IapAccount(models.Model):
         """Get or create a notification channel for low credit alerts"""
         self.ensure_one()
         
-        # Check if the field exists - will be used in future versions
-        if hasattr(self, 'gatewayapi_notification_channel_id'):
-            notification_channel = getattr(self, 'gatewayapi_notification_channel_id', False)
-            if notification_channel:
-                return notification_channel
+        # Use existing channel if set
+        if self.gatewayapi_notification_channel_id:
+            return self.gatewayapi_notification_channel_id
             
         # Create a new channel for notifications
         channel_name = f"GatewayAPI SMS Notifications - {self.name}"
@@ -325,12 +329,8 @@ class IapAccount(models.Model):
             'partner_id': admin_user.partner_id.id,
         })]
         
-        # Save the channel on the account if field exists
-        if hasattr(self, 'gatewayapi_notification_channel_id'):
-            try:
-                self.gatewayapi_notification_channel_id = channel.id
-            except Exception as e:
-                _logger.warning(f"Could not save notification channel: {e}")
+        # Save the channel on the account
+        self.gatewayapi_notification_channel_id = channel.id
         
         return channel
 
@@ -423,11 +423,8 @@ class IapAccount(models.Model):
         
         # Post to notification channel if configured
         if self.gatewayapi_check_min_tokens:
-            try:
-                channel = self._get_or_create_notification_channel()
-                if channel:
-                    channel.message_post(body=message, subject=_('GatewayAPI Low Credits Alert'))
-            except Exception as e:
-                _logger.warning(f"Failed to post low credit notification to channel: {e}")
+            channel = self._get_or_create_notification_channel()
+            if channel:
+                channel.message_post(body=message, subject=_('GatewayAPI Low Credits Alert'))
         
         return activity
