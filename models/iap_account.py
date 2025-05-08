@@ -13,6 +13,9 @@ class IapAccount(models.Model):
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
+    # Make name field required
+    name = fields.Char(required=True, copy=False)
+
     # Instead of trying to dynamically modify the selection options,
     # we should use the inherent extensibility of selection fields in Odoo
     provider = fields.Selection(
@@ -40,7 +43,8 @@ class IapAccount(models.Model):
     gatewayapi_sender = fields.Char(
         string="Sender Name",
         default="Odoo",
-        help="Sender name to use for outgoing SMS. This will appear as the sender on recipients' phones."
+        help="Sender name to use for outgoing SMS. "
+             "This will appear as the sender on recipients' phones."
     )
     gatewayapi_api_token = fields.Char(
         help="GatewayAPI API Token"
@@ -53,7 +57,14 @@ class IapAccount(models.Model):
     gatewayapi_min_tokens = fields.Integer(
         string="Minimum credits",
         default=0,
-        help="Minimum credit level for alerting purposes. Only used if 'Check for minimum credits' is enabled."
+        help="Minimum credit level for alerting purposes. "
+             "Only used if 'Check for minimum credits' is enabled."
+    )
+    gatewayapi_notification_channel_id = fields.Many2one(
+        'mail.channel',
+        string="Notification Channel",
+        help="Discussion channel to post low credit notifications to. "
+             "Leave empty to create a new channel or use an existing one.",
     )
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
@@ -296,6 +307,33 @@ class IapAccount(models.Model):
                 'interval_type': self.gatewayapi_cron_interval_type or 'days',
             })
 
+    def _get_or_create_notification_channel(self):
+        """Get or create a notification channel for low credit alerts"""
+        self.ensure_one()
+        
+        # Use existing channel if set
+        if self.gatewayapi_notification_channel_id:
+            return self.gatewayapi_notification_channel_id
+            
+        # Create a new channel for notifications
+        channel_name = f"GatewayAPI SMS Notifications - {self.name}"
+        channel = self.env['mail.channel'].create({
+            'name': channel_name,
+            'channel_type': 'channel',
+            'description': f"Channel for GatewayAPI SMS credit alerts for account {self.name}",
+        })
+        
+        # Add admin user to the channel
+        admin_user = self.env.ref('base.user_admin')
+        channel.channel_member_ids = [(0, 0, {
+            'partner_id': admin_user.partner_id.id,
+        })]
+        
+        # Save the channel on the account
+        self.gatewayapi_notification_channel_id = channel.id
+        
+        return channel
+
     @api.model
     def create(self, vals_list):
         records = super().create(vals_list)
@@ -369,7 +407,7 @@ class IapAccount(models.Model):
             f"{self.gatewayapi_min_tokens} {self.gatewayapi_currency}" if self.gatewayapi_currency else self.gatewayapi_min_tokens
         )
         
-        # Create activity
+        # Create activity for admin
         admin_user = self.env.ref('base.user_admin')
         activity = self.env['mail.activity'].create({
             'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
@@ -382,5 +420,11 @@ class IapAccount(models.Model):
         
         # Also log a message in the chatter
         self.message_post(body=message, subject=_('GatewayAPI low on credits'))
+        
+        # Post to notification channel if configured
+        if self.gatewayapi_check_min_tokens:
+            channel = self._get_or_create_notification_channel()
+            if channel:
+                channel.message_post(body=message, subject=_('GatewayAPI Low Credits Alert'))
         
         return activity
