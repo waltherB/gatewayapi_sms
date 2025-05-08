@@ -27,6 +27,7 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
    - Click "Test Connection" button
    - Verify "Connection status" shows "OK"
    - Verify Balance field shows your current credit balance
+   - Note that the account is automatically marked as a GatewayAPI account (shown in blue in the list)
 
 3. **Configure Notification Settings**
    - Enable "Check for minimum credits"
@@ -69,6 +70,14 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
    - Verify output shows correct configuration values
    - Verify balance is displayed correctly
 
+2. **Run Account Fix Script if Needed**
+   - If you encounter issues with GatewayAPI not being selected:
+     ```python
+     exec(open('scripts/fix_gatewayapi_accounts.py').read())
+     ```
+   - This will check all accounts, fix any configuration issues, and create a default GatewayAPI account if none exists
+   - Verify the script output shows that at least one GatewayAPI account is available
+
 ## Troubleshooting
 
 If you encounter issues:
@@ -88,6 +97,11 @@ If you encounter issues:
    - Verify API token
    - Check if service_name is set to "sms"
    - Verify base URL is correct
+
+4. **GatewayAPI Not Being Used**
+   - Verify is_gatewayapi field is True for your account
+   - Run the fix_gatewayapi_accounts.py script to repair any configuration issues
+   - Ensure at least one account has both gatewayapi_base_url and gatewayapi_api_token set
 
 ## Expected Results
 
