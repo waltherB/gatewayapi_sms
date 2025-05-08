@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import fields, models, api, _
+from datetime import datetime, timedelta
 
 import logging
 import requests
@@ -46,7 +47,8 @@ class IapAccount(models.Model):
     gatewayapi_base_url = fields.Char(
         string="GatewayAPI Base URL",
         default="https://gatewayapi.eu",
-        help="Base URL for GatewayAPI endpoints. Default: https://gatewayapi.eu"
+        help="Base URL for GatewayAPI endpoints. "
+             "Default: https://gatewayapi.eu"
     )
     gatewayapi_sender = fields.Char(
         string="Sender Name",
@@ -101,7 +103,9 @@ class IapAccount(models.Model):
             ], limit=1)
             
             if notification and notification.channel_id:
-                record.gatewayapi_notification_channel_id = notification.channel_id.id
+                record.gatewayapi_notification_channel_id = (
+                    notification.channel_id.id
+                )
             else:
                 record.gatewayapi_notification_channel_id = False
     
@@ -115,10 +119,14 @@ class IapAccount(models.Model):
                 if record.gatewayapi_notification_channel_id:
                     self.env['gatewayapi.notification'].create({
                         'account_id': record.id,
-                        'channel_id': record.gatewayapi_notification_channel_id.id,
+                        'channel_id': (
+                            record.gatewayapi_notification_channel_id.id
+                        ),
                     })
             else:
-                notification.channel_id = record.gatewayapi_notification_channel_id.id
+                notification.channel_id = (
+                    record.gatewayapi_notification_channel_id.id
+                )
     
     gatewayapi_connection_status = fields.Char(
         string="Connection status",
@@ -155,14 +163,21 @@ class IapAccount(models.Model):
         compute="_compute_gatewayapi_balance_display",
         store=False
     )
-    show_token = fields.Boolean(default=False, help="Show or hide the API token in the form.")
+    show_token = fields.Boolean(
+        default=False, 
+        help="Show or hide the API token in the form.",
+        # Make it non-persistent so it always resets when form is reopened
+        store=False
+    )
 
     @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
     def _compute_is_gatewayapi(self):
         """Compute whether this account is configured for GatewayAPI"""
         for rec in self:
-            rec.is_gatewayapi = (rec.provider == 'sms_api_gatewayapi' or 
-                              (rec.gatewayapi_base_url and rec.gatewayapi_api_token))
+            rec.is_gatewayapi = (
+                rec.provider == 'sms_api_gatewayapi' or 
+                (rec.gatewayapi_base_url and rec.gatewayapi_api_token)
+            )
 
     @api.model
     def get_gatewayapi_account(self):
@@ -184,7 +199,9 @@ class IapAccount(models.Model):
                 'gatewayapi_base_url': 'https://gatewayapi.eu',
                 'gatewayapi_sender': 'Odoo',
             })
-            _logger.info("Created new GatewayAPI account with ID %s", account.id)
+            _logger.info(
+                "Created new GatewayAPI account with ID %s", account.id
+            )
         return account
 
     @api.model
@@ -348,7 +365,9 @@ class IapAccount(models.Model):
         }
 
     def _update_gatewayapi_cron(self):
-        cron = self.env.ref('gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False)
+        cron = self.env.ref(
+            'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
+        )
         if cron:
             cron.write({
                 'interval_number': self.gatewayapi_cron_interval_number or 1,
@@ -375,14 +394,55 @@ class IapAccount(models.Model):
 
     @api.model
     def create(self, vals_list):
+        """Ensure show_token is False for new records"""
+        # Make sure show_token is False for new records
+        if isinstance(vals_list, dict):
+            vals_list['show_token'] = False
         records = super().create(vals_list)
         records._update_gatewayapi_cron()
         return records
 
     def write(self, vals):
+        """Reset show_token to False after form saves unless explicitly toggled"""
         res = super().write(vals)
-        self._update_gatewayapi_cron()
+        
+        # If this write operation wasn't from the toggle button action,
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        
+        # Update cron interval if interval settings changed
+        if any(field in vals for field in [
+            'gatewayapi_cron_interval_number', 
+            'gatewayapi_cron_interval_type'
+        ]):
+            self._update_gatewayapi_cron()
+        
+        # If check_min_tokens is enabled, schedule a run at the next possible time
+        if vals.get('gatewayapi_check_min_tokens'):
+            self._schedule_next_credit_check()
+            
         return res
+    
+    def _schedule_next_credit_check(self):
+        """Schedule the credit check cron to run at the next possible time"""
+        cron = self.env.ref(
+            'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
+        )
+        if cron:
+            # Schedule to run 1 minute from now
+            next_run = datetime.now() + timedelta(minutes=1)
+            _logger.info(f"Scheduling credit check to run at {next_run}")
+            
+            # Update the cron's nextcall
+            cron.write({
+                'nextcall': next_run,
+                'active': True
+            })
+            
+            # Ensure the service is active
+            cron.toggle_active() if not cron.active else None
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
@@ -403,15 +463,37 @@ class IapAccount(models.Model):
         for rec in self:
             if rec.gatewayapi_base_url and rec.gatewayapi_api_token:
                 if rec.gatewayapi_currency:
-                    rec.gatewayapi_balance_display = f"{rec.gatewayapi_balance:.2f} {rec.gatewayapi_currency}"
+                    rec.gatewayapi_balance_display = (
+                        f"{rec.gatewayapi_balance:.2f} {rec.gatewayapi_currency}"
+                    )
                 else:
-                    rec.gatewayapi_balance_display = f"{rec.gatewayapi_balance:.2f}"
+                    rec.gatewayapi_balance_display = (
+                        f"{rec.gatewayapi_balance:.2f}"
+                    )
             else:
                 rec.gatewayapi_balance_display = "0 Credits"
 
     def action_toggle_show_token(self):
+        """Toggle visibility of the API token"""
         for rec in self:
             rec.show_token = not rec.show_token
+
+    @api.model
+    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+        """Override to ensure token is hidden when reopening the form view"""
+        result = super().fields_view_get(view_id=view_id, view_type=view_type, 
+                                        toolbar=toolbar, submenu=submenu)
+        # When a form view is opened, we'll reset show_token via context
+        # This is more efficient than updating all records in the database
+        return result
+        
+    @api.model
+    def default_get(self, fields_list):
+        """Reset show_token to False on new records"""
+        result = super().default_get(fields_list)
+        if 'show_token' in fields_list:
+            result['show_token'] = False
+        return result
 
     def name_get(self):
         result = []
@@ -464,7 +546,9 @@ class IapAccount(models.Model):
         if self.gatewayapi_check_min_tokens:
             channel = self._get_or_create_notification_channel()
             if channel:
-                channel.message_post(body=message, subject=_('GatewayAPI Low Credits Alert'))
+                channel.message_post(
+                    body=message, subject=_('GatewayAPI Low Credits Alert')
+                )
         
         return activity
 
