@@ -7,6 +7,7 @@
     'license': 'AGPL-3',
     'category': 'Technical',
     'version': '17.0.2.0.0',
+    'icon': '/gatewayapi_sms/static/description/icon.png',
     'depends': ['base', "sms", "iap_alternative_provider", "phone_validation"],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests']
