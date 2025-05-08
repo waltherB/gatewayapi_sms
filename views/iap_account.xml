@@ -86,6 +86,9 @@
             <xpath expr="//tree" position="attributes">
                 <attribute name="decoration-info">gatewayapi_base_url != False</attribute>
             </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="gatewayapi_base_url" invisible="1"/>
+            </xpath>
         </field>
     </record>
 
