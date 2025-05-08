@@ -13,11 +13,13 @@
         'python': ['phonenumbers', 'requests']
     },
     'data': [
+        'security/ir.model.access.csv',
         'data/iap_account_data.xml',
         'data/ir_cron.xml',
         'views/iap_account.xml',
         'views/sms_sms.xml',
-        'views/sms_resend.xml'
+        'views/sms_resend.xml',
+        'views/gatewayapi_notification.xml'
     ],
     'images': [
         'static/description/banner.png',

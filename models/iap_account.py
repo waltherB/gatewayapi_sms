@@ -31,6 +31,14 @@ class IapAccount(models.Model):
         help="Indicates if this account is configured for GatewayAPI"
     )
     
+    # Add a helper field to check if notification channel field exists
+    field_exists = fields.Boolean(
+        string="Field Exists",
+        compute="_compute_field_exists",
+        store=False,
+        help="Technical field to check if notification channel field exists"
+    )
+    
     service_name = fields.Char(
         default="sms",
         help="Service Name must be 'sms' for GatewayAPI integration."
@@ -60,18 +68,58 @@ class IapAccount(models.Model):
         help="Minimum credit level for alerting purposes. "
              "Only used if 'Check for minimum credits' is enabled."
     )
+    
+    # Rather than a direct reference, use a computed field
+    notification_id = fields.One2many(
+        'gatewayapi.notification',
+        'account_id',
+        string="Notification Settings"
+    )
+    
+    # For backwards compatibility, compute notification channel from related model
     gatewayapi_notification_channel_id = fields.Many2one(
         'mail.channel',
         string="Notification Channel",
+        compute="_compute_notification_channel",
+        inverse="_inverse_notification_channel",
         help="Discussion channel to post low credit notifications to. "
              "Leave empty to create a new channel or use an existing one.",
     )
+    
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
         string="Credits notification action",
         help="Action to be performed when the number of credits is less than "
              "min_tokens."
     )
+    
+    @api.depends('notification_id.channel_id')
+    def _compute_notification_channel(self):
+        for record in self:
+            notification = self.env['gatewayapi.notification'].search([
+                ('account_id', '=', record.id)
+            ], limit=1)
+            
+            if notification and notification.channel_id:
+                record.gatewayapi_notification_channel_id = notification.channel_id.id
+            else:
+                record.gatewayapi_notification_channel_id = False
+    
+    def _inverse_notification_channel(self):
+        for record in self:
+            notification = self.env['gatewayapi.notification'].search([
+                ('account_id', '=', record.id)
+            ], limit=1)
+            
+            if not notification:
+                if record.gatewayapi_notification_channel_id:
+                    self.env['gatewayapi.notification'].create({
+                        'account_id': record.id,
+                        'channel_id': record.gatewayapi_notification_channel_id.id,
+                    })
+            else:
+                notification.channel_id = record.gatewayapi_notification_channel_id.id
+    
     gatewayapi_connection_status = fields.Char(
         string="Connection status",
         help="Status of the last connection test."
@@ -311,28 +359,19 @@ class IapAccount(models.Model):
         """Get or create a notification channel for low credit alerts"""
         self.ensure_one()
         
-        # Use existing channel if set
-        if self.gatewayapi_notification_channel_id:
-            return self.gatewayapi_notification_channel_id
+        # First try to get a notification for this account
+        notification = self.env['gatewayapi.notification'].search([
+            ('account_id', '=', self.id)
+        ], limit=1)
+        
+        if not notification:
+            # Create a new notification
+            notification = self.env['gatewayapi.notification'].create({
+                'account_id': self.id,
+            })
             
-        # Create a new channel for notifications
-        channel_name = f"GatewayAPI SMS Notifications - {self.name}"
-        channel = self.env['mail.channel'].create({
-            'name': channel_name,
-            'channel_type': 'channel',
-            'description': f"Channel for GatewayAPI SMS credit alerts for account {self.name}",
-        })
-        
-        # Add admin user to the channel
-        admin_user = self.env.ref('base.user_admin')
-        channel.channel_member_ids = [(0, 0, {
-            'partner_id': admin_user.partner_id.id,
-        })]
-        
-        # Save the channel on the account
-        self.gatewayapi_notification_channel_id = channel.id
-        
-        return channel
+        # Get or create the channel
+        return notification.get_or_create_channel()
 
     @api.model
     def create(self, vals_list):
@@ -428,3 +467,8 @@ class IapAccount(models.Model):
                 channel.message_post(body=message, subject=_('GatewayAPI Low Credits Alert'))
         
         return activity
+
+    @api.depends('gatewayapi_notification_channel_id')
+    def _compute_field_exists(self):
+        for rec in self:
+            rec.field_exists = bool(rec.gatewayapi_notification_channel_id)
