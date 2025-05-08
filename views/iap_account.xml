@@ -10,7 +10,7 @@
                 <group
                     string="GatewayAPI account"
                     name="group_sms_api_gatewayapi"
-                    invisible="service_name != 'sms'"
+                    invisible="service_name != 'sms' and provider != 'sms_api_gatewayapi'"
                 >
                     <group col="1">
                         <group>
@@ -73,6 +73,7 @@
         <field name="context">{
             'default_name': 'GatewayAPI',
             'default_service_name': 'sms',
+            'default_provider': 'sms_api_gatewayapi',
             'default_gatewayapi_base_url': 'https://gatewayapi.eu',
             'default_gatewayapi_sender': 'Odoo',
         }</field>
@@ -85,9 +86,10 @@
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">gatewayapi_base_url != False and gatewayapi_api_token != False</attribute>
+                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url != False and gatewayapi_api_token != False)</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
+                <field name="provider" invisible="0"/>
                 <field name="gatewayapi_base_url" invisible="1"/>
                 <field name="gatewayapi_api_token" invisible="1"/>
             </xpath>
@@ -110,10 +112,17 @@
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('gatewayapi_base_url', '!=', False), ('gatewayapi_api_token', '!=', False)]</field>
+        <field name="domain">[
+            '|', 
+            ('provider', '=', 'sms_api_gatewayapi'), 
+            '&', 
+            ('gatewayapi_base_url', '!=', False), 
+            ('gatewayapi_api_token', '!=', False)
+        ]</field>
         <field name="context">{
             'default_name': 'GatewayAPI',
             'default_service_name': 'sms',
+            'default_provider': 'sms_api_gatewayapi',
             'default_gatewayapi_base_url': 'https://gatewayapi.eu',
             'default_gatewayapi_sender': 'Odoo',
         }</field>

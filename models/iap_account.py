@@ -13,6 +13,22 @@ class IapAccount(models.Model):
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
+    # Add provider selection option for GatewayAPI if iap_alternative_provider is installed
+    def _get_provider_selection(self):
+        selection = self.env['iap.account']._fields['provider'].selection
+        if selection:
+            # Add our provider to the existing selection options
+            if ('sms_api_gatewayapi', 'GatewayAPI') not in selection:
+                selection.append(('sms_api_gatewayapi', 'GatewayAPI'))
+        return selection
+
+    # Override provider field to add GatewayAPI option
+    provider = fields.Selection(
+        selection=_get_provider_selection,
+        string='Provider',
+        help="IAP Provider"
+    )
+
     # Add a computed field to indicate if this is a GatewayAPI account
     is_gatewayapi = fields.Boolean(
         string="Is GatewayAPI",
@@ -91,21 +107,30 @@ class IapAccount(models.Model):
     )
     show_token = fields.Boolean(default=False, help="Show or hide the API token in the form.")
 
-    @api.depends('gatewayapi_base_url', 'gatewayapi_api_token')
+    @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
     def _compute_is_gatewayapi(self):
         """Compute whether this account is configured for GatewayAPI"""
         for rec in self:
-            rec.is_gatewayapi = bool(rec.gatewayapi_base_url and rec.gatewayapi_api_token)
+            rec.is_gatewayapi = (rec.provider == 'sms_api_gatewayapi' or 
+                              (rec.gatewayapi_base_url and rec.gatewayapi_api_token))
 
     @api.model
     def get_gatewayapi_account(self):
         """Get or create a GatewayAPI account"""
-        account = self.search([('service_name', '=', 'sms'), ('gatewayapi_base_url', '!=', False)], limit=1)
+        account = self.search([
+            '|',
+            ('provider', '=', 'sms_api_gatewayapi'),
+            '&', 
+            ('service_name', '=', 'sms'), 
+            ('gatewayapi_base_url', '!=', False)
+        ], limit=1)
+        
         if not account:
             # Create a new GatewayAPI account
             account = self.create({
                 'name': 'GatewayAPI',
                 'service_name': 'sms',
+                'provider': 'sms_api_gatewayapi',
                 'gatewayapi_base_url': 'https://gatewayapi.eu',
                 'gatewayapi_sender': 'Odoo',
             })
@@ -116,17 +141,29 @@ class IapAccount(models.Model):
     def _get_sms_account(self):
         """Override to return the GatewayAPI account if configured"""
         account = self.get("sms")
+        
+        # If account is explicitly set as GatewayAPI provider
+        if account.provider == 'sms_api_gatewayapi':
+            return account
+            
         # If account has GatewayAPI configuration, return it
         if account.gatewayapi_base_url and account.gatewayapi_api_token:
             return account
+            
         # Try to find a GatewayAPI account
         gatewayapi_account = self.search([
+            '|',
+            ('provider', '=', 'sms_api_gatewayapi'),
+            '&',
             ('service_name', '=', 'sms'), 
+            '&',
             ('gatewayapi_base_url', '!=', False),
             ('gatewayapi_api_token', '!=', False)
         ], limit=1)
+        
         if gatewayapi_account:
             return gatewayapi_account
+            
         # Fall back to the default account
         return account
 
