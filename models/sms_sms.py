@@ -43,7 +43,9 @@ class Sms(models.Model):
                 raise_exception=raise_exception)
 
     def _is_sent_with_gatewayapi(self):
-        return self.env['iap.account']._get_sms_account().provider == "sms_api_gatewayapi"
+        account = self.env['iap.account']._get_sms_account()
+        # In Odoo 17, provider is always 'odoo', so check for GatewayAPI configuration instead
+        return account.gatewayapi_base_url and account.gatewayapi_api_token
 
     def _send_sms_with_gatewayapi(self):
         self.ensure_one()

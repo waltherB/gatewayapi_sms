@@ -13,10 +13,6 @@ class IapAccount(models.Model):
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
-    provider = fields.Selection(
-        selection_add=[("sms_api_gatewayapi", "GatewayAPI")],
-        ondelete={"sms_api_gatewayapi": "cascade"},
-    )
     service_name = fields.Char(
         default="sms",
         help="Service Name must be 'sms' for GatewayAPI integration."
@@ -176,10 +172,10 @@ class IapAccount(models.Model):
 
     def gatewayapi_connection_test(self):
         iap_account = self._get_sms_account()
-        if iap_account.id != self.id or self.provider != "sms_api_gatewayapi":
+        if iap_account.id != self.id or not self.gatewayapi_base_url:
             _logger.warning(
-                "GatewayAPI connection test is only performed on SMS account "
-                "where GatewayAPI is set as provider."
+                "GatewayAPI connection test is only performed on accounts "
+                "with GatewayAPI configuration."
             )
         try:
             # Only test connection, do not use api_credits
@@ -243,7 +239,7 @@ class IapAccount(models.Model):
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
         for rec in self:
-            if rec.provider == 'sms_api_gatewayapi' and rec.gatewayapi_api_token:
+            if rec.gatewayapi_base_url and rec.gatewayapi_api_token:
                 try:
                     response = rec.get_current_credit_balance(full_response=True)
                     rec.gatewayapi_balance = float(response.get('credit', 0.0))
@@ -257,7 +253,7 @@ class IapAccount(models.Model):
 
     def _compute_gatewayapi_balance_display(self):
         for rec in self:
-            if rec.provider == 'sms_api_gatewayapi' and rec.gatewayapi_api_token:
+            if rec.gatewayapi_base_url and rec.gatewayapi_api_token:
                 if rec.gatewayapi_currency:
                     rec.gatewayapi_balance_display = f"{rec.gatewayapi_balance:.2f} {rec.gatewayapi_currency}"
                 else:
@@ -272,10 +268,48 @@ class IapAccount(models.Model):
     def name_get(self):
         result = []
         for rec in self:
-            if rec.provider == 'sms_api_gatewayapi':
-                base_url = rec.gatewayapi_base_url or 'https://gatewayapi.eu'
-                name = f"GatewayAPI {base_url}"
-                result.append((rec.id, name))
+            if rec.gatewayapi_base_url:
+                if rec.name:
+                    result.append((rec.id, rec.name))
+                else:
+                    base_url = rec.gatewayapi_base_url or 'https://gatewayapi.eu'
+                    name = f"GatewayAPI {base_url}"
+                    result.append((rec.id, name))
             else:
                 result.append((rec.id, super(IapAccount, rec).name_get()[0][1]))
         return result
+
+    def send_low_credits_notification(self):
+        """Send a notification about low credits"""
+        self.ensure_one()
+        
+        # Prepare message
+        message = _("""
+<p><b>⚠️ Low SMS Credits Alert</b></p>
+<p>The SMS credits for <b>%s</b> are running low:</p>
+<ul>
+    <li>Current balance: <b>%s</b></li>
+    <li>Minimum threshold: <b>%s</b></li>
+</ul>
+<p>Please add more credits to ensure uninterrupted SMS services.</p>
+""") % (
+            self.name or 'GatewayAPI account', 
+            self.gatewayapi_balance_display,
+            f"{self.gatewayapi_min_tokens} {self.gatewayapi_currency}" if self.gatewayapi_currency else self.gatewayapi_min_tokens
+        )
+        
+        # Create activity
+        admin_user = self.env.ref('base.user_admin')
+        activity = self.env['mail.activity'].create({
+            'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
+            'note': message,
+            'res_id': self.id,
+            'res_model_id': self.env.ref('iap.model_iap_account').id,
+            'user_id': admin_user.id,
+            'summary': _('GatewayAPI low on credits'),
+        })
+        
+        # Also log a message in the chatter
+        self.message_post(body=message, subject=_('GatewayAPI low on credits'))
+        
+        return activity
