@@ -464,33 +464,31 @@ class IapAccount(models.Model):
             'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
         )
         if cron:
-            # Get the current user's timezone
-            user = self.env.user
-            user_tz = pytz.timezone(user.tz or 'UTC')
-            
-            # Get current time in user's timezone
-            now_utc = pytz.utc.localize(datetime.now())
-            now_user_tz = now_utc.astimezone(user_tz)
-            
-            # Schedule to run 1 minute from now in user's timezone
-            next_run_user_tz = now_user_tz + timedelta(minutes=1)
-            
-            # Convert back to UTC for storage
-            next_run_utc = next_run_user_tz.astimezone(pytz.utc)
+            # Direct approach: Set to run immediately
+            # We'll use server time since this should be immediate regardless of timezone
+            now = datetime.now()
+            next_run = now + timedelta(seconds=30)  # Run 30 seconds from now
             
             _logger.info(
-                f"Scheduling credit check to run at {next_run_user_tz} "
-                f"({user_tz.zone} timezone)"
+                f"Forcing immediate credit check run at {next_run}"
             )
             
-            # Update the cron's nextcall with the timezone-adjusted time
+            # Update the cron's nextcall to run immediately
             cron.write({
-                'nextcall': next_run_utc.replace(tzinfo=None),
+                'nextcall': next_run,
                 'active': True
             })
             
             # Ensure the service is active
-            cron.toggle_active() if not cron.active else None
+            if not cron.active:
+                cron.toggle_active()
+                
+            # Log additional information for diagnosis
+            _logger.info(
+                f"Updated cron job (ID: {cron.id}). "
+                f"Current time: {now}, "
+                f"Next run set for: {next_run}"
+            )
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
