@@ -2,6 +2,7 @@
 
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
+import pytz
 
 import logging
 import requests
@@ -463,13 +464,28 @@ class IapAccount(models.Model):
             'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
         )
         if cron:
-            # Schedule to run 1 minute from now
-            next_run = datetime.now() + timedelta(minutes=1)
-            _logger.info(f"Scheduling credit check to run at {next_run}")
+            # Get the current user's timezone
+            user = self.env.user
+            user_tz = pytz.timezone(user.tz or 'UTC')
             
-            # Update the cron's nextcall
+            # Get current time in user's timezone
+            now_utc = pytz.utc.localize(datetime.now())
+            now_user_tz = now_utc.astimezone(user_tz)
+            
+            # Schedule to run 1 minute from now in user's timezone
+            next_run_user_tz = now_user_tz + timedelta(minutes=1)
+            
+            # Convert back to UTC for storage
+            next_run_utc = next_run_user_tz.astimezone(pytz.utc)
+            
+            _logger.info(
+                f"Scheduling credit check to run at {next_run_user_tz} "
+                f"({user_tz.zone} timezone)"
+            )
+            
+            # Update the cron's nextcall with the timezone-adjusted time
             cron.write({
-                'nextcall': next_run,
+                'nextcall': next_run_utc.replace(tzinfo=None),
                 'active': True
             })
             
