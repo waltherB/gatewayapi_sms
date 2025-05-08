@@ -10,7 +10,6 @@
                 <group
                     string="GatewayAPI account"
                     name="group_sms_api_gatewayapi"
-                    invisible="provider != 'sms_api_gatewayapi'"
                 >
                     <group col="1">
                         <group>
@@ -19,11 +18,11 @@
                         </group>
                         <group>
                             <label for="gatewayapi_base_url" string="GatewayAPI Base URL" class="fw-bold"/>
-                            <field name="gatewayapi_base_url" nolabel="1" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_base_url" nolabel="1"/>
                         </group>
                         <group>
                             <label for="gatewayapi_sender" string="Sender Name" class="fw-bold"/>
-                            <field name="gatewayapi_sender" nolabel="1" required="provider == 'sms_api_gatewayapi'"/>
+                            <field name="gatewayapi_sender" nolabel="1"/>
                         </group>
                         <group>
                             <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
@@ -48,7 +47,7 @@
                             <field name="gatewayapi_check_min_tokens" nolabel="1"/>
                         </group>
                         <div class="text-muted mb-2">
-                            When enabled, you will receive an e-mail notification if your credits fall below the minimum.
+                            When enabled, you will receive a notification if your credits fall below the minimum.
                         </div>
                         <group invisible="gatewayapi_check_min_tokens == False">
                             <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
@@ -64,6 +63,34 @@
         </field>
     </record>
 
+    <!-- Add action button to IAP account list view -->
+    <record id="action_create_gatewayapi_account" model="ir.actions.act_window">
+        <field name="name">Create GatewayAPI Account</field>
+        <field name="res_model">iap.account</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{
+            'default_name': 'GatewayAPI',
+            'default_service_name': 'sms',
+            'default_gatewayapi_base_url': 'https://gatewayapi.eu',
+            'default_gatewayapi_sender': 'Odoo',
+        }</field>
+    </record>
+
+    <!-- Add create button to IAP Account list view -->
+    <record id="iap_account_view_tree" model="ir.ui.view">
+        <field name="name">gatewayapi.iap.account.tree</field>
+        <field name="model">iap.account</field>
+        <field name="inherit_id" ref="iap.iap_account_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="before">
+                <header>
+                    <button name="%(action_create_gatewayapi_account)d" string="Create GatewayAPI Account" type="action" class="btn-primary"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+
     <record id="iap_account_view_tree_gatewayapi" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.view.tree</field>
         <field name="model">iap.account</field>
@@ -74,4 +101,32 @@
             </xpath>
         </field>
     </record>
+    
+    <!-- Direct Action for GatewayAPI Accounts -->
+    <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
+        <field name="name">GatewayAPI SMS Accounts</field>
+        <field name="res_model">iap.account</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('gatewayapi_base_url', '!=', False)]</field>
+        <field name="context">{
+            'default_service_name': 'sms',
+            'default_gatewayapi_base_url': 'https://gatewayapi.eu',
+            'default_gatewayapi_sender': 'Odoo',
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new GatewayAPI account
+            </p>
+            <p>
+                This will create an account for sending SMS via GatewayAPI.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu item for GatewayAPI Accounts -->
+    <menuitem id="menu_gatewayapi_accounts"
+              name="GatewayAPI SMS Accounts"
+              parent="base.menu_custom"
+              action="action_gatewayapi_accounts"
+              sequence="100"/>
 </odoo>
