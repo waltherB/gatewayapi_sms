@@ -24,6 +24,11 @@
                     invisible="service_name != 'sms' and provider != 'sms_api_gatewayapi' and not context.get('default_provider') == 'sms_api_gatewayapi'"
                 >
                     <group col="1">
+                        <!-- Add name field at the top of GatewayAPI section -->
+                        <group>
+                            <label for="name" string="Account Name" class="fw-bold"/>
+                            <field name="name" nolabel="1" required="1" placeholder="e.g. GatewayAPI SMS"/>
+                        </group>
                         <group>
                             <label for="service_name" string="Service Name" class="fw-bold"/>
                             <field name="service_name" nolabel="1" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
