@@ -20,8 +20,8 @@
         'views/sms_resend.xml'
     ],
     'images': [
-        'static/description/banner.svg',
-        'static/description/icon.svg',
+        'static/description/banner.png',
+        'static/description/icon.png',
         'static/description/screenshot_01_config.png',
         'static/description/screenshot_02_test_connection.png',
         'static/description/screenshot_03_notification.png',
