@@ -71,6 +71,16 @@ pip install phonenumbers requests
 4. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
 5. Use the eye/eye-slash button to show/hide your API token securely.
 
+### Important Notes for Odoo 17
+
+In Odoo 17, the SMS provider system has been simplified, but GatewayAPI will still work correctly with this module. When you configure an account with GatewayAPI settings (API token and base URL), the module will automatically:
+
+1. Recognize it as a GatewayAPI-enabled account (shown with blue highlight in the list)
+2. Use it for sending SMS instead of the default Odoo SMS gateway
+3. Enable all GatewayAPI features like balance monitoring and notifications
+
+You can view all GatewayAPI accounts directly by going to **Settings > Technical > GatewayAPI SMS Accounts**.
+
 ---
 
 ## Usage
