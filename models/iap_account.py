@@ -369,10 +369,16 @@ class IapAccount(models.Model):
             'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
         )
         if cron:
+            # First update the interval settings
             cron.write({
                 'interval_number': self.gatewayapi_cron_interval_number or 1,
                 'interval_type': self.gatewayapi_cron_interval_type or 'days',
             })
+            
+            # Also update the next call time based on current settings
+            # This ensures the cron runs at the appropriate time with the new interval
+            if self.gatewayapi_check_min_tokens:
+                self._schedule_next_credit_check()
 
     def _get_or_create_notification_channel(self):
         """Get or create a notification channel for low credit alerts"""
@@ -404,6 +410,28 @@ class IapAccount(models.Model):
 
     def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
+        # Track if we changed from a longer interval to a shorter one
+        reschedule_next_run = False
+        if ('gatewayapi_cron_interval_type' in vals and 
+                self.gatewayapi_cron_interval_type != 
+                vals['gatewayapi_cron_interval_type']):
+            old_type = self.gatewayapi_cron_interval_type
+            new_type = vals['gatewayapi_cron_interval_type']
+            
+            # Define interval priority (smaller intervals should run sooner)
+            interval_priority = {
+                'minutes': 1, 
+                'hours': 2, 
+                'days': 3, 
+                'weeks': 4
+            }
+            
+            # If moving to a higher priority (smaller) interval, reschedule
+            if (self.gatewayapi_check_min_tokens and 
+                    interval_priority.get(new_type, 99) < 
+                    interval_priority.get(old_type, 99)):
+                reschedule_next_run = True
+                
         res = super().write(vals)
         
         # If this write operation wasn't from the toggle button action,
@@ -418,6 +446,10 @@ class IapAccount(models.Model):
             'gatewayapi_cron_interval_type'
         ]):
             self._update_gatewayapi_cron()
+            
+            # If we detected a change from longer to shorter interval, force reschedule
+            if reschedule_next_run:
+                self._schedule_next_credit_check()
         
         # If check_min_tokens is enabled, schedule a run at the next possible time
         if vals.get('gatewayapi_check_min_tokens'):
