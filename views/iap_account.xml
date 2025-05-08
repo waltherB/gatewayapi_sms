@@ -112,7 +112,7 @@
         </field>
     </record>
     
-    <!-- Direct Action for GatewayAPI Accounts -->
+    <!-- Action definition for GatewayAPI Accounts (for potential future use) -->
     <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
@@ -149,10 +149,6 @@
         <field name="act_window_id" ref="action_gatewayapi_accounts"/>
     </record>
 
-    <!-- Menu item for GatewayAPI Accounts -->
-    <menuitem id="menu_gatewayapi_accounts"
-              name="GatewayAPI SMS Accounts"
-              parent="base.menu_custom"
-              action="action_gatewayapi_accounts"
-              sequence="100"/>
+    <!-- The separate menu item for GatewayAPI Accounts has been removed -->
+    <!-- Access now only through Settings -> Technical -> IAP Accounts -->
 </odoo>

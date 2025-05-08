@@ -58,18 +58,19 @@ pip install phonenumbers requests
 
 ## Configuration
 
-1. Go to **Settings > Technical > GatewayAPI SMS Accounts** or **IAP > IAP Accounts**.
-2. Click **Create GatewayAPI Account** to create a new account.
-3. Fill in the required fields:
-   - **Name**: Give your account a name (e.g., "GatewayAPI")
+1. Go to **Settings > Technical > IAP Accounts**.
+2. Create a new account or edit an existing one.
+3. Set the Provider to "GatewayAPI" in the dropdown.
+4. Fill in the required fields:
+   - **Name**: Give your account a name (e.g., "GatewayAPI SMS")
    - **Service Name**: Must be `sms`.
    - **GatewayAPI Base URL**: Default is `https://gatewayapi.eu`
    - **Sender Name**: Set your preferred sender name.
    - **API Token**: Obtain from your GatewayAPI dashboard.
    - **Minimum Credits**: Set a threshold for low credit notifications.
    - **Credit Check Interval**: Configure how often to check your balance.
-4. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
-5. Use the eye/eye-slash button to show/hide your API token securely.
+5. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
+6. Use the eye/eye-slash button to show/hide your API token securely.
 
 ### Important Notes for Odoo 17
 
@@ -79,7 +80,7 @@ In Odoo 17, the SMS provider system has been simplified, but GatewayAPI will sti
 2. Use it for sending SMS instead of the default Odoo SMS gateway
 3. Enable all GatewayAPI features like balance monitoring and notifications
 
-You can view all GatewayAPI accounts directly by going to **Settings > Technical > GatewayAPI SMS Accounts**.
+You'll find GatewayAPI accounts in the standard IAP Accounts list, highlighted in blue.
 
 ---
 
