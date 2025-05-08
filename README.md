@@ -134,3 +134,35 @@ Example:
 ## License
 
 AGPL-3
+
+## Troubleshooting
+
+### The "GatewayAPI" provider option doesn't appear in selection field
+
+After installation, you should see "GatewayAPI" as an option in the provider selection field.
+If this doesn't appear, try the following steps:
+
+1. Run the provider field fix script:
+   ```
+   python odoo-bin shell -c /path/to/odoo.conf -d your_database
+   >>> exec(open('/path/to/addons/gatewayapi_sms/scripts/fix_provider_field.py').read())
+   ```
+
+2. Update the module:
+   ```
+   python odoo-bin -c /path/to/odoo.conf -d your_database -u gatewayapi_sms
+   ```
+
+3. Restart the Odoo server
+
+### Configuration Testing
+
+If you want to test your GatewayAPI configuration, you can use the diagnostic script:
+```
+python odoo-bin shell -c /path/to/odoo.conf -d your_database
+>>> exec(open('/path/to/addons/gatewayapi_sms/scripts/check_provider_selection.py').read())
+```
+
+## Support
+
+For questions and support, please contact the module maintainer.

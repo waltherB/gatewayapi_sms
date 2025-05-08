@@ -5,6 +5,11 @@
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_form" />
         <field name="arch" type="xml">
+            <!-- Add the provider field if it doesn't exist -->
+            <xpath expr="//field[@name='service_name']" position="before">
+                <field name="provider" widget="selection" options="{'no_create': True, 'no_open': True}"/>
+            </xpath>
+            
             <!-- GatewayAPI settings -->
             <xpath expr="//group[@name='account']" position="after">
                 <group
