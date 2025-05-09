@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-
+# We need the models module for the app to function correctly
 from . import models
+
 
 def post_init_hook(first_param, registry=None):
     """Post init hook for migrating notification channels
@@ -72,53 +73,65 @@ def post_init_hook(first_param, registry=None):
         _logger.error(f"Error in post_init_hook: {e}")
         # Don't propagate the error to prevent installation failure
 
-def uninstall_hook(cr, registry):
-    """Cleanup hook to remove GatewayAPI elements from IAP views"""
+
+def uninstall_hook(first_param, registry=None):
+    """Cleanup hook to remove GatewayAPI elements from IAP views
+    
+    Can be called as either:
+    - uninstall_hook(cr, registry) - Odoo <= 16 
+    - uninstall_hook(env) - Odoo 17+
+    """
     import logging
     _logger = logging.getLogger(__name__)
     
     _logger.info("Running uninstall_hook for gatewayapi_sms")
     
     try:
-        # Create an environment to work with
-        from odoo import api, SUPERUSER_ID
-        with api.Environment.manage():
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            
-            # Run cleanup directly on database
-            _logger.info("Cleaning up database views...")
-            
-            # Clean up views
-            cr.execute("""
-                UPDATE ir_ui_view
-                SET arch_db = regexp_replace(arch_db, 
-                    '<field name="gatewayapi_[^"]*"[^>]*>.*?</field>', 
-                    '', 
-                    'g')
-                WHERE model = 'iap.account'
-                AND arch_db LIKE '%gatewayapi%';
-            """)
-            
-            # Clean up view elements containing gatewayapi in groups
-            cr.execute("""
-                UPDATE ir_ui_view
-                SET arch_db = regexp_replace(arch_db, 
-                    '<group[^>]*?>.*?gatewayapi.*?</group>', 
-                    '', 
-                    'g')
-                WHERE model = 'iap.account'
-                AND arch_db LIKE '%gatewayapi%';
-            """)
-            
-            # Remove field references
-            _logger.info("Cleaning up field references...")
-            cr.execute("""
-                DELETE FROM ir_model_fields 
-                WHERE model = 'iap.account' 
-                AND name LIKE 'gatewayapi_%';
-            """)
-            
-            _logger.info("GatewayAPI uninstall cleanup complete")
+        # Determine if we got env or cr as first parameter
+        if hasattr(first_param, 'cr'):
+            # We received env as the first parameter
+            env = first_param
+            cr = env.cr
+        else:
+            # We received cr as the first parameter
+            cr = first_param
+            # Create environment
+            from odoo import api, SUPERUSER_ID
+            with api.Environment.manage():
+                env = api.Environment(cr, SUPERUSER_ID, {})
+        
+        # Run cleanup directly on database
+        _logger.info("Cleaning up database views...")
+        
+        # Clean up views - handle JSONB format in Odoo 17
+        cr.execute("""
+            UPDATE ir_ui_view
+            SET arch_db = regexp_replace(arch_db::text, 
+                '<field name="gatewayapi_[^"]*"[^>]*>.*?</field>', 
+                '', 'g')::jsonb
+            WHERE model = 'iap.account'
+            AND arch_db::text LIKE '%gatewayapi%';
+        """)
+        
+        # Clean up view elements containing gatewayapi in groups
+        cr.execute("""
+            UPDATE ir_ui_view
+            SET arch_db = regexp_replace(arch_db::text, 
+                '<group[^>]*?>.*?gatewayapi.*?</group>', 
+                '', 'g')::jsonb
+            WHERE model = 'iap.account'
+            AND arch_db::text LIKE '%gatewayapi%';
+        """)
+        
+        # Remove field references
+        _logger.info("Cleaning up field references...")
+        cr.execute("""
+            DELETE FROM ir_model_fields 
+            WHERE model = 'iap.account' 
+            AND name LIKE 'gatewayapi_%';
+        """)
+        
+        _logger.info("GatewayAPI uninstall cleanup complete")
     except Exception as e:
         _logger.error(f"Error in uninstall_hook: {e}")
         # Don't propagate the error to prevent uninstallation failure
