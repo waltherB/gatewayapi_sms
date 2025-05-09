@@ -58,13 +58,25 @@ echo "Running SQL cleanup on database $DB_NAME@$DB_HOST:$DB_PORT"
 # Use PGPASSWORD environment variable to pass password to psql
 export PGPASSWORD="$DB_PASSWORD"
 
-# Run the SQL script
-psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/force_cleanup.sql"
+# Run the comprehensive fix for IAP views
+echo "Running comprehensive fix for IAP views..."
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/fix_iap_views.sql"
+
+# Provide fallback options if the user still has issues
+echo ""
+echo "If you still encounter issues, you can try these additional fixes:"
+echo "1. For any remaining XML issues:"
+echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/fix_empty_tree_view.sql\""
+echo "2. For more aggressive cleanup:"
+echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/force_cleanup_jsonb.sql\""
+echo "3. For direct patching of tree views:"
+echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/patch_iap_tree.sql\""
 
 # Clear the password from environment
 unset PGPASSWORD
 
+echo ""
 echo "Cleanup complete!"
-echo "Restart your Odoo server to see the changes."
+echo "Please restart your Odoo server to see the changes."
 
 exit 0 

@@ -23,21 +23,23 @@ BEGIN
     LOOP
         RAISE NOTICE 'Processing view id %', view_record.id;
         
-        -- Remove GatewayAPI Base URL column
-        UPDATE ir_ui_view 
-        SET arch_db = to_jsonb(regexp_replace(arch_db::text, 
-            '<field name="GatewayAPI Base URL"[^/>]*/?>', 
-            '', 
-            'g'))
-        WHERE id = view_record.id;
-        
-        -- Remove Gatewayapi Api Token column
-        UPDATE ir_ui_view 
-        SET arch_db = to_jsonb(regexp_replace(arch_db::text, 
-            '<field name="Gatewayapi Api Token"[^/>]*/?>', 
-            '', 
-            'g'))
-        WHERE id = view_record.id;
+        -- Check if arch_db is valid JSON with non-empty arch
+        IF view_record.arch_db IS NULL OR view_record.arch_db::text = '{}' OR view_record.arch_db::text = '{"arch": ""}' OR view_record.arch_db::text NOT LIKE '%<tree%' THEN
+            -- If invalid, replace with default tree view
+            UPDATE ir_ui_view 
+            SET arch_db = '{"arch": "<tree string=\"IAP Account\"><field name=\"name\"/><field name=\"provider\"/><field name=\"service_name\"/><field name=\"company_id\"/><field name=\"account_token\"/><field name=\"balance\"/></tree>"}'::jsonb
+            WHERE id = view_record.id;
+            
+            RAISE NOTICE 'View % was invalid, replaced with default tree view', view_record.id;
+        ELSE
+            -- Remove GatewayAPI Base URL column
+            UPDATE ir_ui_view 
+            SET arch_db = to_jsonb(regexp_replace(arch_db::text, 
+                '<field name="gatewayapi_[^"]*"[^/>]*/?>', 
+                '', 
+                'g'))
+            WHERE id = view_record.id;
+        END IF;
     END LOOP;
 END$$;
 
@@ -47,7 +49,7 @@ FROM ir_ui_view
 WHERE model = 'iap.account' 
 AND type = 'tree';
 
--- Manually remove field references for the column "GatewayAPI Base URL"
+-- Manually remove field references for any remaining GatewayAPI columns
 UPDATE ir_ui_view 
 SET arch_db = to_jsonb(REPLACE(arch_db::text, 
     'GatewayAPI Base URL', 
@@ -56,7 +58,6 @@ WHERE model = 'iap.account'
 AND type = 'tree'
 AND arch_db::text LIKE '%GatewayAPI Base URL%';
 
--- Manually remove field references for the column "Gatewayapi Api Token"
 UPDATE ir_ui_view 
 SET arch_db = to_jsonb(REPLACE(arch_db::text, 
     'Gatewayapi Api Token', 
@@ -65,24 +66,17 @@ WHERE model = 'iap.account'
 AND type = 'tree'
 AND arch_db::text LIKE '%Gatewayapi Api Token%';
 
--- Directly fix tree view columns - aggressive approach
-UPDATE ir_ui_view
-SET arch_db = to_jsonb(regexp_replace(arch_db::text, 
-    '<field name="[^"]*" invisible="[^"]*"[^/>]*/?>', 
-    '', 
-    'g'))
-WHERE model = 'iap.account' 
-AND type = 'tree';
-
--- Try a very direct XML approach for the main tree view
+-- Ensure all tree views have valid XML structure
 UPDATE ir_ui_view
 SET arch_db = '{"arch": "<tree string=\"IAP Account\"><field name=\"name\"/><field name=\"provider\"/><field name=\"service_name\"/><field name=\"company_id\"/><field name=\"account_token\"/><field name=\"balance\"/></tree>"}'::jsonb
-WHERE id IN (
-    SELECT id FROM ir_ui_view
-    WHERE model = 'iap.account'
-    AND type = 'tree'
-    AND arch_db::text LIKE '%GatewayAPI Base URL%'
-    LIMIT 1
+WHERE model = 'iap.account' 
+AND type = 'tree'
+AND (
+    arch_db IS NULL 
+    OR arch_db::text = '{}' 
+    OR arch_db::text = '{"arch": ""}' 
+    OR arch_db::text NOT LIKE '%<tree%'
+    OR arch_db::text NOT LIKE '%</tree>%'
 );
 
 -- Force clear view cache
