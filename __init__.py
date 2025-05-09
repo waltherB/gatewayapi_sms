@@ -71,3 +71,54 @@ def post_init_hook(first_param, registry=None):
     except Exception as e:
         _logger.error(f"Error in post_init_hook: {e}")
         # Don't propagate the error to prevent installation failure
+
+def uninstall_hook(cr, registry):
+    """Cleanup hook to remove GatewayAPI elements from IAP views"""
+    import logging
+    _logger = logging.getLogger(__name__)
+    
+    _logger.info("Running uninstall_hook for gatewayapi_sms")
+    
+    try:
+        # Create an environment to work with
+        from odoo import api, SUPERUSER_ID
+        with api.Environment.manage():
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            
+            # Run cleanup directly on database
+            _logger.info("Cleaning up database views...")
+            
+            # Clean up views
+            cr.execute("""
+                UPDATE ir_ui_view
+                SET arch_db = regexp_replace(arch_db, 
+                    '<field name="gatewayapi_[^"]*"[^>]*>.*?</field>', 
+                    '', 
+                    'g')
+                WHERE model = 'iap.account'
+                AND arch_db LIKE '%gatewayapi%';
+            """)
+            
+            # Clean up view elements containing gatewayapi in groups
+            cr.execute("""
+                UPDATE ir_ui_view
+                SET arch_db = regexp_replace(arch_db, 
+                    '<group[^>]*?>.*?gatewayapi.*?</group>', 
+                    '', 
+                    'g')
+                WHERE model = 'iap.account'
+                AND arch_db LIKE '%gatewayapi%';
+            """)
+            
+            # Remove field references
+            _logger.info("Cleaning up field references...")
+            cr.execute("""
+                DELETE FROM ir_model_fields 
+                WHERE model = 'iap.account' 
+                AND name LIKE 'gatewayapi_%';
+            """)
+            
+            _logger.info("GatewayAPI uninstall cleanup complete")
+    except Exception as e:
+        _logger.error(f"Error in uninstall_hook: {e}")
+        # Don't propagate the error to prevent uninstallation failure

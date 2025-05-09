@@ -39,4 +39,5 @@ Send SMS via GatewayAPI directly from Odoo. Features include:
 - Scheduled credit checks and admin alerts
 ''',
     'post_init_hook': 'post_init_hook',
+    'uninstall_hook': 'uninstall_hook',
 }
