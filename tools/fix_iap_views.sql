@@ -98,11 +98,33 @@ DELETE FROM ir_model_data
 WHERE (name LIKE '%gatewayapi%' OR name LIKE '%sms_api_gatewayapi%')
 AND model = 'ir.ui.view';
 
--- Step 9: Force clear view cache
-DELETE FROM ir_ui_view_custom
-WHERE view_id IN (
-    SELECT id FROM ir_ui_view WHERE model = 'iap.account'
-);
+-- Step 9: Force clear view cache - check table structure first
+DO $$
+BEGIN
+  -- Check if view_id column exists in ir_ui_view_custom
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name='ir_ui_view_custom' AND column_name='view_id'
+  ) THEN
+    -- If view_id exists, use it
+    EXECUTE 'DELETE FROM ir_ui_view_custom WHERE view_id IN (SELECT id FROM ir_ui_view WHERE model = ''iap.account'')';
+  ELSIF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name='ir_ui_view_custom' AND column_name='ref_id'
+  ) THEN
+    -- If ref_id exists, use that instead
+    EXECUTE 'DELETE FROM ir_ui_view_custom WHERE ref_id IN (SELECT id FROM ir_ui_view WHERE model = ''iap.account'')';
+  ELSE
+    -- Otherwise, just report that we can't clear the cache
+    RAISE NOTICE 'Could not clear view cache - ir_ui_view_custom table structure unknown';
+  END IF;
+END$$;
+
+-- Step 10: Clear server-side caches
+UPDATE ir_model_data
+SET noupdate = false
+WHERE model = 'ir.ui.view' 
+AND res_id IN (SELECT id FROM ir_ui_view WHERE model = 'iap.account');
 
 -- Verify all views are now valid
 SELECT id, name, type, arch_db::text
