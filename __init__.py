@@ -2,7 +2,7 @@
 
 from . import models
 
-def post_init_hook(cr, registry):
+def post_init_hook(cr, registry=None):
     """Post init hook for migrating notification channels"""
     import logging
     _logger = logging.getLogger(__name__)
@@ -23,30 +23,34 @@ def post_init_hook(cr, registry):
             env = api.Environment(cr, SUPERUSER_ID, {})
             
             # First check if notification table exists
-            cr.execute("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public' 
-                    AND table_name = 'gatewayapi_notification'
-                );
-            """)
-            table_exists = cr.fetchone()[0]
-            
-            if not table_exists:
-                _logger.info("gatewayapi_notification table does not exist yet, skipping migration")
-                return
-            
-            # For each account, check if a notification record exists and create if not
-            for account_id in account_ids:
-                notification = env['gatewayapi.notification'].search([
-                    ('account_id', '=', account_id)
-                ], limit=1)
+            try:
+                cr.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public' 
+                        AND table_name = 'gatewayapi_notification'
+                    );
+                """)
+                table_exists = cr.fetchone()[0]
                 
-                if not notification:
-                    # Create notification record
-                    env['gatewayapi.notification'].create({
-                        'account_id': account_id,
-                    })
-                    _logger.info(f"Created notification record for account {account_id}")
-                else:
-                    _logger.info(f"Notification record already exists for account {account_id}")
+                if not table_exists:
+                    _logger.info("gatewayapi_notification table does not exist yet, skipping migration")
+                    return
+                
+                # For each account, check if a notification record exists and create if not
+                for account_id in account_ids:
+                    notification = env['gatewayapi.notification'].search([
+                        ('account_id', '=', account_id)
+                    ], limit=1)
+                    
+                    if not notification:
+                        # Create notification record
+                        env['gatewayapi.notification'].create({
+                            'account_id': account_id,
+                        })
+                        _logger.info(f"Created notification record for account {account_id}")
+                    else:
+                        _logger.info(f"Notification record already exists for account {account_id}")
+            except Exception as e:
+                _logger.error(f"Error in post_init_hook: {e}")
+                # Don't propagate the error to prevent installation failure
