@@ -14,9 +14,22 @@ from datetime import datetime
 
 def find_module_path(base_path, module_name):
     """Find the module path in the Odoo addons directories"""
+    print(f"Searching for {module_name} in {base_path}")
+    
+    # Handle the direct case where module is directly in the path
+    direct_path = os.path.join(base_path, module_name)
+    init_file = os.path.join(direct_path, '__init__.py')
+    if os.path.exists(init_file):
+        print(f"Found module directly at {direct_path}")
+        return direct_path
+    
+    # Search subdirectories
     for root, dirs, files in os.walk(base_path):
         if os.path.basename(root) == module_name and '__init__.py' in files:
+            print(f"Found module at {root}")
             return root
+    
+    print(f"Module not found in {base_path}")
     return None
 
 def backup_file(file_path):
@@ -85,30 +98,60 @@ def patch_uninstall_hook(file_path):
 
 def main():
     parser = argparse.ArgumentParser(description='Fix the uninstall_hook in gatewayapi_sms module')
-    parser.add_argument('--odoo-path', default='/opt/odoo/odoo', help='Path to the Odoo installation')
+    parser.add_argument('--odoo-path', default='/opt/odoo/odoo', 
+                       help='Path(s) to search for the module. Separate multiple paths with semicolons.')
     args = parser.parse_args()
     
-    # Try to find the module
-    possible_addon_paths = [
-        os.path.join(args.odoo_path, 'addons'),
-        os.path.join(args.odoo_path, 'odoo/addons'),
+    # Parse paths
+    search_paths = args.odoo_path.split(';')
+    print(f"Will search in the following paths: {search_paths}")
+    
+    # Add some standard paths
+    standard_paths = [
         '/usr/lib/python3/dist-packages/odoo/addons',
         '/opt/odoo/custom/addons',
         '/mnt/extra-addons'
     ]
+    for path in standard_paths:
+        if path not in search_paths and os.path.exists(path):
+            search_paths.append(path)
     
+    # Try to find the module in the specified paths
     module_path = None
-    for addon_path in possible_addon_paths:
-        if os.path.exists(addon_path):
-            found_path = find_module_path(addon_path, 'gatewayapi_sms')
-            if found_path:
-                module_path = found_path
-                break
+    for base_path in search_paths:
+        if not os.path.exists(base_path):
+            print(f"Path {base_path} does not exist, skipping")
+            continue
+            
+        # Check if module is directly in this path
+        found_path = find_module_path(base_path, 'gatewayapi_sms')
+        if found_path:
+            module_path = found_path
+            break
+            
+        # Check if there are any addons directories
+        addons_dirs = ['addons', 'odoo/addons', 'custom/addons']
+        for addon_dir in addons_dirs:
+            addon_path = os.path.join(base_path, addon_dir)
+            if os.path.exists(addon_path):
+                found_path = find_module_path(addon_path, 'gatewayapi_sms')
+                if found_path:
+                    module_path = found_path
+                    break
+        
+        if module_path:
+            break
     
     if not module_path:
-        print("Could not find the gatewayapi_sms module in the standard Odoo addon paths.")
-        print("Please specify the correct path with --odoo-path")
-        sys.exit(1)
+        print("\nCould not find the gatewayapi_sms module. Let's try a manual approach.")
+        print("Please enter the full path to the gatewayapi_sms module directory:")
+        manual_path = input("> ").strip()
+        
+        if os.path.exists(manual_path) and os.path.exists(os.path.join(manual_path, '__init__.py')):
+            module_path = manual_path
+        else:
+            print("Invalid path or __init__.py not found in the specified directory.")
+            sys.exit(1)
     
     init_file = os.path.join(module_path, '__init__.py')
     if not os.path.exists(init_file):
