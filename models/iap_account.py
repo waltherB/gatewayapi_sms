@@ -376,10 +376,9 @@ class IapAccount(models.Model):
                 'interval_type': self.gatewayapi_cron_interval_type or 'days',
             })
             
-            # Also update the next call time based on current settings
+            # Always update the next call time when interval settings change
             # This ensures the cron runs at the appropriate time with the new interval
-            if self.gatewayapi_check_min_tokens:
-                self._schedule_next_credit_check()
+            self._schedule_next_credit_check()
 
     def _get_or_create_notification_channel(self):
         """Get or create a notification channel for low credit alerts"""
@@ -428,9 +427,7 @@ class IapAccount(models.Model):
             }
             
             # If moving to a higher priority (smaller) interval, reschedule
-            if (self.gatewayapi_check_min_tokens and 
-                    interval_priority.get(new_type, 99) < 
-                    interval_priority.get(old_type, 99)):
+            if interval_priority.get(new_type, 99) < interval_priority.get(old_type, 99):
                 reschedule_next_run = True
                 
         res = super().write(vals)
@@ -447,10 +444,6 @@ class IapAccount(models.Model):
             'gatewayapi_cron_interval_type'
         ]):
             self._update_gatewayapi_cron()
-            
-            # If we detected a change from longer to shorter interval, force reschedule
-            if reschedule_next_run:
-                self._schedule_next_credit_check()
         
         # If check_min_tokens is enabled, schedule a run at the next possible time
         if vals.get('gatewayapi_check_min_tokens'):
@@ -464,20 +457,17 @@ class IapAccount(models.Model):
             'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
         )
         if cron:
-            # Direct approach: Set to run immediately 
-            # Explicitly create a date/time for TODAY within one minute
             now = datetime.now()
             
-            # Get current date
-            year = now.year
-            month = now.month
-            day = now.day
+            # Calculate the next run time based on interval settings
+            interval_number = self.gatewayapi_cron_interval_number or 1
+            interval_type = self.gatewayapi_cron_interval_type or 'days'
             
-            # Create a datetime object for today plus 1 minute
-            next_run = datetime(
-                year, month, day,
-                now.hour, now.minute + 1, 0
-            )
+            # Set the next run to the current time initially
+            next_run = now
+            
+            # Add 1 minute to ensure it's in the future
+            next_run = next_run.replace(minute=next_run.minute + 1, second=0)
             
             # Log current settings before change
             _logger.info(
@@ -485,12 +475,11 @@ class IapAccount(models.Model):
                 f"Current server time: {now}"
             )
             
-            # Force the cron to run TODAY, not tomorrow
             _logger.info(
-                f"Forcing immediate credit check run at {next_run} (today)"
+                f"Setting next credit check run for interval: {interval_number} {interval_type}"
             )
             
-            # Update the cron's nextcall to run today
+            # Update the cron's nextcall
             cron.sudo().write({
                 'nextcall': next_run,
                 'active': True
