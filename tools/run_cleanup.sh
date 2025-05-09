@@ -58,25 +58,36 @@ echo "Running SQL cleanup on database $DB_NAME@$DB_HOST:$DB_PORT"
 # Use PGPASSWORD environment variable to pass password to psql
 export PGPASSWORD="$DB_PASSWORD"
 
-# Run the comprehensive fix for IAP views
-echo "Running comprehensive fix for IAP views..."
-psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/fix_iap_views.sql"
+# Run diagnostic first to see what we're dealing with
+echo "1) Running diagnostics on IAP account views..."
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/inspect_view.sql"
 
-# Provide fallback options if the user still has issues
-echo ""
-echo "If you still encounter issues, you can try these additional fixes:"
-echo "1. For any remaining XML issues:"
-echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/fix_empty_tree_view.sql\""
-echo "2. For more aggressive cleanup:"
-echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/force_cleanup_jsonb.sql\""
-echo "3. For direct patching of tree views:"
-echo "   psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/patch_iap_tree.sql\""
+read -p "Continue with the fix? (y/n) " -n 1 -r
+echo    # move to a new line
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Operation canceled by user."
+    unset PGPASSWORD
+    exit 0
+fi
+
+# Run the comprehensive fix for IAP views
+echo "2) Completely recreating IAP views (the most reliable fix)..."
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/recreate_iap_views.sql"
+
+echo "3) Running additional cleanup..."
+psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$(dirname "$0")/fix_iap_views.sql"
 
 # Clear the password from environment
 unset PGPASSWORD
 
 echo ""
 echo "Cleanup complete!"
-echo "Please restart your Odoo server to see the changes."
+echo "Please restart your Odoo server immediately to see the changes."
+echo ""
+echo "If you still encounter issues after restarting, try these emergency options:"
+echo "  1. Emergency view fix (tries to fix broken views):"
+echo "     psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/fix_broken_view.sql\""
+echo "  2. Run diagnostics to see what might be wrong:"
+echo "     psql -h \"$DB_HOST\" -p \"$DB_PORT\" -U \"$DB_USER\" -d \"$DB_NAME\" -f \"$(dirname "$0")/inspect_view.sql\""
 
 exit 0 
