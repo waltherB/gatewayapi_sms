@@ -7,7 +7,7 @@ BEGIN;
 
 -- Display the specific field (19221)
 SELECT 'Field record information for ID 19221:' AS info;
-SELECT id, name, model, ttype, state, modules
+SELECT id, name, model, ttype, state
 FROM ir_model_fields
 WHERE id = 19221;
 
