@@ -366,19 +366,24 @@ class IapAccount(models.Model):
         }
 
     def _update_gatewayapi_cron(self):
-        cron = self.env.ref(
-            'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
-        )
-        if cron:
-            # First update the interval settings
-            cron.write({
-                'interval_number': self.gatewayapi_cron_interval_number or 1,
-                'interval_type': self.gatewayapi_cron_interval_type or 'days',
-            })
-            
-            # Always update the next call time when interval settings change
-            # This ensures the cron runs at the appropriate time with the new interval
-            self._schedule_next_credit_check()
+        """Update cron job interval settings"""
+        try:
+            cron = self.env.ref(
+                'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
+            )
+            if cron:
+                # First update the interval settings
+                cron.write({
+                    'interval_number': self.gatewayapi_cron_interval_number or 1,
+                    'interval_type': self.gatewayapi_cron_interval_type or 'days',
+                })
+                
+                # Always update the next call time when interval settings change
+                # This ensures the cron runs at the appropriate time with the new interval
+                self._schedule_next_credit_check()
+        except Exception as e:
+            _logger.error(f"Error updating cron job settings: {e}")
+            # Don't raise the exception to avoid disrupting the transaction
 
     def _get_or_create_notification_channel(self):
         """Get or create a notification channel for low credit alerts"""
@@ -451,51 +456,30 @@ class IapAccount(models.Model):
     
     def _schedule_next_credit_check(self):
         """Schedule the credit check cron to run at the next possible time"""
-        cron = self.env.ref(
-            'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
-        )
-        if cron:
-            now = datetime.now()
-            
-            # Calculate the next run time based on interval settings
-            interval_number = self.gatewayapi_cron_interval_number or 1
-            interval_type = self.gatewayapi_cron_interval_type or 'days'
-            
-            # Add 1 minute to ensure it's in the future 
-            next_run = now + timedelta(minutes=1)
-            
-            # Setting to the next 0 seconds for cleaner timing
-            next_run = next_run.replace(second=0)
-            
-            # Log current settings before change
-            _logger.info(
-                f"Before update - Current cron nextcall: {cron.nextcall}, "
-                f"Current server time: {now}"
+        try:
+            cron = self.env.ref(
+                'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
             )
-            
-            _logger.info(
-                f"Setting next credit check run for interval: {interval_number} {interval_type}"
-            )
-            
-            # Update the cron's nextcall and interval settings
-            cron.sudo().write({
-                'nextcall': next_run,
-                'interval_number': interval_number,
-                'interval_type': interval_type,
-                'active': True
-            })
-            
-            # Force Odoo to recompute the next run date based on the new interval
-            # This ensures the cron system will calculate the correct next run time
-            cron._trigger()
-            
-            # Read back the value to verify it was set correctly
-            cron.invalidate_cache()
-            _logger.info(f"After update - New cron nextcall: {cron.nextcall}")
-            
-            # Ensure the service is active
-            if not cron.active:
-                cron.toggle_active()
+            if cron:
+                now = datetime.now()
+                
+                # Calculate the next run time based on interval settings but don't modify them here
+                # Add 1 minute to ensure it's in the future 
+                next_run = now + timedelta(minutes=1)
+                
+                # Setting to the next 0 seconds for cleaner timing
+                next_run = next_run.replace(second=0)
+                
+                _logger.info(f"Setting next credit check run to: {next_run}")
+                
+                # Update just the nextcall time
+                cron.sudo().write({
+                    'nextcall': next_run,
+                    'active': True
+                })
+        except Exception as e:
+            _logger.error(f"Error scheduling next credit check: {e}")
+            # Don't raise the exception to avoid disrupting the transaction
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
