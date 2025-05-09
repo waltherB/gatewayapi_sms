@@ -96,7 +96,7 @@ You'll find GatewayAPI accounts in the standard IAP Accounts list, highlighted i
 
 | Configuration | Test Connection | Notification | Balance |
 |---------------|----------------|--------------|---------|
-| ![Configuration Example](static/description/screenshot_06_config_example.png) | ![Test Connection Example](static/description/screenshot_07_test_connection_example.png) | ![Notification](static/description/screenshot_03_notification.png) | ![Balance Example](static/description/screenshot_08_balance_example.png) |
+| ![Configuration Example](static/description/screenshot_01_config.png) | ![Test Connection Example](static/description/screenshot_02_test_connection.png) | ![Notification](static/description/screenshot_03_notification.png) | ![Balance Example](static/description/screenshot_04_balance.png) |
 
 ### Example: Low Credits Notification Activity
 
