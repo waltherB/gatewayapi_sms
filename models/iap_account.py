@@ -410,8 +410,6 @@ class IapAccount(models.Model):
 
     def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
-        # Track if we changed from a longer interval to a shorter one
-        reschedule_next_run = False
         if ('gatewayapi_cron_interval_type' in vals and 
                 self.gatewayapi_cron_interval_type != 
                 vals['gatewayapi_cron_interval_type']):
@@ -426,9 +424,9 @@ class IapAccount(models.Model):
                 'weeks': 4
             }
             
-            # If moving to a higher priority (smaller) interval, reschedule
+            # Log interval change
             if interval_priority.get(new_type, 99) < interval_priority.get(old_type, 99):
-                reschedule_next_run = True
+                _logger.info("Changing to shorter interval: %s -> %s", old_type, new_type)
                 
         res = super().write(vals)
         
@@ -463,11 +461,11 @@ class IapAccount(models.Model):
             interval_number = self.gatewayapi_cron_interval_number or 1
             interval_type = self.gatewayapi_cron_interval_type or 'days'
             
-            # Set the next run to the current time initially
-            next_run = now
+            # Add 1 minute to ensure it's in the future 
+            next_run = now + timedelta(minutes=1)
             
-            # Add 1 minute to ensure it's in the future
-            next_run = next_run.replace(minute=next_run.minute + 1, second=0)
+            # Setting to the next 0 seconds for cleaner timing
+            next_run = next_run.replace(second=0)
             
             # Log current settings before change
             _logger.info(
@@ -479,11 +477,17 @@ class IapAccount(models.Model):
                 f"Setting next credit check run for interval: {interval_number} {interval_type}"
             )
             
-            # Update the cron's nextcall
+            # Update the cron's nextcall and interval settings
             cron.sudo().write({
                 'nextcall': next_run,
+                'interval_number': interval_number,
+                'interval_type': interval_type,
                 'active': True
             })
+            
+            # Force Odoo to recompute the next run date based on the new interval
+            # This ensures the cron system will calculate the correct next run time
+            cron._trigger()
             
             # Read back the value to verify it was set correctly
             cron.invalidate_cache()
