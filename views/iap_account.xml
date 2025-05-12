@@ -70,6 +70,8 @@
                         <group invisible="gatewayapi_check_min_tokens == False">
                             <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                             <field name="gatewayapi_min_tokens" nolabel="1"/>
+                            <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
+                            <field name="gatewayapi_token_notification_action" nolabel="1"/>
                             <label for="gatewayapi_cron_interval_number" string="Check interval" class="fw-bold"/>
                             <field name="gatewayapi_cron_interval_number" nolabel="1"/>
                             <label for="gatewayapi_cron_interval_type" string="Interval type" class="fw-bold"/>
