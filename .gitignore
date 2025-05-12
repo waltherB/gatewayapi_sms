@@ -41,3 +41,4 @@ ENV/
 *.pot
 *.pyc
 local_addons/ 
+.zed
