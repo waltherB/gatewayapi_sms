@@ -8,7 +8,16 @@
     'category': 'Technical',
     'version': '17.0.2.0.5',
     'icon': 'static/description/icon.png',
-    'depends': ['base', "sms", "iap_alternative_provider", "phone_validation", 'mail'],
+    'application': False,
+    'installable': True,
+    'auto_install': False,
+    'depends': [
+        'base',
+        'mail',
+        'phone_validation',
+        'sms',
+        'iap_alternative_provider'
+    ],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests']
     },
