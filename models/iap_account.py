@@ -410,6 +410,11 @@ class IapAccount(models.Model):
         if isinstance(vals_list, dict):
             vals_list['show_token'] = False
         records = super().create(vals_list)
+        # Link the low credits notification action if it's a GatewayAPI account
+        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+        if notification_action and records and records.is_gatewayapi:
+            records.write({'gatewayapi_token_notification_action': notification_action.id})
+
         records._update_gatewayapi_cron()
         return records
 
