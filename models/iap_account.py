@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+_depends = ['mail']
+
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
 import pytz
@@ -12,6 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class IapAccount(models.Model):
+    _depends = _depends
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models, api, _
+from odoo import fields, models, api, _, SUPERUSER_ID
+
+_depends = ['mail']
+
 
 import logging
 
@@ -10,6 +13,7 @@ _logger = logging.getLogger(__name__)
 class GatewayapiNotification(models.Model):
     _name = "gatewayapi.notification"
     _description = "GatewayAPI Notification Settings"
+    _depends = _depends
     
     name = fields.Char(
         related="account_id.name",
