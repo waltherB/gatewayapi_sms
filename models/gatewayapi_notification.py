@@ -2,7 +2,8 @@
 
 from odoo import fields, models, api, _, SUPERUSER_ID
 
-_depends = ['mail']
+# fix ?
+_depends = {'mail.thread': []}
 
 
 import logging

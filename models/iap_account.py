@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Try with out the depends
-#_depends = ['mail']
+# fix ?
+_depends = {'mail.thread': []}
 
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
