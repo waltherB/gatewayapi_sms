@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-_depends = ['mail']
+# Try with out the depends
+#_depends = ['mail']
 
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
@@ -35,7 +36,7 @@ class IapAccount(models.Model):
         store=False,  # Changed to False to avoid upgrade issues
         help="Indicates if this account is configured for GatewayAPI"
     )
-    
+
     # Add a helper field to check if notification channel field exists
     field_exists = fields.Boolean(
         string="Field Exists",
@@ -43,7 +44,7 @@ class IapAccount(models.Model):
         store=False,
         help="Technical field to check if notification channel field exists"
     )
-    
+
     service_name = fields.Char(
         default="sms",
         help="Service Name must be 'sms' for GatewayAPI integration."
@@ -74,14 +75,14 @@ class IapAccount(models.Model):
         help="Minimum credit level for alerting purposes. "
              "Only used if 'Check for minimum credits' is enabled."
     )
-    
+
     # Rather than a direct reference, use a computed field
     notification_id = fields.One2many(
         'gatewayapi.notification',
         'account_id',
         string="Notification Settings"
     )
-    
+
     # For backwards compatibility, compute notification channel from related model
     gatewayapi_notification_channel_id = fields.Many2one(
         'mail.channel',
@@ -91,34 +92,34 @@ class IapAccount(models.Model):
         help="Discussion channel to post low credit notifications to. "
              "Leave empty to create a new channel or use an existing one.",
     )
-    
+
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
         string="Credits notification action",
         help="Action to be performed when the number of credits is less than "
              "min_tokens."
     )
-    
+
     @api.depends('notification_id.channel_id')
     def _compute_notification_channel(self):
         for record in self:
             notification = self.env['gatewayapi.notification'].search([
                 ('account_id', '=', record.id)
             ], limit=1)
-            
+
             if notification and notification.channel_id:
                 record.gatewayapi_notification_channel_id = (
                     notification.channel_id.id
                 )
             else:
                 record.gatewayapi_notification_channel_id = False
-    
+
     def _inverse_notification_channel(self):
         for record in self:
             notification = self.env['gatewayapi.notification'].search([
                 ('account_id', '=', record.id)
             ], limit=1)
-            
+
             if not notification:
                 if record.gatewayapi_notification_channel_id:
                     self.env['gatewayapi.notification'].create({
@@ -131,7 +132,7 @@ class IapAccount(models.Model):
                 notification.channel_id = (
                     record.gatewayapi_notification_channel_id.id
                 )
-    
+
     gatewayapi_connection_status = fields.Char(
         string="Connection status",
         help="Status of the last connection test."
@@ -168,7 +169,7 @@ class IapAccount(models.Model):
         store=False
     )
     show_token = fields.Boolean(
-        default=False, 
+        default=False,
         help="Show or hide the API token in the form.",
         # Make it non-persistent so it always resets when form is reopened
         store=False
@@ -179,7 +180,7 @@ class IapAccount(models.Model):
         """Compute whether this account is configured for GatewayAPI"""
         for rec in self:
             rec.is_gatewayapi = (
-                rec.provider == 'sms_api_gatewayapi' or 
+                rec.provider == 'sms_api_gatewayapi' or
                 (rec.gatewayapi_base_url and rec.gatewayapi_api_token)
             )
 
@@ -189,11 +190,11 @@ class IapAccount(models.Model):
         account = self.search([
             '|',
             ('provider', '=', 'sms_api_gatewayapi'),
-            '&', 
-            ('service_name', '=', 'sms'), 
+            '&',
+            ('service_name', '=', 'sms'),
             ('gatewayapi_base_url', '!=', False)
         ], limit=1)
-        
+
         if not account:
             # Create a new GatewayAPI account
             account = self.create({
@@ -212,29 +213,29 @@ class IapAccount(models.Model):
     def _get_sms_account(self):
         """Override to return the GatewayAPI account if configured"""
         account = self.get("sms")
-        
+
         # If account is explicitly set as GatewayAPI provider
         if account.provider == 'sms_api_gatewayapi':
             return account
-            
+
         # If account has GatewayAPI configuration, return it
         if account.gatewayapi_base_url and account.gatewayapi_api_token:
             return account
-            
+
         # Try to find a GatewayAPI account
         gatewayapi_account = self.search([
             '|',
             ('provider', '=', 'sms_api_gatewayapi'),
             '&',
-            ('service_name', '=', 'sms'), 
+            ('service_name', '=', 'sms'),
             '&',
             ('gatewayapi_base_url', '!=', False),
             ('gatewayapi_api_token', '!=', False)
         ], limit=1)
-        
+
         if gatewayapi_account:
             return gatewayapi_account
-            
+
         # Fall back to the default account
         return account
 
@@ -380,7 +381,7 @@ class IapAccount(models.Model):
                     'interval_number': self.gatewayapi_cron_interval_number or 1,
                     'interval_type': self.gatewayapi_cron_interval_type or 'days',
                 })
-                
+
                 # Always update the next call time when interval settings change
                 # This ensures the cron runs at the appropriate time with the new interval
                 self._schedule_next_credit_check()
@@ -391,18 +392,18 @@ class IapAccount(models.Model):
     def _get_or_create_notification_channel(self):
         """Get or create a notification channel for low credit alerts"""
         self.ensure_one()
-        
+
         # First try to get a notification for this account
         notification = self.env['gatewayapi.notification'].search([
             ('account_id', '=', self.id)
         ], limit=1)
-        
+
         if not notification:
             # Create a new notification
             notification = self.env['gatewayapi.notification'].create({
                 'account_id': self.id,
             })
-            
+
         # Get or create the channel
         return notification.get_or_create_channel()
 
@@ -423,44 +424,44 @@ class IapAccount(models.Model):
 
     def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
-        if ('gatewayapi_cron_interval_type' in vals and 
-                self.gatewayapi_cron_interval_type != 
+        if ('gatewayapi_cron_interval_type' in vals and
+                self.gatewayapi_cron_interval_type !=
                 vals['gatewayapi_cron_interval_type']):
             old_type = self.gatewayapi_cron_interval_type
             new_type = vals['gatewayapi_cron_interval_type']
-            
+
             # Define interval priority (smaller intervals should run sooner)
             interval_priority = {
-                'minutes': 1, 
-                'hours': 2, 
-                'days': 3, 
+                'minutes': 1,
+                'hours': 2,
+                'days': 3,
                 'weeks': 4
             }
-            
+
             # Log interval change
             if interval_priority.get(new_type, 99) < interval_priority.get(old_type, 99):
                 _logger.info("Changing to shorter interval: %s -> %s", old_type, new_type)
-                
+
         res = super().write(vals)
-        
+
         # If this write operation wasn't from the toggle button action,
         # reset show_token to False
         caller = self.env.context.get('caller', '')
         if 'show_token' not in vals and caller != 'toggle_token':
             self.write({'show_token': False})
-        
+
         # Update cron interval if interval settings changed
         if any(field in vals for field in [
-            'gatewayapi_cron_interval_number', 
+            'gatewayapi_cron_interval_number',
             'gatewayapi_cron_interval_type'
         ]):
             self._update_gatewayapi_cron()
-        
+
         # If check_min_tokens is enabled, schedule a run at the next possible time
         # and set the notification action if not already set
         if vals.get('gatewayapi_check_min_tokens'):
             self._schedule_next_credit_check()
-            
+
             # Set the notification action if it's not already set
             for record in self:
                 if not record.gatewayapi_token_notification_action:
@@ -470,9 +471,9 @@ class IapAccount(models.Model):
                         _logger.info("Set notification action for account %s", record.id)
                     except Exception as e:
                         _logger.error("Failed to set notification action: %s", e)
-            
+
         return res
-    
+
     def _schedule_next_credit_check(self):
         """Schedule the credit check cron to run at the next possible time"""
         try:
@@ -481,16 +482,16 @@ class IapAccount(models.Model):
             )
             if cron:
                 now = datetime.now()
-                
+
                 # Calculate the next run time based on interval settings but don't modify them here
-                # Add 1 minute to ensure it's in the future 
+                # Add 1 minute to ensure it's in the future
                 next_run = now + timedelta(minutes=1)
-                
+
                 # Setting to the next 0 seconds for cleaner timing
                 next_run = next_run.replace(second=0)
-                
+
                 _logger.info(f"Setting next credit check run to: {next_run}")
-                
+
                 # Update just the nextcall time
                 cron.sudo().write({
                     'nextcall': next_run,
@@ -537,12 +538,12 @@ class IapAccount(models.Model):
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         """Override to ensure token is hidden when reopening the form view"""
-        result = super().fields_view_get(view_id=view_id, view_type=view_type, 
+        result = super().fields_view_get(view_id=view_id, view_type=view_type,
                                         toolbar=toolbar, submenu=submenu)
         # When a form view is opened, we'll reset show_token via context
         # This is more efficient than updating all records in the database
         return result
-        
+
     @api.model
     def default_get(self, fields_list):
         """Reset show_token to False on new records"""
@@ -568,7 +569,7 @@ class IapAccount(models.Model):
     def send_low_credits_notification(self):
         """Send a notification about low credits"""
         self.ensure_one()
-        
+
         # Prepare message
         message = _("""
 <p><b>⚠️ Low SMS Credits Alert</b></p>
@@ -579,11 +580,11 @@ class IapAccount(models.Model):
 </ul>
 <p>Please add more credits to ensure uninterrupted SMS services.</p>
 """) % (
-            self.name or 'GatewayAPI account', 
+            self.name or 'GatewayAPI account',
             self.gatewayapi_balance_display,
             f"{self.gatewayapi_min_tokens} {self.gatewayapi_currency}" if self.gatewayapi_currency else self.gatewayapi_min_tokens
         )
-        
+
         # Create activity for admin
         admin_user = self.env.ref('base.user_admin')
         activity = self.env['mail.activity'].create({
@@ -594,10 +595,10 @@ class IapAccount(models.Model):
             'user_id': admin_user.id,
             'summary': _('GatewayAPI low on credits'),
         })
-        
+
         # Also log a message in the chatter
         self.message_post(body=message, subject=_('GatewayAPI low on credits'))
-        
+
         # Post to notification channel if configured
         if self.gatewayapi_check_min_tokens:
             channel = self._get_or_create_notification_channel()
@@ -605,7 +606,7 @@ class IapAccount(models.Model):
                 channel.message_post(
                     body=message, subject=_('GatewayAPI Low Credits Alert')
                 )
-        
+
         return activity
 
     @api.depends('gatewayapi_notification_channel_id')
