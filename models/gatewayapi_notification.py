@@ -15,6 +15,7 @@ class GatewayapiNotification(models.Model):
     _name = "gatewayapi.notification"
     _description = "GatewayAPI Notification Settings"
     _depends = _depends
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     
     name = fields.Char(
         related="account_id.name",
