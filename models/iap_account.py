@@ -422,6 +422,17 @@ class IapAccount(models.Model):
         records._update_gatewayapi_cron()
         return records
 
+    def _disable_cron_job(self):
+        """Disable cron job for low credit notification """
+        cron_job = self.env['ir.cron.job'].search([
+            ('name', '=', 'GatewayAPI: Check credit balance'),
+            ('model_id', '=', self.env['ir.model']._get_id('iap.account')),
+        ])
+        if cron_job:
+            cron_job.write({
+                'active_job': False,
+            })
+
     def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
         if ('gatewayapi_cron_interval_type' in vals and
@@ -443,6 +454,14 @@ class IapAccount(models.Model):
                 _logger.info("Changing to shorter interval: %s -> %s", old_type, new_type)
 
         res = super().write(vals)
+
+        # Disable cron_job if checkbox not set
+        if 'gatewayapi_check_min_tokens' in vals:
+            if vals['gatewayapi_check_min_tokens']:
+                self._schedule_next_credit_check()
+            else:
+                self._disable_cron_job()
+
 
         # If this write operation wasn't from the toggle button action,
         # reset show_token to False
@@ -515,6 +534,23 @@ class IapAccount(models.Model):
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
+        # If this write operation wasn't from the toggle button action,
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
         for rec in self:
             if rec.gatewayapi_base_url and rec.gatewayapi_api_token:
                 try:
