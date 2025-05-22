@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# fix ?
+_depends = {'mail.thread': []}
+
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
 import pytz
@@ -12,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class IapAccount(models.Model):
-    # Removed the problematic _depends attribute. Dependencies are managed in __manifest__.py.
+    _depends = _depends
     _name = "iap.account"
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
@@ -432,10 +435,23 @@ class IapAccount(models.Model):
 
     def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
-        # Consolidate show_token reset logic
-        caller = self.env.context.get('caller', '')
-        if 'show_token' not in vals and caller != 'toggle_token':
-            vals['show_token'] = False # Set it in vals before super() call
+        if ('gatewayapi_cron_interval_type' in vals and
+                self.gatewayapi_cron_interval_type !=
+                vals['gatewayapi_cron_interval_type']):
+            old_type = self.gatewayapi_cron_interval_type
+            new_type = vals['gatewayapi_cron_interval_type']
+
+            # Define interval priority (smaller intervals should run sooner)
+            interval_priority = {
+                'minutes': 1,
+                'hours': 2,
+                'days': 3,
+                'weeks': 4
+            }
+
+            # Log interval change
+            if interval_priority.get(new_type, 99) < interval_priority.get(old_type, 99):
+                _logger.info("Changing to shorter interval: %s -> %s", old_type, new_type)
 
         res = super().write(vals)
 
@@ -446,8 +462,16 @@ class IapAccount(models.Model):
             else:
                 self._disable_cron_job()
 
+
+        # If this write operation wasn't from the toggle button action,
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+
         # Set the notification action if check_min_tokens is enabled
         if vals.get('gatewayapi_check_min_tokens'):
+            # Set the notification action if it's not already set
             for record in self:
                 if not record.gatewayapi_token_notification_action:
                     try:
@@ -463,6 +487,21 @@ class IapAccount(models.Model):
             'gatewayapi_cron_interval_type'
         ]):
             self._update_gatewayapi_cron()
+
+        # If check_min_tokens is enabled, schedule a run at the next possible time
+        # and set the notification action if not already set
+        if vals.get('gatewayapi_check_min_tokens'):
+            self._schedule_next_credit_check()
+
+            # Set the notification action if it's not already set
+            for record in self:
+                if not record.gatewayapi_token_notification_action:
+                    try:
+                        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action')
+                        record.gatewayapi_token_notification_action = notification_action.id
+                        _logger.info("Set notification action for account %s", record.id)
+                    except Exception as e:
+                        _logger.error("Failed to set notification action: %s", e)
 
         return res
 
@@ -495,7 +534,23 @@ class IapAccount(models.Model):
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):
-        # The show_token reset logic was moved to the write method for better consolidation.
+        # If this write operation wasn't from the toggle button action,
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
+        # reset show_token to False
+        caller = self.env.context.get('caller', '')
+        if 'show_token' not in vals and caller != 'toggle_token':
+            self.write({'show_token': False})
         for rec in self:
             if rec.gatewayapi_base_url and rec.gatewayapi_api_token:
                 try:
@@ -606,4 +661,3 @@ class IapAccount(models.Model):
     def _compute_field_exists(self):
         for rec in self:
             rec.field_exists = bool(rec.gatewayapi_notification_channel_id)
-
