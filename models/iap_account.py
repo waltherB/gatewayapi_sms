@@ -421,13 +421,14 @@ class IapAccount(models.Model):
 
     def _disable_cron_job(self):
         """Disable cron job for low credit notification """
-        cron_job = self.env['ir.cron.job'].search([
+        # Corrected model name from 'ir.cron.job' to 'ir.cron' for Odoo 17
+        cron_job = self.env['ir.cron'].search([
             ('name', '=', 'GatewayAPI: Check credit balance'),
             ('model_id', '=', self.env['ir.model']._get_id('iap.account')),
         ])
         if cron_job:
             cron_job.write({
-                'active_job': False,
+                'active': False,
             })
 
     def write(self, vals):
