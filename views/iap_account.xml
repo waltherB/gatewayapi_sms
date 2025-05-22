@@ -43,11 +43,11 @@
                         </group>
                         <group>
                             <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-                            <div class="o_row">
-                                <field name="gatewayapi_api_token" password="False" invisible="show_token == False" nolabel="1"/>
-                                <field name="gatewayapi_api_token" password="True" invisible="show_token == True" nolabel="1"/>
-                                <button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="show_token == True" title="Show Token"/>
-                                <button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="show_token == False" title="Hide Token"/>
+			    <div class="o_row">
+			        <field name="gatewayapi_api_token" password="False" invisible="[('show_token', '=', False)]" nolabel="1"/>
+				<field name="gatewayapi_api_token" password="True" invisible="[('show_token', '=', True)]" nolabel="1"/>
+				<button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="[('show_token', '=', True)]" title="Show Token"/>
+				<button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="[('show_token', '=', False)]" title="Hide Token"/>
                             </div>
                         </group>
                         <group>
