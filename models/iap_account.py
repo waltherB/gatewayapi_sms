@@ -96,6 +96,12 @@ class IapAccount(models.Model):
         help="Action to be performed when the number of credits is less than "
              "min_tokens."
     )
+    gatewayapi_last_credit_check_time = fields.Datetime(
+        string="Last Credit Check Time",
+        readonly=True,
+        copy=False,
+        help="Timestamp of the last automated credit balance check for this account.",
+    )
 
     @api.depends('notification_id.channel_id')
     def _compute_notification_channel(self):
@@ -238,60 +244,121 @@ class IapAccount(models.Model):
 
     @api.model
     def check_gatewayapi_credit_balance(self):
-        """If current credits are lower than gatewayapi_min_tokens, execute action"""
-        iap_account = self._get_sms_account()
-        if iap_account.gatewayapi_min_tokens < 0:
-            _logger.info(
-                "GatewayAPI minimum credits not set. "
-                "Skipping balance check."
-            )
-            return
-        if not iap_account.gatewayapi_token_notification_action:
-            _logger.info(
-                "GatewayAPI notification action not set. "
-                "Skipping balance check."
-            )
-            return
-        try:
-            api_credits = iap_account.get_current_credit_balance()
-        except UserWarning as e:
-            _logger.warning(
-                f"GatewayAPI returned an error while attempting to get "
-                f"current credit balance: {e}"
-            )
-        except Exception as e:
-            _logger.warning(
-                f"An exception occurred while attempting to get current "
-                f"credit balance: {e}"
-            )
-        else:
-            if float(api_credits) < float(iap_account.gatewayapi_min_tokens):
-                _logger.info(
-                    f"You only have {api_credits} GatewayAPI credits left."
-                )
-                ctx = dict(self.env.context or {})
-                ctx.update({
-                    'active_id': iap_account.id,
-                    'active_model': 'iap.account'
-                })
-                iap_account.gatewayapi_token_notification_action.with_context(
-                    ctx
-                ).run()
+        """
+        Checks credit balance for all configured GatewayAPI accounts.
+
+        This method iterates over all iap.account records that are configured
+        for GatewayAPI and have credit checking enabled. It then determines if a
+        balance check is due based on the account's individual schedule.
+        """
+        accounts_to_check = self.env['iap.account'].search([
+            '&',
+            '&',
+            ('service_name', '=', 'sms'),
+            ('gatewayapi_check_min_tokens', '=', True),
+            '|',
+            ('provider', '=', 'sms_api_gatewayapi'),
+            '&',
+            ('gatewayapi_base_url', '!=', False),
+            ('gatewayapi_api_token', '!=', False)
+        ])
+
+        _logger.info(f"Found {len(accounts_to_check)} GatewayAPI accounts to potentially check.")
+
+        for account in accounts_to_check:
+            _logger.info(f"Checking account: {account.name} (ID: {account.id})")
+
+            now = fields.Datetime.now()
+            last_check_time = account.gatewayapi_last_credit_check_time
+            interval_number = account.gatewayapi_cron_interval_number
+            interval_type = account.gatewayapi_cron_interval_type
+
+            # Determine if a check is due
+            check_due = False
+            if not last_check_time:
+                check_due = True
+                _logger.info(f"Account {account.name}: Last check time not set, check is due.")
             else:
-                _logger.info(
-                    f"You have {api_credits} GatewayAPI credits, which is more "
-                    f"than your set minimum of "
-                    f"{iap_account.gatewayapi_min_tokens} credits"
-                )
+                # Calculate the next check time
+                interval_delta = timedelta()
+                if interval_type == 'minutes':
+                    interval_delta = timedelta(minutes=interval_number)
+                elif interval_type == 'hours':
+                    interval_delta = timedelta(hours=interval_number)
+                elif interval_type == 'days':
+                    interval_delta = timedelta(days=interval_number)
+                elif interval_type == 'weeks':
+                    interval_delta = timedelta(weeks=interval_number)
+
+                next_check_time = last_check_time + interval_delta
+                if now >= next_check_time:
+                    check_due = True
+                    _logger.info(f"Account {account.name}: Check is due. Next check was at {next_check_time}, current time is {now}.")
+                else:
+                    _logger.info(f"Account {account.name}: Check not yet due. Next check at {next_check_time}, current time is {now}.")
+
+            if check_due:
+                _logger.info(f"Account {account.name}: Performing credit balance check.")
+                try:
+                    # Update last check time before making the call
+                    account.sudo().write({'gatewayapi_last_credit_check_time': now})
+                    api_credits = account.get_current_credit_balance() # Call on the specific account instance
+                except UserWarning as e:
+                    _logger.warning(
+                        f"Account {account.name}: GatewayAPI returned an error while attempting to get "
+                        f"current credit balance: {e}"
+                    )
+                except Exception as e:
+                    _logger.warning(
+                        f"Account {account.name}: An exception occurred while attempting to get current "
+                        f"credit balance: {e}"
+                    )
+                else:
+                    _logger.info(f"Account {account.name}: Successfully retrieved credit balance: {api_credits}")
+                    if account.gatewayapi_min_tokens < 0:
+                        _logger.info(
+                            f"Account {account.name}: Minimum credits not set (or invalid: {account.gatewayapi_min_tokens}). "
+                            "Skipping low balance notification."
+                        )
+                        continue # Skip to next account
+
+                    if not account.gatewayapi_token_notification_action:
+                        _logger.info(
+                            f"Account {account.name}: Notification action not set. "
+                            "Skipping low balance notification."
+                        )
+                        continue # Skip to next account
+
+                    if float(api_credits) < float(account.gatewayapi_min_tokens):
+                        _logger.info(
+                            f"Account {account.name}: Low credit balance! Current: {api_credits}, Minimum: {account.gatewayapi_min_tokens}."
+                        )
+                        ctx = dict(self.env.context or {})
+                        ctx.update({
+                            'active_id': account.id,
+                            'active_model': 'iap.account'
+                        })
+                        try:
+                            account.gatewayapi_token_notification_action.with_context(ctx).run()
+                            _logger.info(f"Account {account.name}: Low credit notification action triggered.")
+                        except Exception as e:
+                            _logger.error(f"Account {account.name}: Failed to run low credit notification action: {e}")
+                    else:
+                        _logger.info(
+                            f"Account {account.name}: Credit balance ({api_credits}) is sufficient "
+                            f"(Minimum: {account.gatewayapi_min_tokens})."
+                        )
+            else:
+                _logger.info(f"Account {account.name}: Skipping credit balance check as it's not due yet.")
 
     def get_current_credit_balance(self, full_response=False):
-        iap_account_sms = self.env['iap.account']._get_sms_account()
+        self.ensure_one()  # Ensure this method is called on a single record
         headers = {
             'Authorization': (
-                f'Token {iap_account_sms.gatewayapi_api_token}'
+                f'Token {self.gatewayapi_api_token}'
             )
         }
-        base_url = iap_account_sms.gatewayapi_base_url
+        base_url = self.gatewayapi_base_url
         _logger.debug(f"Raw base_url value before validation: {base_url!r}")
         if not base_url or str(base_url).lower() == 'false':
             base_url = 'https://gatewayapi.eu'
@@ -366,26 +433,6 @@ class IapAccount(models.Model):
             'tag': 'reload',
         }
 
-    def _update_gatewayapi_cron(self):
-        """Update cron job interval settings"""
-        try:
-            cron = self.env.ref(
-                'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
-            )
-            if cron:
-                # First update the interval settings
-                cron.write({
-                    'interval_number': self.gatewayapi_cron_interval_number or 1,
-                    'interval_type': self.gatewayapi_cron_interval_type or 'days',
-                })
-
-                # Always update the next call time when interval settings change
-                # This ensures the cron runs at the appropriate time with the new interval
-                self._schedule_next_credit_check()
-        except Exception as e:
-            _logger.error(f"Error updating cron job settings: {e}")
-            # Don't raise the exception to avoid disrupting the transaction
-
     def _get_or_create_notification_channel(self):
         """Get or create a notification channel for low credit alerts"""
         self.ensure_one()
@@ -410,13 +457,31 @@ class IapAccount(models.Model):
         # Make sure show_token is False for new records
         if isinstance(vals_list, dict):
             vals_list['show_token'] = False
+            # Initialize gatewayapi_last_credit_check_time if check_min_tokens is true
+            if vals_list.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals_list:
+                vals_list['gatewayapi_last_credit_check_time'] = False
+        elif isinstance(vals_list, list): # Handle multiple record creation
+            for vals in vals_list:
+                vals['show_token'] = False
+                if vals.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals:
+                    vals['gatewayapi_last_credit_check_time'] = False
+
         records = super().create(vals_list)
         # Link the low credits notification action if it's a GatewayAPI account
         notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
-        if notification_action and records and records.is_gatewayapi:
-            records.write({'gatewayapi_token_notification_action': notification_action.id})
+        for record in records:
+            if notification_action and record.is_gatewayapi:
+                record.write({'gatewayapi_token_notification_action': notification_action.id})
+            # Ensure last_credit_check_time is explicitly set if check is enabled
+            # This handles cases where is_gatewayapi might be true due to other fields
+            # but gatewayapi_check_min_tokens was the trigger.
+            if record.gatewayapi_check_min_tokens and not record.gatewayapi_last_credit_check_time and 'gatewayapi_last_credit_check_time' not in (vals_list if isinstance(vals_list, dict) else {}):
+                 # Check if vals_list is a dict before trying to access it, otherwise default to empty dict to avoid error
+                if not (isinstance(vals_list, dict) and vals_list.get('gatewayapi_last_credit_check_time') is False):
+                    record.write({'gatewayapi_last_credit_check_time': False})
 
-        records._update_gatewayapi_cron()
+
+        # records._update_gatewayapi_cron() # Removed as per task
         return records
 
     def _disable_cron_job(self):
@@ -431,21 +496,23 @@ class IapAccount(models.Model):
                 'active': False,
             })
 
-    def write(self, vals):
+      def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
         # Consolidate show_token reset logic
         caller = self.env.context.get('caller', '')
         if 'show_token' not in vals and caller != 'toggle_token':
             vals['show_token'] = False # Set it in vals before super() call
 
-        res = super().write(vals)
+        # If gatewayapi_check_min_tokens is being enabled, set last_credit_check_time to False
+        # to ensure an immediate check by the next cron run.
+        if vals.get('gatewayapi_check_min_tokens') is True and 'gatewayapi_last_credit_check_time' not in vals:
+            vals['gatewayapi_last_credit_check_time'] = False
+        # If gatewayapi_check_min_tokens is being disabled, we can optionally clear the last_credit_check_time
+        # or leave it. For now, let's clear it to False for consistency.
+        elif vals.get('gatewayapi_check_min_tokens') is False and 'gatewayapi_last_credit_check_time' not in vals:
+            vals['gatewayapi_last_credit_check_time'] = False
 
-        # Disable cron_job if checkbox not set
-        if 'gatewayapi_check_min_tokens' in vals:
-            if vals['gatewayapi_check_min_tokens']:
-                self._schedule_next_credit_check()
-            else:
-                self._disable_cron_job()
+        res = super().write(vals)
 
         # Set the notification action if check_min_tokens is enabled
         if vals.get('gatewayapi_check_min_tokens'):
@@ -457,42 +524,25 @@ class IapAccount(models.Model):
                         _logger.info("Set notification action for account %s", record.id)
                     except Exception as e:
                         _logger.error("Failed to set notification action: %s", e)
+        elif vals.get('gatewayapi_check_min_tokens') is False:
+            # If check_min_tokens is disabled, we might want to clear the notification action.
+            # However, current logic seems to only set it when enabled, not remove it when disabled.
+            # For now, let's maintain that behavior. If desired, add:
+            # for record in self:
+            #     record.gatewayapi_token_notification_action = False
+            pass
+
 
         # Update cron interval if interval settings changed
-        if any(field in vals for field in [
-            'gatewayapi_cron_interval_number',
-            'gatewayapi_cron_interval_type'
-        ]):
-            self._update_gatewayapi_cron()
+        # No longer needed as _update_gatewayapi_cron is removed.
+        # The check_gatewayapi_credit_balance method will use the current values.
+        # if any(field in vals for field in [
+        # 'gatewayapi_cron_interval_number',
+        # 'gatewayapi_cron_interval_type'
+        # ]):
+            # pass
 
         return res
-
-    def _schedule_next_credit_check(self):
-        """Schedule the credit check cron to run at the next possible time"""
-        try:
-            cron = self.env.ref(
-                'gatewayapi_sms.ir_cron_check_tokens', raise_if_not_found=False
-            )
-            if cron:
-                now = datetime.now()
-
-                # Calculate the next run time based on interval settings but don't modify them here
-                # Add 1 minute to ensure it's in the future
-                next_run = now + timedelta(minutes=1)
-
-                # Setting to the next 0 seconds for cleaner timing
-                next_run = next_run.replace(second=0)
-
-                _logger.info(f"Setting next credit check run to: {next_run}")
-
-                # Update just the nextcall time
-                cron.sudo().write({
-                    'nextcall': next_run,
-                    'active': True
-                })
-        except Exception as e:
-            _logger.error(f"Error scheduling next credit check: {e}")
-            # Don't raise the exception to avoid disrupting the transaction
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
     def _compute_gatewayapi_balance(self):

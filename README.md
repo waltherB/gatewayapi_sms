@@ -9,7 +9,7 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
 - **Send SMS via GatewayAPI**: Seamless integration with GatewayAPI for reliable SMS delivery.
 - **Secure API Token Management**: Show/hide your API token in the form with a single click.
 - **Credit Balance Monitoring**: Set minimum credit thresholds and receive notifications when your balance is low.
-- **Flexible Credit Check Scheduling**: Configure how often Odoo checks your GatewayAPI balance directly from the IAP Account form.
+- **Per-Account Credit Check Scheduling**: Configure individual credit check intervals (e.g., daily, hourly) for each GatewayAPI account directly on its IAP Account form. Balance checks are performed automatically for all enabled accounts based on their specific schedules.
 - **Admin Notifications**: Automatic admin alerts and activities when credits run low.
 - **Easy Configuration**: Intuitive form layout and clear help texts.
 - **Odoo 17 Compatible**: Built and tested for Odoo 17.
@@ -86,9 +86,19 @@ You'll find GatewayAPI accounts in the standard IAP Accounts list, highlighted i
 
 ## Usage
 
-- Send SMS from Odoo using the GatewayAPI provider.
-- Receive admin notifications when your credit balance drops below your set threshold.
-- All configuration and scheduling is managed from the IAP Account form—no need to edit Scheduled Actions manually.
+- Send SMS from Odoo using any of your configured GatewayAPI accounts.
+- Receive admin notifications when a specific GatewayAPI account's credit balance drops below its set threshold.
+- Automated credit balance checks are managed by a system-level scheduled action that runs frequently (e.g., hourly). The actual checking of each GatewayAPI account's balance is determined by the individual "Credit check interval" settings on that account's form. There's no need to manually edit the main "GatewayAPI: Check credit balance" scheduled action.
+
+### Understanding Credit Check Scheduling
+The module uses a central scheduled action (`GatewayAPI: Check credit balance`) that runs at a fixed interval (typically hourly). When this action triggers, it reviews all your GatewayAPI IAP accounts that have "Check for minimum credits" enabled.
+
+For each enabled account, the system looks at its individual "Credit check interval" (e.g., every 2 hours, every 1 day) and the "Last Credit Check Time". If the configured interval has passed since the last check for that specific account, its balance will be queried from GatewayAPI, and the "Last Credit Check Time" will be updated.
+
+This ensures that:
+- Each GatewayAPI account is checked according to its own preferred frequency.
+- All configured and enabled accounts are monitored independently.
+- You do not need to adjust the global scheduled action's timing; only the interval settings on each IAP Account form matter for determining check frequency.
 
 ---
 
