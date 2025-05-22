@@ -473,13 +473,13 @@ class IapAccount(models.Model):
         if vals.get('gatewayapi_check_min_tokens'):
             # Set the notification action if it's not already set
             for record in self:
-            if not record.gatewayapi_token_notification_action:
-                try:
-                    notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action')
-                    record.gatewayapi_token_notification_action = notification_action.id
-                    _logger.info("Set notification action for account %s", record.id)
-                except Exception as e:
-                    _logger.error("Failed to set notification action: %s", e)
+                if not record.gatewayapi_token_notification_action:
+                    try:
+                        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action')
+                        record.gatewayapi_token_notification_action = notification_action.id
+                        _logger.info("Set notification action for account %s", record.id)
+                    except Exception as e:
+                        _logger.error("Failed to set notification action: %s", e)
 
         # Update cron interval if interval settings changed
         if any(field in vals for field in [
