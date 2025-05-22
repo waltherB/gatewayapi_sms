@@ -1,132 +1,150 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <record id="iap_account_view_form" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.view.form</field>
         <field name="model">iap.account</field>
-        <field name="inherit_id" ref="iap.iap_account_view_form" />
+        <field name="inherit_id" ref="iap.iap_account_view_form"/>
         <field name="arch" type="xml">
-            <!-- Add the provider field if it doesn't exist -->
+
+            <!-- Add provider field -->
             <xpath expr="//field[@name='service_name']" position="before">
-                <field name="provider" widget="selection" options="{'no_create': True, 'no_open': True}"/>
+                <field name="provider" widget="selection"
+                       options="{'no_create': True, 'no_open': True}"/>
             </xpath>
-            
-            <!-- Make name field required -->
+
+            <!-- Make name required -->
             <xpath expr="//field[@name='name']" position="attributes">
                 <attribute name="required">1</attribute>
                 <attribute name="placeholder">e.g. GatewayAPI SMS</attribute>
             </xpath>
-            
-            <!-- GatewayAPI settings -->
+
+            <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
-                <group
-                    string="GatewayAPI account"
-                    name="group_sms_api_gatewayapi"
-                    invisible="service_name != 'sms' and provider != 'sms_api_gatewayapi' and not context.get('default_provider') == 'sms_api_gatewayapi'"
-                >
-                    <group col="1">
-                        <!-- Add name field at the top of GatewayAPI section -->
-                        <group>
-                            <label for="name" string="Account Name" class="fw-bold"/>
-                            <field name="name" nolabel="1" required="1" placeholder="e.g. GatewayAPI SMS"/>
-                        </group>
-                        <group>
-                            <label for="service_name" string="Service Name" class="fw-bold"/>
-                            <field name="service_name" nolabel="1" placeholder="sms" help="Service Name must be 'sms' for GatewayAPI integration."/>
-                        </group>
-                        <group>
-                            <label for="gatewayapi_base_url" string="GatewayAPI Base URL" class="fw-bold"/>
-                            <field name="gatewayapi_base_url" nolabel="1"/>
-                        </group>
-                        <group>
-                            <label for="gatewayapi_sender" string="Sender Name" class="fw-bold"/>
-                            <field name="gatewayapi_sender" nolabel="1"/>
-                        </group>
-                        <group>
-                            <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-			    <div class="o_row">
-			        <field name="gatewayapi_api_token" password="False" invisible="[('show_token', '=', False)]" nolabel="1"/>
-				<field name="gatewayapi_api_token" password="True" invisible="[('show_token', '=', True)]" nolabel="1"/>
-				<button name="action_toggle_show_token" icon="fa-eye" type="object" class="oe_stat_button" invisible="[('show_token', '=', True)]" title="Show Token"/>
-				<button name="action_toggle_show_token" icon="fa-eye-slash" type="object" class="oe_stat_button" invisible="[('show_token', '=', False)]" title="Hide Token"/>
-                            </div>
-                        </group>
-                        <group>
-                            <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>
-                            <field name="gatewayapi_balance" nolabel="1" readonly="1"/>
-                        </group>
-                        <button name="gatewayapi_connection_test" string="Test Connection" type="object" class="oe_highlight" style="width:auto; min-width:0; display:inline-block;"/>
-                        <group>
-                            <label for="gatewayapi_connection_status" string="Connection Status" class="fw-bold"/>
-                            <field name="gatewayapi_connection_status" nolabel="1" readonly="True"/>
-                        </group>
-                        <group>
-                            <label for="gatewayapi_check_min_tokens" string="Check for minimum credits" class="fw-bold"/>
-                            <field name="gatewayapi_check_min_tokens" nolabel="1"/>
-                        </group>
-                        <div class="text-muted mb-2">
-                            When enabled, you will receive a notification if your credits fall below the minimum.
-                        </div>
-                        
-                        <group string="Notification Channel Configuration" col="1" name="group_gatewayapi_notification_channel_config" attrs="{'invisible': ['|', ('provider', '!=', 'sms_api_gatewayapi'), '&amp;', ('gatewayapi_base_url', '=', False), ('gatewayapi_api_token', '=', False)]}">
-                            <field name="gatewayapi_channel_config_mode" widget="radio" options="{'horizontal': true}"/>
-                            <field name="gatewayapi_existing_channel_id"
-                                   attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'existing')], 'required': [('gatewayapi_channel_config_mode', '=', 'existing')]}"
-                                   options="{'no_create': True, 'no_open': True}"/>
-                            <field name="gatewayapi_new_channel_name"
-                                   attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'create')], 'required': [('gatewayapi_channel_config_mode', '=', 'create')]}"/>
-                            
-                            <group col="2" attrs="{'invisible': [('gatewayapi_channel_config_mode', '=', 'none')]}" name="group_gatewayapi_notification_subscriptions">
-                                <field name="gatewayapi_subscribe_current_user"/>
-                                <field name="gatewayapi_additional_subscribers_user_ids" widget="many2many_tags"
-                                       options="{'no_create': True}"/>
-                            </group>
-                    
-                            <field name="gatewayapi_effective_notification_channel_id" readonly="1" string="Active Notification Channel"/>
-                        </group>
-                                                
-                        <group invisible="gatewayapi_check_min_tokens == False">
-                            <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
-                            <field name="gatewayapi_min_tokens" nolabel="1"/>
-                            <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
-                            <field name="gatewayapi_token_notification_action" nolabel="1"/>
-                            <label for="gatewayapi_cron_interval_number" string="Check interval" class="fw-bold"/>
-                            <field name="gatewayapi_cron_interval_number" nolabel="1"/>
-                            <label for="gatewayapi_cron_interval_type" string="Interval type" class="fw-bold"/>
-                            <field name="gatewayapi_cron_interval_type" nolabel="1"/>
-                        </group>
+                <group string="GatewayAPI account"
+                       name="group_sms_api_gatewayapi"
+                       attrs="{'invisible': ['|', ('service_name', '!=', 'sms'), ('provider', '!=', 'sms_api_gatewayapi')]}"
+                       col="1">
+
+                    <group>
+                        <label for="name" string="Account Name" class="fw-bold"/>
+                        <field name="name" nolabel="1" required="1"
+                               placeholder="e.g. GatewayAPI SMS"/>
                     </group>
+
+                    <group>
+                        <label for="service_name" string="Service Name" class="fw-bold"/>
+                        <field name="service_name" nolabel="1"
+                               placeholder="sms"
+                               help="Service Name must be 'sms' for GatewayAPI integration."/>
+                    </group>
+
+                    <group>
+                        <label for="gatewayapi_base_url" string="GatewayAPI Base URL" class="fw-bold"/>
+                        <field name="gatewayapi_base_url" nolabel="1"/>
+                    </group>
+
+                    <group>
+                        <label for="gatewayapi_sender" string="Sender Name" class="fw-bold"/>
+                        <field name="gatewayapi_sender" nolabel="1"/>
+                    </group>
+
+                    <group>
+                        <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                        <div class="o_row">
+                            <field name="gatewayapi_api_token" widget="char"
+                                   attrs="{'invisible': [('show_token', '=', False)]}"
+                                   password="0" nolabel="1"/>
+                            <field name="gatewayapi_api_token" widget="password"
+                                   attrs="{'invisible': [('show_token', '=', True)]}"
+                                   nolabel="1"/>
+                            <button name="action_toggle_show_token" icon="fa-eye"
+                                    type="object" class="oe_stat_button"
+                                    attrs="{'invisible': [('show_token', '=', True)]}"
+                                    title="Show Token"/>
+                            <button name="action_toggle_show_token" icon="fa-eye-slash"
+                                    type="object" class="oe_stat_button"
+                                    attrs="{'invisible': [('show_token', '=', False)]}"
+                                    title="Hide Token"/>
+                        </div>
+                    </group>
+
+                    <group>
+                        <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>
+                        <field name="gatewayapi_balance" readonly="1" nolabel="1"/>
+                    </group>
+
+                    <button name="gatewayapi_connection_test" string="Test Connection"
+                            type="object" class="oe_highlight"/>
+
+                    <group>
+                        <label for="gatewayapi_connection_status" string="Connection Status" class="fw-bold"/>
+                        <field name="gatewayapi_connection_status" readonly="1" nolabel="1"/>
+                    </group>
+
+                    <group>
+                        <label for="gatewayapi_check_min_tokens" string="Check for minimum credits" class="fw-bold"/>
+                        <field name="gatewayapi_check_min_tokens" nolabel="1"/>
+                    </group>
+
+                    <div class="text-muted mb-2">
+                        When enabled, you will receive a notification if your credits fall below the minimum.
+                    </div>
+
+                    <group string="Notification Channel Configuration"
+                           name="group_gatewayapi_notification_channel_config"
+                           attrs="{'invisible': ['|', ('provider', '!=', 'sms_api_gatewayapi'), &amp;, ('gatewayapi_base_url', '=', False), ('gatewayapi_api_token', '=', False)]}">
+
+                        <field name="gatewayapi_channel_config_mode"
+                               widget="radio"
+                               options="{'horizontal': true}"/>
+                        <field name="gatewayapi_existing_channel_id"
+                               attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'existing')],
+                                       'required': [('gatewayapi_channel_config_mode', '=', 'existing')]}"
+                               options="{'no_create': True, 'no_open': True}"/>
+                        <field name="gatewayapi_new_channel_name"
+                               attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'create')],
+                                       'required': [('gatewayapi_channel_config_mode', '=', 'create')]}"/>
+                        <group col="2"
+                               attrs="{'invisible': [('gatewayapi_channel_config_mode', '=', 'none')]}"
+                               name="group_gatewayapi_notification_subscriptions">
+                            <field name="gatewayapi_subscribe_current_user"/>
+                            <field name="gatewayapi_additional_subscribers_user_ids"
+                                   widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                        </group>
+
+                        <field name="gatewayapi_effective_notification_channel_id"
+                               readonly="1"
+                               string="Active Notification Channel"/>
+                    </group>
+
+                    <group attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}">
+                        <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
+                        <field name="gatewayapi_min_tokens" nolabel="1"/>
+                        <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
+                        <field name="gatewayapi_token_notification_action" nolabel="1"/>
+                        <label for="gatewayapi_cron_interval_number" string="Check interval" class="fw-bold"/>
+                        <field name="gatewayapi_cron_interval_number" nolabel="1"/>
+                        <label for="gatewayapi_cron_interval_type" string="Interval type" class="fw-bold"/>
+                        <field name="gatewayapi_cron_interval_type" nolabel="1"/>
+                    </group>
+
                 </group>
             </xpath>
         </field>
     </record>
 
-    <!-- Add action button to IAP account list view -->
-    <record id="action_create_gatewayapi_account" model="ir.actions.act_window">
-        <field name="name">Create GatewayAPI Account</field>
-        <field name="res_model">iap.account</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-        <field name="context">{
-            'default_name': 'GatewayAPI',
-            'default_service_name': 'sms',
-            'default_provider': 'sms_api_gatewayapi',
-            'default_gatewayapi_base_url': 'https://gatewayapi.eu',
-            'default_gatewayapi_sender': 'Odoo',
-            'form_view_ref': 'gatewayapi_sms.iap_account_view_form'
-        }</field>
-    </record>
-
-    <!-- Modified tree view with highlighting for GatewayAPI accounts -->
+    <!-- Tree view decoration -->
     <record id="iap_account_view_tree" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.tree</field>
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url != False and gatewayapi_api_token != False)</attribute>
+                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url and gatewayapi_api_token)</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
-                <field name="provider" invisible="0"/>
+                <field name="provider"/>
                 <field name="gatewayapi_base_url" invisible="1"/>
                 <field name="gatewayapi_api_token" invisible="1"/>
             </xpath>
@@ -143,44 +161,33 @@
             </xpath>
         </field>
     </record>
-    
-    <!-- Action definition for GatewayAPI Accounts (for potential future use) -->
+
+    <!-- Action -->
     <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[
-            '|', 
-            ('provider', '=', 'sms_api_gatewayapi'), 
-            '&amp;', 
-            ('gatewayapi_base_url', '!=', False), 
-            ('gatewayapi_api_token', '!=', False)
-        ]</field>
+        <field name="domain">[('|', ('provider', '=', 'sms_api_gatewayapi'), &amp;, ('gatewayapi_base_url', '!=', False), ('gatewayapi_api_token', '!=', False))]</field>
         <field name="context">{
             'default_name': 'GatewayAPI',
             'default_service_name': 'sms',
             'default_provider': 'sms_api_gatewayapi',
             'default_gatewayapi_base_url': 'https://gatewayapi.eu',
-            'default_gatewayapi_sender': 'Odoo',
+            'default_gatewayapi_sender': 'Odoo'
         }</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create a new GatewayAPI account
             </p>
-            <p>
-                This will create an account for sending SMS via GatewayAPI.
-            </p>
+            <p>This will create an account for sending SMS via GatewayAPI.</p>
         </field>
     </record>
 
-    <!-- Add Create button to the GatewayAPI accounts action -->
     <record id="action_gatewayapi_accounts_form_view" model="ir.actions.act_window.view">
-        <field name="sequence" eval="1"/>
+        <field name="sequence">1</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="iap.iap_account_view_form"/>
         <field name="act_window_id" ref="action_gatewayapi_accounts"/>
     </record>
-
-    <!-- The separate menu item for GatewayAPI Accounts has been removed -->
-    <!-- Access now only through Settings -> Technical -> IAP Accounts -->
 </odoo>
+
