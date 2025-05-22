@@ -66,6 +66,23 @@
                         <div class="text-muted mb-2">
                             When enabled, you will receive a notification if your credits fall below the minimum.
                         </div>
+                        
+                        <group string="Notification Channel Configuration" col="1" name="group_gatewayapi_notification_channel_config" attrs="{'invisible': ['|', ('provider', '!=', 'sms_api_gatewayapi'), '&amp;', ('gatewayapi_base_url', '=', False), ('gatewayapi_api_token', '=', False)]}">
+                            <field name="gatewayapi_channel_config_mode" widget="radio" options="{'horizontal': true}"/>
+                            <field name="gatewayapi_existing_channel_id"
+                                   attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'existing')], 'required': [('gatewayapi_channel_config_mode', '=', 'existing')]}"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="gatewayapi_new_channel_name"
+                                   attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'create')], 'required': [('gatewayapi_channel_config_mode', '=', 'create')]}"/>
+                            
+                            <group col="2" attrs="{'invisible': [('gatewayapi_channel_config_mode', '=', 'none')]}" name="group_gatewayapi_notification_subscriptions">
+                                <field name="gatewayapi_subscribe_current_user"/>
+                                <field name="gatewayapi_additional_subscribers_user_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"/>
+                            </group>
+                    
+                            <field name="gatewayapi_effective_notification_channel_id" readonly="1" string="Active Notification Channel"/>
+                        </group>
                                                 
                         <group invisible="gatewayapi_check_min_tokens == False">
                             <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>

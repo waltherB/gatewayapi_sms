@@ -72,6 +72,30 @@ pip install phonenumbers requests
 5. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
 6. Use the eye/eye-slash button to show/hide your API token securely.
 
+### Configuring Notification Channel for Low Credits
+
+For each GatewayAPI IAP account, you can configure how low credit alerts are posted to an Odoo Discuss channel. These settings are found within the "Notification Channel Configuration" section on the IAP Account form:
+
+1.  **Notification Channel Mode**:
+    *   **No Channel Notifications**: Select this if you do not want low credit alerts for this account to be posted to any channel. Admin notifications (activities) will still be created.
+    *   **Use Existing Channel**: Choose this to select a pre-existing Discuss channel where notifications should be posted.
+        *   **Existing Notification Channel**: Appears if "Use Existing Channel" is selected. Pick the desired channel from the list.
+    *   **Create New Channel**: Select this to have a new Discuss channel automatically created for this account's notifications.
+        *   **New Channel Name**: Appears if "Create New Channel" is selected. You can customize the name for the new channel (default is "GatewayAPI: {Account Name} Notifications").
+
+2.  **Channel Subscriptions** (available if mode is not 'No Channel Notifications'):
+    *   **Subscribe Me to Channel**: Check this box (default: enabled) to automatically add yourself as a member to the selected or newly created notification channel.
+    *   **Additional Users for Channel**: You can select other Odoo users who should also be added as members to the notification channel.
+
+3.  **Active Notification Channel**:
+    *   This read-only field displays the Discuss channel that is currently active for notifications for this IAP account, based on your configuration.
+
+When you save the IAP Account, the system will:
+- Link or create the channel as per your selection.
+- Subscribe the specified users (current user if checked, and any additional users) to that channel. Note: Users are added, but not automatically removed by unchecking these options later; channel membership can be managed directly in Discuss if needed.
+
+Low credit alerts for this account will then be posted to this "Active Notification Channel" in addition to creating an activity for the admin.
+
 ### Important Notes for Odoo 17
 
 In Odoo 17, the SMS provider system has been simplified, but GatewayAPI will still work correctly with this module. When you configure an account with GatewayAPI settings (API token and base URL), the module will automatically:

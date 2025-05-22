@@ -42,36 +42,10 @@ class GatewayapiNotification(models.Model):
         copy=False
     )
 
-    def get_or_create_channel(self):
-        """Get or create a notification channel for low credit alerts."""
+    def get_channel_for_notifications(self): # Renamed
         self.ensure_one()
-
         if self.channel_id:
             return self.channel_id
-
-        channel_name = f"GatewayAPI SMS Notifications - {self.account_id.name or 'Default'}"
-        
-        # Ensure partner_ids has a default value if needed by mail.channel creation.
-        # Usually, admin is added or specific users.
-        admin_user = self.env.ref('base.user_admin', raise_if_not_found=False)
-        if not admin_user:
-            _logger.warning("Admin user not found, cannot automatically add to new notification channel.")
-            partner_ids = []
-        else:
-            partner_ids = [(4, admin_user.partner_id.id)] # Add admin partner to the channel
-
-        channel_vals = {
-            'name': channel_name,
-            'channel_type': 'channel',  # Use 'chat' for private, 'channel' for public/group
-            'description': f"Channel for GatewayAPI SMS credit alerts for account {self.account_id.name or 'Default'}",
-            'group_public_id': None,  # Set to None for a private channel, or link to a group for restricted access
-            'channel_partner_ids': partner_ids, # Add initial members during creation
-        }
-
-        channel = self.env['mail.channel'].create(channel_vals)
-        _logger.info(f"Created new mail.channel '{channel.name}' (ID: {channel.id}) for GatewayAPI notifications.")
-
-        # Assign the newly created channel to the current notification record
-        self.channel_id = channel.id
-        return channel
+        # _logger.info(f"No notification channel is configured for IAP account {self.account_id.name} (via gatewayapi.notification record).") # Optional logging
+        return False
 
