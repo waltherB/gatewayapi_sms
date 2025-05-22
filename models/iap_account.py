@@ -484,7 +484,19 @@ class IapAccount(models.Model):
         # records._update_gatewayapi_cron() # Removed as per task
         return records
 
-    def write(self, vals):
+    def _disable_cron_job(self):
+        """Disable cron job for low credit notification """
+        # Corrected model name from 'ir.cron.job' to 'ir.cron' for Odoo 17
+        cron_job = self.env['ir.cron'].search([
+            ('name', '=', 'GatewayAPI: Check credit balance'),
+            ('model_id', '=', self.env['ir.model']._get_id('iap.account')),
+        ])
+        if cron_job:
+            cron_job.write({
+                'active': False,
+            })
+
+      def write(self, vals):
         """Reset show_token to False after form saves unless explicitly toggled"""
         # Consolidate show_token reset logic
         caller = self.env.context.get('caller', '')
