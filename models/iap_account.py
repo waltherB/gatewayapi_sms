@@ -142,7 +142,7 @@ class IapAccount(models.Model):
             if notif_setting and notif_setting.channel_id:
                 rec.gatewayapi_effective_notification_channel_id = notif_setting.channel_id
             else:
-                rec.gatewayapi_effective_notification_channel_id = False
+                rec.gatewayapi_effective_notification_channel_id = None
 
     @api.onchange('name', 'gatewayapi_channel_config_mode')
     def _onchange_iap_account_name_for_channel(self):
