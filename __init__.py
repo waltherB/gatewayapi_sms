@@ -73,19 +73,18 @@ def post_init_hook(first_param, registry=None):
         _logger.error(f"Error in post_init_hook: {e}")
         # Don't propagate the error to prevent installation failure
 
-
 def uninstall_hook(first_param, registry=None):
     """Cleanup hook to remove GatewayAPI elements from IAP views
-    
+
     Can be called as either:
-    - uninstall_hook(cr, registry) - Odoo <= 16 
+    - uninstall_hook(cr, registry) - Odoo <= 16
     - uninstall_hook(env) - Odoo 17+
     """
     import logging
     _logger = logging.getLogger(__name__)
-    
+
     _logger.info("Running uninstall_hook for gatewayapi_sms")
-    
+
     try:
         # Determine if we got env or cr as first parameter
         if hasattr(first_param, 'cr'):
@@ -99,39 +98,77 @@ def uninstall_hook(first_param, registry=None):
             from odoo import api, SUPERUSER_ID
             with api.Environment.manage():
                 env = api.Environment(cr, SUPERUSER_ID, {})
-        
+
+        IrModelFields = env['ir.model.fields']
+        IrModel = env['ir.model']
+
+        # Define the model and field pattern to check
+        model_name = 'iap.account'
+        field_pattern = 'gatewayapi_%'
+
+        # Get the model ID
+        model = IrModel.search([('model', '=', model_name)])
+        if not model:
+            _logger.error(f"Model {model_name} not found")
+            return
+
+        # Get all fields related to the pattern
+        existing_fields = IrModelFields.search([('model_id', '=', model.id), ('name', 'like', field_pattern)])
+        existing_field_names = {field.name for field in existing_fields}
+
+        # Define the fields that should exist
+        required_fields = [
+            'gatewayapi_new_channel_name',
+            'gatewayapi_subscribe_current_user',
+            'gatewayapi_effective_notification_channel_id',
+            # Add other required fields as needed
+        ]
+
+        # Create missing fields
+        for field_name in required_fields:
+            if field_name not in existing_field_names:
+                _logger.info(f"Creating missing field: {field_name}")
+                IrModelFields.create({
+                    'name': field_name,
+                    'model_id': model.id,
+                    'model': model_name,
+                    'field_description': '{"en_US": "Field Description"}',  # Update description as needed
+                    'ttype': 'char',  # Update field type as needed
+                    'state': 'manual',
+                })
+
         # Run cleanup directly on database
         _logger.info("Cleaning up database views...")
-        
+
         # Clean up views - handle JSONB format in Odoo 17
         cr.execute("""
             UPDATE ir_ui_view
-            SET arch_db = regexp_replace(arch_db::text, 
-                '<field name="gatewayapi_[^"]*"[^>]*>.*?</field>', 
+            SET arch_db = regexp_replace(arch_db::text,
+                '<field name="gatewayapi_[^"]*"[^>]*>.*?</field>',
                 '', 'g')::jsonb
             WHERE model = 'iap.account'
             AND arch_db::text LIKE '%gatewayapi%';
         """)
-        
+
         # Clean up view elements containing gatewayapi in groups
         cr.execute("""
             UPDATE ir_ui_view
-            SET arch_db = regexp_replace(arch_db::text, 
-                '<group[^>]*?>.*?gatewayapi.*?</group>', 
+            SET arch_db = regexp_replace(arch_db::text,
+                '<group[^>]*?>.*?gatewayapi.*?</group>',
                 '', 'g')::jsonb
             WHERE model = 'iap.account'
             AND arch_db::text LIKE '%gatewayapi%';
         """)
-        
+
         # Remove field references
         _logger.info("Cleaning up field references...")
         cr.execute("""
-            DELETE FROM ir_model_fields 
-            WHERE model = 'iap.account' 
+            DELETE FROM ir_model_fields
+            WHERE model = 'iap.account'
             AND name LIKE 'gatewayapi_%';
         """)
-        
+
         _logger.info("GatewayAPI uninstall cleanup complete")
     except Exception as e:
         _logger.error(f"Error in uninstall_hook: {e}")
-        # Don't propagate the error to prevent uninstallation failure
+
