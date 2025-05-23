@@ -19,6 +19,8 @@
 
             <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
+                <!-- Add the computed field so Odoo can use it in modifiers -->
+                <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
                        invisible="not is_gatewayapi"
