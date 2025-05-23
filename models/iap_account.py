@@ -135,14 +135,18 @@ class IapAccount(models.Model):
             if rec.provider == 'sms_api_gatewayapi' and not rec.name:
                 raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
-    @api.depends('notification_id.channel_id')
+    @api.depends('notification_id', 'notification_id.channel_id')
     def _compute_effective_notification_channel(self):
         for rec in self:
-            notif_setting = self.env['gatewayapi.notification'].search([('account_id', '=', rec.id)], limit=1)
-            if notif_setting and notif_setting.channel_id:
-                rec.gatewayapi_effective_notification_channel_id = notif_setting.channel_id
-            else:
-                rec.gatewayapi_effective_notification_channel_id = False
+            effective_channel = None
+            if rec.notification_id:
+                # Assuming there's at most one notification_id record,
+                # or we take the first one that has a channel_id.
+                for notif_setting in rec.notification_id:
+                    if notif_setting.channel_id and isinstance(notif_setting.channel_id, models.BaseModel) and notif_setting.channel_id._name == 'mail.channel':
+                        effective_channel = notif_setting.channel_id
+                        break # Found a suitable channel
+            rec.gatewayapi_effective_notification_channel_id = effective_channel
 
     @api.onchange('name', 'gatewayapi_channel_config_mode')
     def _onchange_iap_account_name_for_channel(self):
