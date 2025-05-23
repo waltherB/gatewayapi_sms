@@ -135,7 +135,7 @@ class IapAccount(models.Model):
             if rec.provider == 'sms_api_gatewayapi' and not rec.name:
                 raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
-    @api.depends('notification_id', 'notification_id.channel_id')
+    @api.depends('notification_id', 'notification_id.channel_id') # Dependencies are less critical for this diagnostic version
     def _compute_effective_notification_channel(self):
         for rec in self:
             effective_channel = None
@@ -147,6 +147,7 @@ class IapAccount(models.Model):
                         effective_channel = notif_setting.channel_id
                         break # Found a suitable channel
             rec.gatewayapi_effective_notification_channel_id = effective_channel
+
 
     @api.onchange('name', 'gatewayapi_channel_config_mode')
     def _onchange_iap_account_name_for_channel(self):
@@ -647,11 +648,19 @@ class IapAccount(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-        """Reset show_token to False on new records"""
-        result = super().default_get(fields_list)
+        """Reset show_token to False and ensure gatewayapi_existing_channel_id is False by default."""
+        # It's good practice to use a consistent variable name, e.g., `res`
+        res = super(IapAccount, self).default_get(fields_list)
+        
+        # Ensure show_token is False if requested
         if 'show_token' in fields_list:
-            result['show_token'] = False
-        return result
+            res['show_token'] = False
+        
+        # Explicitly default gatewayapi_existing_channel_id to False (empty) if requested
+        if 'gatewayapi_existing_channel_id' in fields_list:
+            res['gatewayapi_existing_channel_id'] = False
+            
+        return res
 
     def name_get(self):
         result = []
@@ -726,4 +735,5 @@ class IapAccount(models.Model):
             # This field might be removed or its logic updated later
             # For now, let's check if there's any notification setting which implies a channel might exist or be configured.
             rec.field_exists = bool(rec.notification_id and rec.notification_id[0].channel_id)
+
 
