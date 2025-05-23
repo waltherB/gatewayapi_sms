@@ -102,8 +102,7 @@
                                invisible="gatewayapi_channel_config_mode != 'existing'"
                                options="{'no_create': True, 'no_open': True}"/>
                         <field name="gatewayapi_new_channel_name"
-                               invisible="gatewayapi_channel_config_mode != 'create'"
-                               required="1"/>
+                               invisible="gatewayapi_channel_config_mode != 'create'"/>
                         
                         <group col="2" name="group_gatewayapi_notification_subscriptions">
                             <field name="gatewayapi_subscribe_current_user"/>
