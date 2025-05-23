@@ -100,7 +100,6 @@
                                options="{'horizontal': true}"/>
                         <field name="gatewayapi_existing_channel_id"
                                invisible="gatewayapi_channel_config_mode != 'existing'"
-                               required="1"
                                options="{'no_create': True, 'no_open': True}"/>
                         <field name="gatewayapi_new_channel_name"
                                invisible="gatewayapi_channel_config_mode != 'create'"
