@@ -27,7 +27,7 @@
 
                     <group>
                         <label for="name" string="Account Name" class="fw-bold"/>
-                        <field name="name" nolabel="1" required="1"
+                        <field name="name" nolabel="1" 
                                placeholder="e.g. GatewayAPI SMS"/>
                     </group>
 
