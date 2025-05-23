@@ -21,7 +21,7 @@
             <xpath expr="//group[@name='account']" position="after">
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
-                       attrs="{'invisible': [('provider', '!=', 'sms_api_gatewayapi')]}"
+                       t-if="provider == 'sms_api_gatewayapi'"
                        col="1">
 
                     <group>
@@ -51,19 +51,19 @@
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
-                                   attrs="{'invisible': [('show_token', '=', True)]}"
+                                   t-if="!show_token"
                                    password="0" nolabel="1"/>
                             <field name="gatewayapi_api_token" widget="password"
-                                   attrs="{'invisible': [('show_token', '=', False)]}"
+                                   t-if="show_token"
                                    nolabel="1"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
                                     type="object" class="oe_stat_button"
-                                    attrs="{'invisible': [('show_token', '=', False)]}"
-                                    title="Show Token"/>
+                                    t-if="show_token"
+                                    title="Hide Token"/>
                             <button name="action_toggle_show_token" icon="fa-eye-slash"
                                     type="object" class="oe_stat_button"
-                                    attrs="{'invisible': [('show_token', '=', True)]}"
-                                    title="Hide Token"/>
+                                    t-if="!show_token"
+                                    title="Show Token"/>
                         </div>
                     </group>
 
@@ -91,18 +91,18 @@
 
                     <group string="Notification Channel Configuration"
                            name="group_gatewayapi_notification_channel_config"
-                           attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}">
+                           t-if="gatewayapi_check_min_tokens">
 
                         <field name="gatewayapi_channel_config_mode"
                                widget="radio"
                                options="{'horizontal': true}"/>
                         <field name="gatewayapi_existing_channel_id"
-                               attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'existing')],
-                                       'required': [('gatewayapi_channel_config_mode', '=', 'existing')]}"
+                               t-if="gatewayapi_channel_config_mode == 'existing'"
+                               required="1"
                                options="{'no_create': True, 'no_open': True}"/>
                         <field name="gatewayapi_new_channel_name"
-                               attrs="{'invisible': [('gatewayapi_channel_config_mode', '!=', 'create')],
-                                       'required': [('gatewayapi_channel_config_mode', '=', 'create')]}"/>
+                               t-if="gatewayapi_channel_config_mode == 'create'"
+                               required="1"/>
                         
                         <group col="2" name="group_gatewayapi_notification_subscriptions">
                             <field name="gatewayapi_subscribe_current_user"/>
@@ -116,7 +116,7 @@
                                string="Active Notification Channel"/>
                     </group>
 
-                    <group attrs="{'invisible': [('gatewayapi_check_min_tokens', '=', False)]}">
+                    <group t-if="gatewayapi_check_min_tokens">
                         <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                         <field name="gatewayapi_min_tokens" nolabel="1"/>
                         <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
