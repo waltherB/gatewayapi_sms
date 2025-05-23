@@ -13,7 +13,7 @@
 
             <!-- Make name required -->
             <xpath expr="//field[@name='name']" position="attributes">
-                <attribute name="required">1</attribute>
+                <attribute name="attrs">{'required': [('provider', '=', 'sms_api_gatewayapi')]}</attribute>
                 <attribute name="placeholder">e.g. GatewayAPI SMS</attribute>
             </xpath>
 

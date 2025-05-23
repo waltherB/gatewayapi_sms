@@ -19,7 +19,7 @@ class IapAccount(models.Model):
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
     # Make name field required
-    name = fields.Char(required=True, copy=False)
+    name = fields.Char(copy=False)
 
     # Instead of trying to dynamically modify the selection options,
     # we should use the inherent extensibility of selection fields in Odoo
@@ -129,6 +129,11 @@ class IapAccount(models.Model):
         for rec in self:
             if rec.gatewayapi_channel_config_mode == 'create' and not rec.gatewayapi_new_channel_name:
                 raise ValidationError(_("You must set a channel name when creating a new notification channel."))
+    @api.constrains('provider', 'name')
+    def _check_gatewayapi_name_required(self):
+        for rec in self:
+            if rec.provider == 'sms_api_gatewayapi' and not rec.name:
+                raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
     @api.depends('notification_id.channel_id')
     def _compute_effective_notification_channel(self):
