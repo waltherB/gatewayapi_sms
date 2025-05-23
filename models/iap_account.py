@@ -2,6 +2,8 @@
 
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
+from odoo.exceptions import ValidationError
+
 import pytz
 
 import logging
@@ -121,6 +123,12 @@ class IapAccount(models.Model):
         copy=False,
         help="Timestamp of the last automated credit balance check for this account.",
     )
+
+    @api.constrains('gatewayapi_channel_config_mode', 'gatewayapi_new_channel_name')
+    def _check_channel_name_required(self):
+        for rec in self:
+            if rec.gatewayapi_channel_config_mode == 'create' and not rec.gatewayapi_new_channel_name:
+                raise ValidationError(_("You must set a channel name when creating a new notification channel."))
 
     @api.depends('notification_id.channel_id')
     def _compute_effective_notification_channel(self):
