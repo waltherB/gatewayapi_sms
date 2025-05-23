@@ -91,7 +91,9 @@ class IapAccount(models.Model):
     gatewayapi_existing_channel_id = fields.Many2one(
         'mail.channel', string="Existing Notification Channel",
     #    domain="[('channel_type', 'in', ['channel', 'group'])]", # Temporarily commented out
-        help="Select an existing channel for notifications.", copy=False, ondelete='set null')
+    #    help="Select an existing channel for notifications.", copy=False, ondelete='set null')
+         help="Select an existing channel for notifications.", copy=False)
+
 
     gatewayapi_new_channel_name = fields.Char(
         string="New Channel Name", copy=False,
