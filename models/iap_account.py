@@ -2,6 +2,8 @@
 
 from odoo import fields, models, api, _
 from datetime import datetime, timedelta
+from odoo.exceptions import ValidationError
+
 import pytz
 
 import logging
@@ -17,7 +19,7 @@ class IapAccount(models.Model):
     _inherit = ['iap.account', 'mail.thread', 'mail.activity.mixin']
 
     # Make name field required
-    name = fields.Char(required=True, copy=False)
+    name = fields.Char(copy=False)
 
     # Instead of trying to dynamically modify the selection options,
     # we should use the inherent extensibility of selection fields in Odoo
@@ -32,14 +34,6 @@ class IapAccount(models.Model):
         compute="_compute_is_gatewayapi",
         store=False,  # Changed to False to avoid upgrade issues
         help="Indicates if this account is configured for GatewayAPI"
-    )
-
-    # Add a helper field to check if notification channel field exists
-    field_exists = fields.Boolean(
-        string="Field Exists",
-        compute="_compute_field_exists",
-        store=False,
-        help="Technical field to check if notification channel field exists"
     )
 
     service_name = fields.Char(
@@ -72,42 +66,15 @@ class IapAccount(models.Model):
         help="Minimum credit level for alerting purposes. "
              "Only used if 'Check for minimum credits' is enabled."
     )
-
-    # Rather than a direct reference, use a computed field
-    notification_id = fields.One2many(
-        'gatewayapi.notification',
-        'account_id',
-        string="Notification Settings"
+    gatewayapi_enable_email_notification = fields.Boolean(
+        string="Enable Low Credit Email Alert", 
+        default=False,
+        help="If checked, an email will be sent to the specified address when credits fall below the minimum threshold."
     )
-
-    gatewayapi_channel_config_mode = fields.Selection([
-        ('none', 'No Channel Notifications'),
-        ('existing', 'Use Existing Channel'),
-        ('create', 'Create New Channel'),
-    ], string="Notification Channel Mode", default='create', copy=False)
-
-    gatewayapi_existing_channel_id = fields.Many2one(
-        'mail.channel', string="Existing Notification Channel",
-    #    domain="[('channel_type', 'in', ['channel', 'group'])]", # Temporarily commented out
-        help="Select an existing channel for notifications.", copy=False, ondelete='set null')
-
-    gatewayapi_new_channel_name = fields.Char(
-        string="New Channel Name", copy=False,
-        help="Name for the new channel to be created for notifications. Default: 'GatewayAPI: {Account Name} Notifications'")
-
-    gatewayapi_subscribe_current_user = fields.Boolean(
-        string="Subscribe Me to Channel", default=True, copy=False,
-        help="Check this to automatically subscribe yourself to the notification channel.")
-
-    gatewayapi_additional_subscribers_user_ids = fields.Many2many(
-        'res.users', 'iap_account_notification_res_users_rel',
-        'iap_account_id', 'user_id', string="Additional Users for Channel", copy=False,
-        help="Select other users to subscribe to the notification channel.")
-
-    gatewayapi_effective_notification_channel_id = fields.Many2one(
-        'mail.channel', string="Effective Notification Channel",
-        compute="_compute_effective_notification_channel", store=True, readonly=True,
-        help="The channel currently used for notifications for this account.")
+    gatewayapi_low_credit_notification_email = fields.Char(
+        string="Low Credit Notification Email",
+        help="Email address to receive low credit alerts. Required if email alert is enabled."
+    )
 
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
@@ -122,77 +89,19 @@ class IapAccount(models.Model):
         help="Timestamp of the last automated credit balance check for this account.",
     )
 
-    @api.depends('notification_id.channel_id')
-    def _compute_effective_notification_channel(self):
+    @api.constrains('gatewayapi_channel_config_mode', 'gatewayapi_new_channel_name')
+    def _check_channel_name_required(self):
         for rec in self:
-            notif_setting = self.env['gatewayapi.notification'].search([('account_id', '=', rec.id)], limit=1)
-            if notif_setting and notif_setting.channel_id:
-                rec.gatewayapi_effective_notification_channel_id = notif_setting.channel_id
-            else:
-                rec.gatewayapi_effective_notification_channel_id = False
-
-    @api.onchange('name', 'gatewayapi_channel_config_mode')
-    def _onchange_iap_account_name_for_channel(self):
-        if self.gatewayapi_channel_config_mode == 'create' and self.name and not self.gatewayapi_new_channel_name:
-            self.gatewayapi_new_channel_name = f"GatewayAPI: {self.name} Notifications"
-
-    def _create_gatewayapi_new_channel(self, channel_name):
-        # self here is a single iap.account record
-        if not channel_name:
-            channel_name = f"GatewayAPI: {self.name or 'Unnamed Account'} Notifications"
-        
-        channel_vals = {
-            'name': channel_name,
-            'channel_type': 'channel',
-            'description': f"Notifications for GatewayAPI Account: {self.name}",
-            'group_public_id': None,
-        }
-        new_channel = self.env['mail.channel'].create(channel_vals)
-        _logger.info(f"Created new mail.channel '{new_channel.name}' (ID: {new_channel.id}) for IAP account {self.name}")
-        return new_channel
+            if rec.gatewayapi_channel_config_mode == 'create' and not rec.gatewayapi_new_channel_name:
+                raise ValidationError(_("You must set a channel name when creating a new notification channel."))
+    @api.constrains('provider', 'name')
+    def _check_gatewayapi_name_required(self):
+        for rec in self:
+            if rec.provider == 'sms_api_gatewayapi' and not rec.name:
+                raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
     def _process_notification_channel_settings(self):
-        for record in self:
-            notif_config_record = self.env['gatewayapi.notification'].search([('account_id', '=', record.id)], limit=1)
-            if not notif_config_record:
-                notif_config_record = self.env['gatewayapi.notification'].create({'account_id': record.id})
-
-            target_channel = False
-            if record.gatewayapi_channel_config_mode == 'existing':
-                target_channel = record.gatewayapi_existing_channel_id
-            elif record.gatewayapi_channel_config_mode == 'create':
-                # Ensure new_channel_name is not empty, use default if necessary
-                channel_name_to_create = record.gatewayapi_new_channel_name
-                if not channel_name_to_create and record.name: # Default if empty
-                    channel_name_to_create = f"GatewayAPI: {record.name} Notifications"
-                elif not channel_name_to_create: # Fallback if name is also empty
-                    channel_name_to_create = "GatewayAPI: Unnamed Account Notifications"
-                
-                # Check if a channel with this name already exists to avoid duplicates if desired,
-                # or always create new. For now, let's assume we always create if mode is 'create'
-                # and rely on user to manage channel names if they want to reuse.
-                # Alternatively, search for existing channel with this name first.
-                target_channel = record._create_gatewayapi_new_channel(channel_name_to_create)
-
-            notif_config_record.sudo().write({'channel_id': target_channel.id if target_channel else False})
-
-            user_ids_to_subscribe = []
-            if record.gatewayapi_subscribe_current_user:
-                user_ids_to_subscribe.append(self.env.uid)
-            
-            if record.gatewayapi_additional_subscribers_user_ids:
-                user_ids_to_subscribe.extend(record.gatewayapi_additional_subscribers_user_ids.ids)
-
-            if target_channel and user_ids_to_subscribe:
-                unique_user_ids = list(set(user_ids_to_subscribe))
-                # mail.channel.add_members is idempotent, no need to filter existing members
-                try:
-                    target_channel.sudo().add_members(unique_user_ids)
-                    _logger.info(f"Subscribed users {unique_user_ids} to channel {target_channel.name} for account {record.name}")
-                except Exception as e:
-                    _logger.error(f"Failed to subscribe users to channel {target_channel.name} for account {record.name}: {e}")
-            elif target_channel and not user_ids_to_subscribe:
-                 _logger.info(f"No users selected for subscription to channel {target_channel.name} for account {record.name}")
+        pass
 
 
     gatewayapi_connection_status = fields.Char(
@@ -232,9 +141,8 @@ class IapAccount(models.Model):
     )
     show_token = fields.Boolean(
         default=False,
-        help="Show or hide the API token in the form.",
-        # Make it non-persistent so it always resets when form is reopened
-        store=False
+        help="Show or hide the API token in the form."
+        # store=False has been removed, so it defaults to store=True
     )
 
     @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
@@ -538,50 +446,50 @@ class IapAccount(models.Model):
         return records
 
     def write(self, vals):
-        """Reset show_token to False after form saves unless explicitly toggled"""
-        # Consolidate show_token reset logic
-        caller = self.env.context.get('caller', '')
-        if 'show_token' not in vals and caller != 'toggle_token':
-            vals['show_token'] = False # Set it in vals before super() call
-
-        # If gatewayapi_check_min_tokens is being enabled, set last_credit_check_time to False
-        # to ensure an immediate check by the next cron run.
-        if vals.get('gatewayapi_check_min_tokens') is True and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-        # If gatewayapi_check_min_tokens is being disabled, we can optionally clear the last_credit_check_time
-        # or leave it. For now, let's clear it to False for consistency.
-        elif vals.get('gatewayapi_check_min_tokens') is False and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-
-        res = super().write(vals)
-
-        # Set the notification action if check_min_tokens is enabled
-        if 'gatewayapi_check_min_tokens' in vals: # Check if the field is part of the update
-            for record in self: # Iterate over self, which are the records being written to
-                if record.gatewayapi_check_min_tokens:
-                    if not record.gatewayapi_token_notification_action:
-                        try:
-                            notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action')
-                            record.gatewayapi_token_notification_action = notification_action.id
-                            _logger.info("Set notification action for account %s", record.id)
-                        except Exception as e:
-                            _logger.error("Failed to set notification action for account %s: %s", record.id, e)
-                # else: # If gatewayapi_check_min_tokens is False
-                    # Optionally clear the action if it's disabled
-                    # record.gatewayapi_token_notification_action = False
+        # Handle 'gatewayapi_check_min_tokens' change
+        if 'gatewayapi_check_min_tokens' in vals:
+            if vals['gatewayapi_check_min_tokens'] is True:
+                # Enabling checks: reset last check time to ensure an immediate check by cron
+                vals['gatewayapi_last_credit_check_time'] = False
+            else:
+                # Disabling checks: reset last check time and clear the notification action
+                vals['gatewayapi_last_credit_check_time'] = False
+                vals['gatewayapi_token_notification_action'] = False
         
-        # Process channel settings if relevant fields are changed
-        channel_config_fields = [
-            'gatewayapi_channel_config_mode', 
-            'gatewayapi_existing_channel_id', 
-            'gatewayapi_new_channel_name',
-            'gatewayapi_subscribe_current_user',
-            'gatewayapi_additional_subscribers_user_ids'
-        ]
-        if any(field_name in vals for field_name in channel_config_fields) or 'name' in vals: # 'name' can affect default channel name
-            for record in self:
-                record._process_notification_channel_settings()
+        # Handle interval changes for already active checks
+        # If interval fields are changed and checks are not being explicitly disabled in this write operation
+        elif ('gatewayapi_cron_interval_number' in vals or 'gatewayapi_cron_interval_type' in vals):
+            # Check if any of the records currently being written to have checks enabled.
+            # This requires checking the state of 'self' before the write.
+            # If 'gatewayapi_check_min_tokens' is also in 'vals', the logic above handles it.
+            # This 'elif' ensures this block is only considered if 'gatewayapi_check_min_tokens' is NOT in vals.
+            if any(rec.gatewayapi_check_min_tokens for rec in self):
+                 vals['gatewayapi_last_credit_check_time'] = False
 
+        res = super(IapAccount, self).write(vals)
+
+        # Post-write logic to ensure server action is correctly set or cleared
+        # This runs for each record in 'self' (which now have updated values from 'vals')
+        for record in self.filtered(lambda r: r.is_gatewayapi): # Filter for GatewayAPI accounts
+            if record.gatewayapi_check_min_tokens:
+                # If checks are enabled and no action is set (it might have been cleared by vals), set it.
+                if not record.gatewayapi_token_notification_action and \
+                   (vals.get('gatewayapi_token_notification_action') is not False): # Ensure not explicitly cleared
+                    try:
+                        action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+                        if action:
+                            # Use record.write here to ensure it's a separate ORM call for this specific record,
+                            # which can be important for audit logging and potential re-triggering of other logic
+                            # if 'gatewayapi_token_notification_action' itself has dependencies.
+                            record.write({'gatewayapi_token_notification_action': action.id})
+                        else:
+                            _logger.warning("Action 'gatewayapi_sms.low_credits_notification_action' not found.")
+                    except Exception as e:
+                        _logger.error(f"Failed to set notification action for account {record.id}: {e}")
+            else:
+                # If checks are disabled and an action is set, clear it.
+                if record.gatewayapi_token_notification_action:
+                    record.write({'gatewayapi_token_notification_action': False})
         return res
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
@@ -630,11 +538,19 @@ class IapAccount(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-        """Reset show_token to False on new records"""
-        result = super().default_get(fields_list)
+        """Reset show_token to False and ensure gatewayapi_existing_channel_id is False by default."""
+        # It's good practice to use a consistent variable name, e.g., `res`
+        res = super(IapAccount, self).default_get(fields_list)
+        
+        # Ensure show_token is False if requested
         if 'show_token' in fields_list:
-            result['show_token'] = False
-        return result
+            res['show_token'] = False
+        
+        # Explicitly default gatewayapi_existing_channel_id to False (empty) if requested
+        if 'gatewayapi_existing_channel_id' in fields_list:
+            res['gatewayapi_existing_channel_id'] = False
+            
+        return res
 
     def name_get(self):
         result = []
@@ -651,62 +567,66 @@ class IapAccount(models.Model):
         return result
 
     def send_low_credits_notification(self):
-        """Send a notification about low credits"""
         self.ensure_one()
-
-        # Prepare message
-        message = _("""
+        message_subject = _('GatewayAPI Low Credits Alert: %s') % (self.name or 'Unnamed GatewayAPI Account')
+        message_body_html = _("""
 <p><b>⚠️ Low SMS Credits Alert</b></p>
-<p>The SMS credits for <b>%s</b> are running low:</p>
+<p>The SMS credits for account <b>%s</b> are running low:</p>
 <ul>
     <li>Current balance: <b>%s</b></li>
     <li>Minimum threshold: <b>%s</b></li>
 </ul>
 <p>Please add more credits to ensure uninterrupted SMS services.</p>
 """) % (
-            self.name or 'GatewayAPI account',
+            self.name or 'Unnamed GatewayAPI Account',
             self.gatewayapi_balance_display,
             f"{self.gatewayapi_min_tokens} {self.gatewayapi_currency}" if self.gatewayapi_currency else self.gatewayapi_min_tokens
         )
 
-        # Create activity for admin
-        admin_user = self.env.ref('base.user_admin')
+        # Preserve Admin Activity
+        admin_user = self.env.ref('base.user_admin', raise_if_not_found=False) or self.env['res.users'] # Ensure admin_user is found or fallback
+        user_id_to_assign = admin_user.id if admin_user and admin_user != self.env['res.users'] else self.env.uid # Assign to admin or current user
+
         activity = self.env['mail.activity'].create({
             'activity_type_id': self.env.ref('mail.mail_activity_data_todo').id,
-            'note': message,
+            'note': message_body_html, # Use the HTML body for the activity note
             'res_id': self.id,
             'res_model_id': self.env.ref('iap.model_iap_account').id,
-            'user_id': admin_user.id,
-            'summary': _('GatewayAPI low on credits'),
+            'user_id': user_id_to_assign,
+            'summary': _('GatewayAPI low on credits for %s') % (self.name or 'Unnamed GatewayAPI Account'),
         })
 
-        # Also log a message in the chatter
-        self.message_post(body=message, subject=_('GatewayAPI low on credits'))
+        # Preserve Chatter Post
+        self.message_post(body=message_body_html, subject=message_subject)
 
-        # Post to notification channel if configured
-        if self.gatewayapi_check_min_tokens:
-            channel = False
-            if self.notification_id: # Assuming notification_id is the one2many field
-                notif_setting = self.notification_id[0] # Get the first (and should be only) record
-                channel = notif_setting.get_channel_for_notifications()
+        # New Email Notification Logic
+        if self.gatewayapi_enable_email_notification and self.gatewayapi_low_credit_notification_email:
+            _logger.info(f"Attempting to send low credits email alert for account '{self.name}' to '{self.gatewayapi_low_credit_notification_email}'")
             
-            if channel:
-                _logger.info(f"Sending low credits notification to channel '{channel.name}' for account '{self.name}'")
-                channel.message_post(
-                    body=message, 
-                    subject=_('GatewayAPI Low Credits Alert: %s', self.name),
-                    subtype_xmlid='mail.mt_comment', # Ensure it's a comment/message
-                    author_id=self.env.user.partner_id.id # Optional: set author
-                )
-            else:
-                _logger.info(f"No effective notification channel found for account '{self.name}' when trying to send low credits alert.")
+            # Determine email_from: use company email, then user email, then a fallback.
+            email_from = self.env.user.company_id.email_formatted or self.env.user.email_formatted or                          self.env['ir.mail_server'].sudo().search([], limit=1).smtp_user # Fallback to system email if configured
+            if not email_from:
+                _logger.warning(f"Cannot determine 'email_from' for low credit notification for account {self.name}. Email will likely fail or use Odoo's default sender.")
+                # Consider a hardcoded fallback if critical, e.g., noreply@yourdomain.com
+                # For now, let it proceed; Odoo might use a system default.
 
+            mail_values = {
+                'subject': message_subject,
+                'body_html': message_body_html,
+                'email_to': self.gatewayapi_low_credit_notification_email,
+                'email_from': email_from,
+                'model': self._name,
+                'res_id': self.id,
+                'auto_delete': True, # Delete email from Odoo's queue after sending
+                '#reply_to': email_from, # Optional: Set reply-to if different from from
+            }
+            
+            mail = self.env['mail.mail'].sudo().create(mail_values)
+            try:
+                mail.send()
+                _logger.info(f"Low credits email for account '{self.name}' sent successfully to '{self.gatewayapi_low_credit_notification_email}'. Mail ID: {mail.id}")
+            except Exception as e:
+                _logger.error(f"Failed to send low credits email for account '{self.name}' to '{self.gatewayapi_low_credit_notification_email}': {e}")
+        
         return activity
-
-    @api.depends('notification_id.channel_id') # Keep dependency on notification_id for now, will be replaced by effective_notification_channel_id
-    def _compute_field_exists(self):
-        for rec in self:
-            # This field might be removed or its logic updated later
-            # For now, let's check if there's any notification setting which implies a channel might exist or be configured.
-            rec.field_exists = bool(rec.notification_id and rec.notification_id[0].channel_id)
 

@@ -13,20 +13,21 @@
 
             <!-- Make name required -->
             <xpath expr="//field[@name='name']" position="attributes">
-                <attribute name="required">1</attribute>
                 <attribute name="placeholder">e.g. GatewayAPI SMS</attribute>
             </xpath>
 
             <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
+                <!-- Add the computed field so Odoo can use it in modifiers -->
+                <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
-                       t-if="provider == 'sms_api_gatewayapi'"
+                       invisible="not is_gatewayapi"
                        col="1">
 
                     <group>
                         <label for="name" string="Account Name" class="fw-bold"/>
-                        <field name="name" nolabel="1" required="1"
+                        <field name="name" nolabel="1" 
                                placeholder="e.g. GatewayAPI SMS"/>
                     </group>
 
@@ -49,20 +50,21 @@
 
                     <group>
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                        <field name="show_token" invisible="1"/> <!-- Added this line -->
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
-                                   t-if="!show_token"
+                                   invisible="show_token"
                                    password="0" nolabel="1"/>
                             <field name="gatewayapi_api_token" widget="password"
-                                   t-if="show_token"
+                                   invisible="not show_token"
                                    nolabel="1"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
                                     type="object" class="oe_stat_button"
-                                    t-if="show_token"
+                                    invisible="not show_token"
                                     title="Hide Token"/>
                             <button name="action_toggle_show_token" icon="fa-eye-slash"
                                     type="object" class="oe_stat_button"
-                                    t-if="!show_token"
+                                    invisible="show_token"
                                     title="Show Token"/>
                         </div>
                     </group>
@@ -89,34 +91,15 @@
                         When enabled, you will receive a notification if your credits fall below the minimum.
                     </div>
 
-                    <group string="Notification Channel Configuration"
-                           name="group_gatewayapi_notification_channel_config"
-                           t-if="gatewayapi_check_min_tokens">
+                    <group invisible="not gatewayapi_check_min_tokens">
+                        <field name="gatewayapi_enable_email_notification"/>
+                        <label for="gatewayapi_low_credit_notification_email" 
+                               invisible="not gatewayapi_enable_email_notification"/>
+                        <field name="gatewayapi_low_credit_notification_email" 
+                               nolabel="1"
+                               invisible="not gatewayapi_enable_email_notification"
+                               placeholder="Enter email address for alerts"/>
 
-                        <field name="gatewayapi_channel_config_mode"
-                               widget="radio"
-                               options="{'horizontal': true}"/>
-                        <field name="gatewayapi_existing_channel_id"
-                               t-if="gatewayapi_channel_config_mode == 'existing'"
-                               required="1"
-                               options="{'no_create': True, 'no_open': True}"/>
-                        <field name="gatewayapi_new_channel_name"
-                               t-if="gatewayapi_channel_config_mode == 'create'"
-                               required="1"/>
-                        
-                        <group col="2" name="group_gatewayapi_notification_subscriptions">
-                            <field name="gatewayapi_subscribe_current_user"/>
-                            <field name="gatewayapi_additional_subscribers_user_ids"
-                                   widget="many2many_tags"
-                                   options="{'no_create': True}"/>
-                        </group>
-
-                        <field name="gatewayapi_effective_notification_channel_id"
-                               readonly="1"
-                               string="Active Notification Channel"/>
-                    </group>
-
-                    <group t-if="gatewayapi_check_min_tokens">
                         <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                         <field name="gatewayapi_min_tokens" nolabel="1"/>
                         <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
@@ -184,7 +167,7 @@
     <record id="action_gatewayapi_accounts_form_view" model="ir.actions.act_window.view">
         <field name="sequence">1</field>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="iap.iap_account_view_form"/>
+        <field name="view_id" ref="iap_account_view_form"/>
         <field name="act_window_id" ref="action_gatewayapi_accounts"/>
     </record>
 </odoo>
