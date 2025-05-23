@@ -97,10 +97,12 @@
                         <field name="gatewayapi_channel_config_mode"
                                widget="radio"
 				options="{'horizontal': true}"/>
-                        <field name="gatewayapi_existing_channel_id"
+ <!-- 
+			<field name="gatewayapi_existing_channel_id"
                                invisible="gatewayapi_channel_config_mode != 'existing'"
                                options="{'no_create': True, 'no_open': True}"/>
-                        <field name="gatewayapi_new_channel_name"
+ -->
+	                <field name="gatewayapi_new_channel_name"
                                invisible="gatewayapi_channel_config_mode != 'create'"/>
                         
                         <group col="2" name="group_gatewayapi_notification_subscriptions">
