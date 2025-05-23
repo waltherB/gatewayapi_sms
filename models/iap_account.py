@@ -141,14 +141,11 @@ class IapAccount(models.Model):
         for rec in self:
             effective_channel = None
             if rec.notification_id:
-                # Assuming there's at most one notification_id record,
-                # or we take the first one that has a channel_id.
                 for notif_setting in rec.notification_id:
                     if notif_setting.channel_id and isinstance(notif_setting.channel_id, models.BaseModel) and notif_setting.channel_id._name == 'mail.channel':
                         effective_channel = notif_setting.channel_id
                         break # Found a suitable channel
             rec.gatewayapi_effective_notification_channel_id = effective_channel
-
 
     @api.onchange('name', 'gatewayapi_channel_config_mode')
     def _onchange_iap_account_name_for_channel(self):
@@ -649,19 +646,11 @@ class IapAccount(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-        """Reset show_token to False and ensure gatewayapi_existing_channel_id is False by default."""
-        # It's good practice to use a consistent variable name, e.g., `res`
-        res = super(IapAccount, self).default_get(fields_list)
-        
-        # Ensure show_token is False if requested
+        """Reset show_token to False on new records"""
+        result = super(IapAccount, self).default_get(fields_list)
         if 'show_token' in fields_list:
-            res['show_token'] = False
-        
-        # Explicitly default gatewayapi_existing_channel_id to False (empty) if requested
-        if 'gatewayapi_existing_channel_id' in fields_list:
-            res['gatewayapi_existing_channel_id'] = False
-            
-        return res
+            result['show_token'] = False
+        return result
 
     def name_get(self):
         result = []
