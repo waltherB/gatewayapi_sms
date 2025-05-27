@@ -136,7 +136,7 @@ class IapAccount(models.Model):
             if rec.provider == 'sms_api_gatewayapi' and not rec.name:
                 raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
-    @api.depends('notification_id', 'notification_id.channel_id') # Dependencies are less critical for this diagnostic version
+    @api.depends('notification_id', 'notification_id.channel_id')
     def _compute_effective_notification_channel(self):
         for rec in self:
             effective_channel = None
@@ -146,6 +146,7 @@ class IapAccount(models.Model):
                         effective_channel = notif_setting.channel_id
                         break # Found a suitable channel
             rec.gatewayapi_effective_notification_channel_id = effective_channel
+
 
     @api.onchange('name', 'gatewayapi_channel_config_mode')
     def _onchange_iap_account_name_for_channel(self):
@@ -249,8 +250,6 @@ class IapAccount(models.Model):
     show_token = fields.Boolean(
         default=False,
         help="Show or hide the API token in the form.",
-        # Make it non-persistent so it always resets when form is reopened
-        #store=False
     )
 
     @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
