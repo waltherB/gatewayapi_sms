@@ -18,7 +18,6 @@
 
             <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
-                <!-- Add the computed field so Odoo can use it in modifiers -->
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
@@ -49,8 +48,8 @@
                     </group>
 
                     <group>
-			<label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-                        <field name="show_token" invisible="1"/> <!-- Added this line -->
+                        <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                        <field name="show_token" invisible="1"/> <!-- Added for show_token alignment -->
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
                                    invisible="show_token"
@@ -87,36 +86,22 @@
                         <field name="gatewayapi_check_min_tokens" nolabel="1"/>
                     </group>
 
-                    <div class="text-muted mb-2">
+                    <div class="text-muted mb-2" invisible="not gatewayapi_check_min_tokens">
                         When enabled, you will receive a notification if your credits fall below the minimum.
                     </div>
 
-                    <group string="Notification Channel Configuration"
-                           name="group_gatewayapi_notification_channel_config"
-                           invisible="not gatewayapi_check_min_tokens">
-
-                        <field name="gatewayapi_channel_config_mode"
-                               widget="radio"
-				options="{'horizontal': true}"/>
-			<field name="gatewayapi_existing_channel_id"
-                               invisible="gatewayapi_channel_config_mode != 'existing'"
-                               options="{'no_create': True, 'no_open': True}"/>
-	                <field name="gatewayapi_new_channel_name"
-                               invisible="gatewayapi_channel_config_mode != 'create'"/>
-                        
-                        <group col="2" name="group_gatewayapi_notification_subscriptions">
-                            <field name="gatewayapi_subscribe_current_user"/>
-                            <field name="gatewayapi_additional_subscribers_user_ids"
-                                   widget="many2many_tags"
-                                   options="{'no_create': True}"/>
-                        </group>
-
-                        <field name="gatewayapi_effective_notification_channel_id"
-                               readonly="1"
-                               string="Active Notification Channel"/>
-                    </group>
+                    <!-- Removed Notification Channel Configuration group -->
 
                     <group invisible="not gatewayapi_check_min_tokens">
+                        <!-- Added new Email Notification Fields -->
+                        <field name="gatewayapi_enable_email_notification"/>
+                        <label for="gatewayapi_low_credit_notification_email" 
+                               invisible="not gatewayapi_enable_email_notification"/>
+                        <field name="gatewayapi_low_credit_notification_email" 
+                               nolabel="1"
+                               invisible="not gatewayapi_enable_email_notification"
+                               placeholder="Enter email address for alerts"/>
+
                         <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                         <field name="gatewayapi_min_tokens" nolabel="1"/>
                         <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
@@ -132,7 +117,7 @@
         </field>
     </record>
 
-    <!-- Tree view decoration -->
+    <!-- Tree view decoration (ensure this is as per your original if it was correct) -->
     <record id="iap_account_view_tree" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.tree</field>
         <field name="model">iap.account</field>
@@ -160,7 +145,7 @@
         </field>
     </record>
 
-    <!-- Action -->
+    <!-- Action (ensure this is as per your original if it was correct) -->
     <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
