@@ -49,7 +49,8 @@
                     </group>
 
                     <group>
-                        <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+			<label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                        <field name="show_token" invisible="1"/> <!-- Added this line -->
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
                                    invisible="show_token"

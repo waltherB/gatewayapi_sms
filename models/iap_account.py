@@ -250,7 +250,7 @@ class IapAccount(models.Model):
         default=False,
         help="Show or hide the API token in the form.",
         # Make it non-persistent so it always resets when form is reopened
-        store=False
+        #store=False
     )
 
     @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
