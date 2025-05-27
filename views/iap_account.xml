@@ -50,6 +50,7 @@
 
                     <group>
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
+                        <field name="show_token" invisible="1"/> <!-- Added this line -->
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
                                    invisible="show_token"
@@ -90,32 +91,15 @@
                         When enabled, you will receive a notification if your credits fall below the minimum.
                     </div>
 
-                    <group string="Notification Channel Configuration"
-                           name="group_gatewayapi_notification_channel_config"
-                           invisible="not gatewayapi_check_min_tokens">
-
-                        <field name="gatewayapi_channel_config_mode"
-                               widget="radio"
-                               options="{'horizontal': true}"/>
-                        <field name="gatewayapi_existing_channel_id"
-                               invisible="gatewayapi_channel_config_mode != 'existing'"
-                               options="{'no_create': True, 'no_open': True}"/>
-                        <field name="gatewayapi_new_channel_name"
-                               invisible="gatewayapi_channel_config_mode != 'create'"/>
-                        
-                        <group col="2" name="group_gatewayapi_notification_subscriptions">
-                            <field name="gatewayapi_subscribe_current_user"/>
-                            <field name="gatewayapi_additional_subscribers_user_ids"
-                                   widget="many2many_tags"
-                                   options="{'no_create': True}"/>
-                        </group>
-
-                        <field name="gatewayapi_effective_notification_channel_id"
-                               readonly="1"
-                               string="Active Notification Channel"/>
-                    </group>
-
                     <group invisible="not gatewayapi_check_min_tokens">
+                        <field name="gatewayapi_enable_email_notification"/>
+                        <label for="gatewayapi_low_credit_notification_email" 
+                               invisible="not gatewayapi_enable_email_notification"/>
+                        <field name="gatewayapi_low_credit_notification_email" 
+                               nolabel="1"
+                               invisible="not gatewayapi_enable_email_notification"
+                               placeholder="Enter email address for alerts"/>
+
                         <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                         <field name="gatewayapi_min_tokens" nolabel="1"/>
                         <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>

@@ -27,8 +27,7 @@
         'data/ir_cron.xml',
         'views/iap_account.xml',
         'views/sms_sms.xml',
-        'views/sms_resend.xml',
-        'views/gatewayapi_notification.xml'
+        'views/sms_resend.xml'
     ],
     'images': [
         'static/description/banner.png',
