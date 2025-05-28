@@ -124,12 +124,10 @@
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url and gatewayapi_api_token)</attribute>
+                <attribute name="decoration-info">provider == 'sms_api_gatewayapi'</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
                 <field name="provider"/>
-                <field name="gatewayapi_base_url" invisible="1"/>
-                <field name="gatewayapi_api_token" invisible="1"/>
             </xpath>
         </field>
     </record>
