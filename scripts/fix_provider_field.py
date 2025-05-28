@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# IMPORTANT NOTE:
+# This script is likely no longer necessary for most users with recent versions
+# of the gatewayapi_sms module (version 17.0.2.0.5 and later).
+# The module has been updated to automatically set the provider field when
+# GatewayAPI credentials (URL and Token) are correctly entered.
+#
+# This script is retained for troubleshooting specific edge cases or for use
+# with older, unpatched versions of the module. Please ensure your module is
+# up-to-date before resorting to this script.
+
 """
 Script to fix provider field integration issues with IAP Alternative Provider
 Run this in the Odoo shell with:

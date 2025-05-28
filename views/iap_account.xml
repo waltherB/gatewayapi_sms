@@ -18,11 +18,10 @@
 
             <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
-                <!-- Add the computed field so Odoo can use it in modifiers -->
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
-                       invisible="not is_gatewayapi"
+                       attrs="{'invisible': [('is_gatewayapi', '=', False)]}"
                        col="1">
 
                     <group>
@@ -50,22 +49,22 @@
 
                     <group>
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-                        <field name="show_token" invisible="1"/> <!-- Added this line -->
+                        <field name="show_token" invisible="1"/>
                         <div class="o_row">
-                            <field name="gatewayapi_api_token" widget="char"
-                                   invisible="show_token"
-                                   password="0" nolabel="1"/>
-                            <field name="gatewayapi_api_token" widget="password"
-                                   invisible="not show_token"
-                                   nolabel="1"/>
+                            <field name="gatewayapi_api_token" password="False"
+                                   invisible="not show_token"/>
+                            <field name="gatewayapi_api_token" password="True"
+                                   invisible="show_token"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
-                                    type="object" class="oe_stat_button"
-                                    invisible="not show_token"
-                                    title="Hide Token"/>
-                            <button name="action_toggle_show_token" icon="fa-eye-slash"
-                                    type="object" class="oe_stat_button"
+                                    type="object" 
+                                    class="oe_stat_button"
                                     invisible="show_token"
                                     title="Show Token"/>
+                            <button name="action_toggle_show_token" icon="fa-eye-slash"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    invisible="not show_token"
+                                    title="Hide Token"/>
                         </div>
                     </group>
 
@@ -87,7 +86,7 @@
                         <field name="gatewayapi_check_min_tokens" nolabel="1"/>
                     </group>
 
-                    <div class="text-muted mb-2">
+                    <div class="text-muted mb-2" invisible="not gatewayapi_check_min_tokens">
                         When enabled, you will receive a notification if your credits fall below the minimum.
                     </div>
 
@@ -115,19 +114,17 @@
         </field>
     </record>
 
-    <!-- Tree view decoration -->
     <record id="iap_account_view_tree" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.tree</field>
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url and gatewayapi_api_token)</attribute>
+                <attribute name="decoration-info">provider == 'sms_api_gatewayapi'</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
                 <field name="provider"/>
-                <field name="gatewayapi_base_url" invisible="1"/>
-                <field name="gatewayapi_api_token" invisible="1"/>
+                <!-- gatewayapi_base_url and gatewayapi_api_token columns removed from here -->
             </xpath>
         </field>
     </record>
@@ -143,7 +140,6 @@
         </field>
     </record>
 
-    <!-- Action -->
     <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>

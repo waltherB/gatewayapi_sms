@@ -16,15 +16,17 @@
         'mail',
         'phone_validation',
         'sms',
-        'iap_alternative_provider'
+        'iap_alternative_provider',
+        'iap', # Added line
     ],
     'external_dependencies': {
-        'python': ['phonenumbers', 'requests']
+        'python': ['phonenumbers', 'requests', 'pyjwt']
     },
     'data': [
         'security/ir.model.access.csv',
         'data/iap_account_data.xml',
         'data/ir_cron.xml',
+        'data/ir_config_parameter_data.xml',
         'views/iap_account.xml',
         'views/sms_sms.xml',
         'views/sms_resend.xml'
@@ -55,6 +57,4 @@ Features include:
     - A master scheduled action (cron job) runs frequently (configurable, e.g., every 10 minutes) to trigger checks for due accounts based on their individual settings.
 - Easy configuration and integration within IAP accounts.
 """,
-    'post_init_hook': 'post_init_hook',
-    'uninstall_hook': 'uninstall_hook',
 }
