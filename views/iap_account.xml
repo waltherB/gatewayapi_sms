@@ -72,6 +72,8 @@
                     <group>
                         <label for="gatewayapi_balance" string="Gatewayapi Balance" class="fw-bold"/>
                         <field name="gatewayapi_balance" readonly="1" nolabel="1"/>
+                        <label for="gatewayapi_currency" string="Gatewayapi Currency" class="fw-bold"/>
+                        <field name="gatewayapi_currency" readonly="1" nolabel="1"/>
                     </group>
 
                     <button name="gatewayapi_connection_test" string="Test Connection"
