@@ -37,15 +37,24 @@
         'static/description/screenshot_03_notification.png',
         'static/description/screenshot_04_balance.png',
     ],
-    'description': '''
+    'description': """\
 GatewayAPI SMS Connector for Odoo 17
 ------------------------------------
-Send SMS via GatewayAPI directly from Odoo. Features include:
-- Secure API Token management with show/hide toggle
-- Credit balance monitoring and notifications
-- Easy configuration and integration
-- Scheduled credit checks and admin alerts
-''',
+Send SMS via GatewayAPI directly from Odoo. This module enhances IAP accounts for use with GatewayAPI.
+
+Features include:
+- Secure API Token management with a show/hide toggle.
+- Credit balance monitoring:
+    - Configure minimum credit thresholds per account.
+    - Automated periodic checks for low balances.
+- Low Credit Notifications:
+    - Automatic To-Do activity created for the admin user.
+    - Option to send an email alert to a configured email address.
+- Per-Account Credit Check Scheduling:
+    - Define check frequency (e.g., every 10 minutes, hourly, daily) on each IAP account.
+    - A master scheduled action (cron job) runs frequently (configurable, e.g., every 10 minutes) to trigger checks for due accounts based on their individual settings.
+- Easy configuration and integration within IAP accounts.
+""",
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
 }

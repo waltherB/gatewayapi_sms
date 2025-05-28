@@ -9,8 +9,9 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
 - **Send SMS via GatewayAPI**: Seamless integration with GatewayAPI for reliable SMS delivery.
 - **Secure API Token Management**: Show/hide your API token in the form with a single click.
 - **Credit Balance Monitoring**: Set minimum credit thresholds and receive notifications when your balance is low.
-- **Per-Account Credit Check Scheduling**: Configure individual credit check intervals (e.g., daily, hourly) for each GatewayAPI account directly on its IAP Account form. Balance checks are performed automatically for all enabled accounts based on their specific schedules.
-- **Admin Notifications**: Automatic admin alerts and activities when credits run low.
+- **Per-Account Credit Check Scheduling**: Configure individual credit check intervals (e.g., daily, hourly) for each GatewayAPI account.
+- **Admin Activity Notifications**: Automatic admin alerts (To-Do activities) when credits run low.
+- **Direct Email Notifications**: Receive low credit alerts at a user-defined email address.
 - **Easy Configuration**: Intuitive form layout and clear help texts.
 - **Odoo 17 Compatible**: Built and tested for Odoo 17.
 
@@ -72,30 +73,6 @@ pip install phonenumbers requests
 5. Click **Test Connection** to verify your setup. The result will be shown in the *Connection Status* field.
 6. Use the eye/eye-slash button to show/hide your API token securely.
 
-### Configuring Notification Channel for Low Credits
-
-For each GatewayAPI IAP account, you can configure how low credit alerts are posted to an Odoo Discuss channel. These settings are found within the "Notification Channel Configuration" section on the IAP Account form:
-
-1.  **Notification Channel Mode**:
-    *   **No Channel Notifications**: Select this if you do not want low credit alerts for this account to be posted to any channel. Admin notifications (activities) will still be created.
-    *   **Use Existing Channel**: Choose this to select a pre-existing Discuss channel where notifications should be posted.
-        *   **Existing Notification Channel**: Appears if "Use Existing Channel" is selected. Pick the desired channel from the list.
-    *   **Create New Channel**: Select this to have a new Discuss channel automatically created for this account's notifications.
-        *   **New Channel Name**: Appears if "Create New Channel" is selected. You can customize the name for the new channel (default is "GatewayAPI: {Account Name} Notifications").
-
-2.  **Channel Subscriptions** (available if mode is not 'No Channel Notifications'):
-    *   **Subscribe Me to Channel**: Check this box (default: enabled) to automatically add yourself as a member to the selected or newly created notification channel.
-    *   **Additional Users for Channel**: You can select other Odoo users who should also be added as members to the notification channel.
-
-3.  **Active Notification Channel**:
-    *   This read-only field displays the Discuss channel that is currently active for notifications for this IAP account, based on your configuration.
-
-When you save the IAP Account, the system will:
-- Link or create the channel as per your selection.
-- Subscribe the specified users (current user if checked, and any additional users) to that channel. Note: Users are added, but not automatically removed by unchecking these options later; channel membership can be managed directly in Discuss if needed.
-
-Low credit alerts for this account will then be posted to this "Active Notification Channel" in addition to creating an activity for the admin.
-
 ### Important Notes for Odoo 17
 
 In Odoo 17, the SMS provider system has been simplified, but GatewayAPI will still work correctly with this module. When you configure an account with GatewayAPI settings (API token and base URL), the module will automatically:
@@ -112,17 +89,33 @@ You'll find GatewayAPI accounts in the standard IAP Accounts list, highlighted i
 
 - Send SMS from Odoo using any of your configured GatewayAPI accounts.
 - Receive admin notifications when a specific GatewayAPI account's credit balance drops below its set threshold.
-- Automated credit balance checks are managed by a system-level scheduled action that runs frequently (e.g., hourly). The actual checking of each GatewayAPI account's balance is determined by the individual "Credit check interval" settings on that account's form. There's no need to manually edit the main "GatewayAPI: Check credit balance" scheduled action.
+- Automated credit balance checks are managed by a system-level scheduled action that runs frequently. The actual checking of each GatewayAPI account's balance is determined by the individual "Credit check interval" settings on that account's form.
 
 ### Understanding Credit Check Scheduling
-The module uses a central scheduled action (`GatewayAPI: Check credit balance`) that runs at a fixed interval (typically hourly). When this action triggers, it reviews all your GatewayAPI IAP accounts that have "Check for minimum credits" enabled.
 
-For each enabled account, the system looks at its individual "Credit check interval" (e.g., every 2 hours, every 1 day) and the "Last Credit Check Time". If the configured interval has passed since the last check for that specific account, its balance will be queried from GatewayAPI, and the "Last Credit Check Time" will be updated.
+The module utilizes a master cron job named **"GatewayAPI: Check credit balance"** (with XML ID `ir_cron_check_tokens` found in `data/ir_cron.xml`) to manage credit balance checks. This master job runs periodically.
 
-This ensures that:
-- Each GatewayAPI account is checked according to its own preferred frequency.
-- All configured and enabled accounts are monitored independently.
-- You do not need to adjust the global scheduled action's timing; only the interval settings on each IAP Account form matter for determining check frequency.
+When the master cron job executes, it calls a method that iterates through all your IAP Accounts that are configured for GatewayAPI and have the "Check for minimum credits" feature enabled. For each of these accounts, the system then refers to its individual "Credit check interval" and "Last Credit Check Time" fields. If the specified interval has passed since the last check for that particular account, its balance will be queried from GatewayAPI, and the "Last Credit Check Time" for that account will be updated.
+
+**Important Note on Precision:** For an account's specific check interval (e.g., every 10 minutes) to be effective with high precision, the **Master Cron Job itself must be configured to run frequently enough.**
+
+For example, if you set an account's check interval to 10 minutes, but the "GatewayAPI: Check credit balance" cron job in Odoo's Scheduled Actions (Settings > Technical > Automation > Scheduled Actions) is set to run only every 1 hour, then your account will effectively only be evaluated for a check on an hourly basis. To achieve checks closer to every 10 minutes for that account, you should adjust the schedule of the "GatewayAPI: Check credit balance" master cron job itself.
+
+#### How to Adjust the Master Cron Schedule:
+
+The schedule for the "GatewayAPI: Check credit balance" (ID: `ir_cron_check_tokens`) is defined in the file `data/ir_cron.xml` within the `gatewayapi_sms` module.
+
+To change its frequency, you can edit this file. For example, to make it run every 10 minutes:
+```xml
+<record id="ir_cron_check_tokens" model="ir.cron">
+    ...
+    <field name="interval_number">10</field>
+    <field name="interval_type">minutes</field>
+    ...
+</record>
+```
+
+After saving this change, you must restart your Odoo server and update the `gatewayapi_sms` module (e.g., from the Apps menu or using `odoo-bin -u gatewayapi_sms ...`) for the new schedule to take effect. Alternatively, you can modify the schedule directly via Odoo's UI under **Settings > Technical > Automation > Scheduled Actions** by finding the "GatewayAPI: Check credit balance" job and editing its "Execute Every" value.
 
 ---
 
@@ -140,20 +133,24 @@ This is what the admin will see in the Odoo activity stream when credits fall be
 
 ---
 
-## Low Credits Notification
+## Low Credit Notifications
 
-The email notification for low credits is not a traditional email, but rather an Odoo activity that appears in the admin's activity stream. This is configured in your module as follows:
+When an account's credit balance falls below its configured "Minimum Credits" threshold, the system initiates the following notifications:
 
-- When your GatewayAPI credits fall below the minimum threshold, the system triggers the server action `model_iap_account_action_low_tokens`.
-- This action creates a To-Do activity for the admin user with:
-  - **Summary:** "GatewayAPI low on credits"
-  - **Note:** "Buy more SMS credits with provider GatewayAPI"
+1.  **Admin Activity (To-Do)**:
+    *   A To-Do activity is created and assigned to the Administrator (or the user who triggered the check if the admin user is not found/accessible).
+    *   **Summary**: "GatewayAPI low on credits for {Account Name}"
+    *   **Note**: Contains details about the low balance, current credits, and the minimum threshold, formatted in HTML.
+    *   This activity will appear in the assigned user's activity stream and Odoo's chatter for the IAP Account.
 
-**What the notification looks like:**
-- The admin will see a new activity in the Odoo chatter (and in their activity dashboard) with the above summary and note.
-- The activity is not a direct email, but Odoo can be configured to send email reminders for pending activities, so the admin may receive an email with the same content if reminders are enabled.
+2.  **Direct Email Notification** (if configured):
+    *   If "Enable Low Credit Email Alert" is checked on the IAP Account form and a valid "Low Credit Notification Email" address is provided, an email will be sent directly to that address.
+    *   The email content is similar to the admin activity note, providing details about the low balance.
+    *   The "from" address for this email is determined by Odoo's standard email configuration (company email, then current user's email, then system mail server's default).
 
-Example:
+The specific actions performed (like creating the activity and sending the email) are triggered by the "Credits notification action" (field `gatewayapi_token_notification_action`) configured on the IAP Account. By default, this is set to "GatewayAPI: Send Low Credits Notification" (`gatewayapi_sms.low_credits_notification_action`), which calls the `send_low_credits_notification` method on the `iap.account` model.
+
+Example of the Admin Activity:
 
 ![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
 

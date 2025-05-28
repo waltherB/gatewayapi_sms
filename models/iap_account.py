@@ -100,11 +100,6 @@ class IapAccount(models.Model):
             if rec.provider == 'sms_api_gatewayapi' and not rec.name:
                 raise ValidationError(_("Name is required for GatewayAPI accounts."))
 
-    @api.onchange('name', 'gatewayapi_channel_config_mode')
-    def _onchange_iap_account_name_for_channel(self):
-        if self.gatewayapi_channel_config_mode == 'create' and self.name and not self.gatewayapi_new_channel_name:
-            self.gatewayapi_new_channel_name = f"GatewayAPI: {self.name} Notifications"
-
     def _process_notification_channel_settings(self):
         pass
 
@@ -451,50 +446,50 @@ class IapAccount(models.Model):
         return records
 
     def write(self, vals):
-        """Reset show_token to False after form saves unless explicitly toggled"""
-        # Consolidate show_token reset logic
-        caller = self.env.context.get('caller', '')
-        if 'show_token' not in vals and caller != 'toggle_token':
-            vals['show_token'] = False # Set it in vals before super() call
-
-        # If gatewayapi_check_min_tokens is being enabled, set last_credit_check_time to False
-        # to ensure an immediate check by the next cron run.
-        if vals.get('gatewayapi_check_min_tokens') is True and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-        # If gatewayapi_check_min_tokens is being disabled, we can optionally clear the last_credit_check_time
-        # or leave it. For now, let's clear it to False for consistency.
-        elif vals.get('gatewayapi_check_min_tokens') is False and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-
-        res = super().write(vals)
-
-        # Set the notification action if check_min_tokens is enabled
-        if 'gatewayapi_check_min_tokens' in vals: # Check if the field is part of the update
-            for record in self: # Iterate over self, which are the records being written to
-                if record.gatewayapi_check_min_tokens:
-                    if not record.gatewayapi_token_notification_action:
-                        try:
-                            notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action')
-                            record.gatewayapi_token_notification_action = notification_action.id
-                            _logger.info("Set notification action for account %s", record.id)
-                        except Exception as e:
-                            _logger.error("Failed to set notification action for account %s: %s", record.id, e)
-                # else: # If gatewayapi_check_min_tokens is False
-                    # Optionally clear the action if it's disabled
-                    # record.gatewayapi_token_notification_action = False
+        # Handle 'gatewayapi_check_min_tokens' change
+        if 'gatewayapi_check_min_tokens' in vals:
+            if vals['gatewayapi_check_min_tokens'] is True:
+                # Enabling checks: reset last check time to ensure an immediate check by cron
+                vals['gatewayapi_last_credit_check_time'] = False
+            else:
+                # Disabling checks: reset last check time and clear the notification action
+                vals['gatewayapi_last_credit_check_time'] = False
+                vals['gatewayapi_token_notification_action'] = False
         
-        # Process channel settings if relevant fields are changed
-        channel_config_fields = [
-            'gatewayapi_channel_config_mode', 
-            'gatewayapi_existing_channel_id', 
-            'gatewayapi_new_channel_name',
-            'gatewayapi_subscribe_current_user',
-            'gatewayapi_additional_subscribers_user_ids'
-        ]
-        if any(field_name in vals for field_name in channel_config_fields) or 'name' in vals: # 'name' can affect default channel name
-            for record in self:
-                record._process_notification_channel_settings()
+        # Handle interval changes for already active checks
+        # If interval fields are changed and checks are not being explicitly disabled in this write operation
+        elif ('gatewayapi_cron_interval_number' in vals or 'gatewayapi_cron_interval_type' in vals):
+            # Check if any of the records currently being written to have checks enabled.
+            # This requires checking the state of 'self' before the write.
+            # If 'gatewayapi_check_min_tokens' is also in 'vals', the logic above handles it.
+            # This 'elif' ensures this block is only considered if 'gatewayapi_check_min_tokens' is NOT in vals.
+            if any(rec.gatewayapi_check_min_tokens for rec in self):
+                 vals['gatewayapi_last_credit_check_time'] = False
 
+        res = super(IapAccount, self).write(vals)
+
+        # Post-write logic to ensure server action is correctly set or cleared
+        # This runs for each record in 'self' (which now have updated values from 'vals')
+        for record in self.filtered(lambda r: r.is_gatewayapi): # Filter for GatewayAPI accounts
+            if record.gatewayapi_check_min_tokens:
+                # If checks are enabled and no action is set (it might have been cleared by vals), set it.
+                if not record.gatewayapi_token_notification_action and \
+                   (vals.get('gatewayapi_token_notification_action') is not False): # Ensure not explicitly cleared
+                    try:
+                        action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+                        if action:
+                            # Use record.write here to ensure it's a separate ORM call for this specific record,
+                            # which can be important for audit logging and potential re-triggering of other logic
+                            # if 'gatewayapi_token_notification_action' itself has dependencies.
+                            record.write({'gatewayapi_token_notification_action': action.id})
+                        else:
+                            _logger.warning("Action 'gatewayapi_sms.low_credits_notification_action' not found.")
+                    except Exception as e:
+                        _logger.error(f"Failed to set notification action for account {record.id}: {e}")
+            else:
+                # If checks are disabled and an action is set, clear it.
+                if record.gatewayapi_token_notification_action:
+                    record.write({'gatewayapi_token_notification_action': False})
         return res
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
@@ -606,22 +601,32 @@ class IapAccount(models.Model):
 
         # New Email Notification Logic
         if self.gatewayapi_enable_email_notification and self.gatewayapi_low_credit_notification_email:
-            _logger.info(f"Sending low credits email alert for account '{self.name}' to '{self.gatewayapi_low_credit_notification_email}'")
+            _logger.info(f"Attempting to send low credits email alert for account '{self.name}' to '{self.gatewayapi_low_credit_notification_email}'")
             
-            author_id = self.env.user.partner_id.id # Default to current user's partner
-            admin_partner = admin_user.partner_id if admin_user and admin_user != self.env['res.users'] else None
-            if admin_partner:
-                 author_id = admin_partner.id
+            # Determine email_from: use company email, then user email, then a fallback.
+            email_from = self.env.user.company_id.email_formatted or self.env.user.email_formatted or                          self.env['ir.mail_server'].sudo().search([], limit=1).smtp_user # Fallback to system email if configured
+            if not email_from:
+                _logger.warning(f"Cannot determine 'email_from' for low credit notification for account {self.name}. Email will likely fail or use Odoo's default sender.")
+                # Consider a hardcoded fallback if critical, e.g., noreply@yourdomain.com
+                # For now, let it proceed; Odoo might use a system default.
 
-            self.message_post(
-                body=message_body_html,
-                subject=message_subject,
-                email_layout_xmlid='mail.mail_notification_light', 
-                partner_ids=[], 
-                email_to=self.gatewayapi_low_credit_notification_email,
-                subtype_xmlid='mail.mt_comment', 
-                author_id=author_id 
-            )
+            mail_values = {
+                'subject': message_subject,
+                'body_html': message_body_html,
+                'email_to': self.gatewayapi_low_credit_notification_email,
+                'email_from': email_from,
+                'model': self._name,
+                'res_id': self.id,
+                'auto_delete': True, # Delete email from Odoo's queue after sending
+                '#reply_to': email_from, # Optional: Set reply-to if different from from
+            }
+            
+            mail = self.env['mail.mail'].sudo().create(mail_values)
+            try:
+                mail.send()
+                _logger.info(f"Low credits email for account '{self.name}' sent successfully to '{self.gatewayapi_low_credit_notification_email}'. Mail ID: {mail.id}")
+            except Exception as e:
+                _logger.error(f"Failed to send low credits email for account '{self.name}' to '{self.gatewayapi_low_credit_notification_email}': {e}")
         
         return activity
 
