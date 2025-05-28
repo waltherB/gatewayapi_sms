@@ -70,7 +70,7 @@
                     </group>
 
                     <group>
-                        <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>
+                        <label for="gatewayapi_balance" string="Gatewayapi Balance" class="fw-bold"/>
                         <field name="gatewayapi_balance" readonly="1" nolabel="1"/>
                     </group>
 
