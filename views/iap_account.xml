@@ -54,7 +54,7 @@
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
                                    invisible="show_token"
-                                   password="0" nolabel="1"/>
+                                   nolabel="1"/>
                             <field name="gatewayapi_api_token" widget="password"
                                    invisible="not show_token"
                                    nolabel="1"/>
