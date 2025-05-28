@@ -18,7 +18,6 @@
 
             <!-- GatewayAPI configuration group -->
             <xpath expr="//group[@name='account']" position="after">
-                <!-- Add the computed field so Odoo can use it in modifiers -->
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
@@ -50,13 +49,13 @@
 
                     <group>
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
-                        <field name="show_token" invisible="1"/> <!-- Added this line -->
+                        <field name="show_token" invisible="1"/>
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
-                                   invisible="not show_token"
+                                   invisible="not show_token" <!-- Corrected -->
                                    nolabel="1"/>
                             <field name="gatewayapi_api_token" widget="password"
-                                   invisible="show_token"
+                                   invisible="show_token"   <!-- Corrected -->
                                    nolabel="1"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
                                     type="object" class="oe_stat_button"
@@ -70,10 +69,8 @@
                     </group>
 
                     <group>
-                        <label for="gatewayapi_balance" string="Gatewayapi Balance" class="fw-bold"/>
+                        <label for="gatewayapi_balance" string="Balance" class="fw-bold"/>
                         <field name="gatewayapi_balance" readonly="1" nolabel="1"/>
-                        <label for="gatewayapi_currency" string="Gatewayapi Currency" class="fw-bold"/>
-                        <field name="gatewayapi_currency" readonly="1" nolabel="1"/>
                     </group>
 
                     <button name="gatewayapi_connection_test" string="Test Connection"
@@ -89,7 +86,7 @@
                         <field name="gatewayapi_check_min_tokens" nolabel="1"/>
                     </group>
 
-                    <div class="text-muted mb-2">
+                    <div class="text-muted mb-2" invisible="not gatewayapi_check_min_tokens">
                         When enabled, you will receive a notification if your credits fall below the minimum.
                     </div>
 
@@ -117,17 +114,17 @@
         </field>
     </record>
 
-    <!-- Tree view decoration -->
     <record id="iap_account_view_tree" model="ir.ui.view">
         <field name="name">gatewayapi.iap.account.tree</field>
         <field name="model">iap.account</field>
         <field name="inherit_id" ref="iap.iap_account_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree" position="attributes">
-                <attribute name="decoration-info">provider == 'sms_api_gatewayapi'</attribute>
+                <attribute name="decoration-info">provider == 'sms_api_gatewayapi' or (gatewayapi_base_url and gatewayapi_api_token)</attribute>
             </xpath>
             <xpath expr="//field[@name='name']" position="after">
                 <field name="provider"/>
+                <!-- gatewayapi_base_url and gatewayapi_api_token columns removed from here -->
             </xpath>
         </field>
     </record>
@@ -143,7 +140,6 @@
         </field>
     </record>
 
-    <!-- Action -->
     <record id="action_gatewayapi_accounts" model="ir.actions.act_window">
         <field name="name">GatewayAPI SMS Accounts</field>
         <field name="res_model">iap.account</field>
