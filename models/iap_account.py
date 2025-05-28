@@ -89,6 +89,11 @@ class IapAccount(models.Model):
         help="Timestamp of the last automated credit balance check for this account.",
     )
 
+    @api.onchange('show_token')
+    def _onchange_show_token(self):
+        # This method is just to trigger the UI update; no logic needed.
+        pass
+
     @api.constrains('gatewayapi_channel_config_mode', 'gatewayapi_new_channel_name')
     def _check_channel_name_required(self):
         for rec in self:
@@ -141,8 +146,8 @@ class IapAccount(models.Model):
     )
     show_token = fields.Boolean(
         default=False,
+        store=False,
         help="Show or hide the API token in the form."
-        # store=False has been removed, so it defaults to store=True
     )
 
     @api.depends('gatewayapi_base_url', 'gatewayapi_api_token', 'provider')
@@ -524,8 +529,8 @@ class IapAccount(models.Model):
 
     def action_toggle_show_token(self):
         """Toggle visibility of the API token"""
-        for rec in self:
-            rec.show_token = not rec.show_token
+        #for rec in self:
+        self.show_token = not self.show_token
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
