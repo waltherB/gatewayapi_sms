@@ -53,10 +53,10 @@
                         <field name="show_token" invisible="1"/> <!-- Added this line -->
                         <div class="o_row">
                             <field name="gatewayapi_api_token" widget="char"
-                                   invisible="show_token"
+                                   invisible="not show_token"
                                    nolabel="1"/>
                             <field name="gatewayapi_api_token" widget="password"
-                                   invisible="not show_token"
+                                   invisible="show_token"
                                    nolabel="1"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
                                     type="object" class="oe_stat_button"
