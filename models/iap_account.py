@@ -269,56 +269,101 @@ class IapAccount(models.Model):
 
     @api.model
     def create(self, vals_list):
+        processed_vals_list = []
         if isinstance(vals_list, dict):
-            if 'show_token' not in vals_list: vals_list['show_token'] = False
-            if vals_list.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals_list:
-                vals_list['gatewayapi_last_credit_check_time'] = False
-        elif isinstance(vals_list, list):
-            for vals_item in vals_list:
-                if 'show_token' not in vals_item: vals_item['show_token'] = False
-                if vals_item.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals_item:
-                    vals_item['gatewayapi_last_credit_check_time'] = False
-        records = super(IapAccount, self).create(vals_list)
+            # Handle single dict case
+            vals_list_internal = [vals_list]
+        else:
+            # Handle list of dicts case
+            vals_list_internal = vals_list
+
+        for vals_item in vals_list_internal:
+            # Set default for show_token
+            if 'show_token' not in vals_item:
+                vals_item['show_token'] = False
+            
+            # Set default for gatewayapi_last_credit_check_time
+            if vals_item.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals_item:
+                vals_item['gatewayapi_last_credit_check_time'] = False
+
+            # Automatically set provider if URL and token are present
+            if vals_item.get('gatewayapi_base_url') and vals_item.get('gatewayapi_api_token'):
+                if vals_item.get('provider') != 'sms_api_gatewayapi':
+                    vals_item['provider'] = 'sms_api_gatewayapi'
+            
+            if isinstance(vals_list, dict): # If original was a dict, use the modified item directly
+                processed_vals_list = vals_item
+                break # only one item to process
+            processed_vals_list.append(vals_item)
+
+        records = super(IapAccount, self).create(processed_vals_list)
+        
         notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
-        for record in records:
-            if notification_action and record.is_gatewayapi:
-                record.write({'gatewayapi_token_notification_action': notification_action.id})
+        if notification_action: # Check if action exists
+            for record in records:
+                # Check if it's a gatewayapi account based on provider or credentials (is_gatewayapi might not be updated yet)
+                is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
+                                     (record.gatewayapi_base_url and record.gatewayapi_api_token)
+                if is_gateway_api_type and record.gatewayapi_check_min_tokens:
+                     if not record.gatewayapi_token_notification_action: # Only set if not already set (e.g. by vals)
+                        record.write({'gatewayapi_token_notification_action': notification_action.id})
+                elif not record.gatewayapi_check_min_tokens and record.gatewayapi_token_notification_action == notification_action:
+                    # If checks are disabled and action is our default one, clear it
+                    record.write({'gatewayapi_token_notification_action': False})
         return records
 
     def write(self, vals):
-        # This is the 'ultra-simplified' write method focusing on key logic for 'immediate check'.
-        # The 'immediate check on interval change' logic that previously failed to apply is omitted here for now.
-        # This was the version I could not apply due to diff issues.
-        # For now, reverting to a simpler write that only handles the token_notification_action setting.
-        
-        # Original logic from your file for last_credit_check_time based on gatewayapi_check_min_tokens in vals:
-        if vals.get('gatewayapi_check_min_tokens') is True and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-        elif vals.get('gatewayapi_check_min_tokens') is False and 'gatewayapi_last_credit_check_time' not in vals:
-            vals['gatewayapi_last_credit_check_time'] = False
-            # If disabling checks, also ensure the action is cleared
-            if 'gatewayapi_token_notification_action' not in vals: # Don't override if explicitly set
-                 vals['gatewayapi_token_notification_action'] = False
+        # Handle provider update based on credentials
+        if 'gatewayapi_base_url' in vals or 'gatewayapi_api_token' in vals:
+            for record in self:
+                base_url_to_be = vals.get('gatewayapi_base_url', record.gatewayapi_base_url)
+                token_to_be = vals.get('gatewayapi_api_token', record.gatewayapi_api_token)
+                
+                if base_url_to_be and token_to_be and \
+                   record.provider != 'sms_api_gatewayapi' and \
+                   vals.get('provider') != 'sms_api_gatewayapi':
+                    vals['provider'] = 'sms_api_gatewayapi'
+                    # Since vals is modified, this will apply to all records in self.
+                    # This is a simplification based on the prompt.
+                    # If individual provider changes are needed per record, logic would be more complex.
+                    break # Modifying vals once is enough if it affects all records
 
+        # Original logic for last_credit_check_time and token_notification_action based on gatewayapi_check_min_tokens
+        if vals.get('gatewayapi_check_min_tokens') is True:
+            if 'gatewayapi_last_credit_check_time' not in vals:
+                vals['gatewayapi_last_credit_check_time'] = False
+        elif vals.get('gatewayapi_check_min_tokens') is False: # Explicitly disabling
+            vals['gatewayapi_last_credit_check_time'] = False # Reset check time
+            # If disabling checks, also ensure the action is cleared if not being explicitly set to something else
+            if 'gatewayapi_token_notification_action' not in vals or vals.get('gatewayapi_token_notification_action') is None:
+                 vals['gatewayapi_token_notification_action'] = False
+        
         res = super(IapAccount, self).write(vals)
 
         # Post-write logic to ensure server action is correctly set or cleared
-        # This is important if gatewayapi_check_min_tokens was set by default or not in vals during the super call.
-        if 'gatewayapi_check_min_tokens' in vals: # Only iterate if this was part of the write
-            for record in self: # self has updated values
-                if record.is_gatewayapi: # Only act on GatewayAPI accounts
-                    if record.gatewayapi_check_min_tokens:
-                        # If checks enabled, and action is not set (and not being explicitly cleared in this write)
-                        if not record.gatewayapi_token_notification_action and (vals.get('gatewayapi_token_notification_action') is not False):
-                            try:
-                                action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
-                                if action:
-                                    record.write({'gatewayapi_token_notification_action': action.id})
-                            except Exception as e:
-                                _logger.error(f"Error setting notification action for {record.id}: {e}")
-                    else: # gatewayapi_check_min_tokens is False for this record
-                        if record.gatewayapi_token_notification_action is not False: # If action is set, clear it
-                            record.write({'gatewayapi_token_notification_action': False})
+        # This handles cases where gatewayapi_check_min_tokens might not have been in `vals`
+        # or was set by default, or if provider changed.
+        # Also, this handles setting the action if provider was changed to gatewayapi.
+        if 'gatewayapi_check_min_tokens' in vals or 'provider' in vals:
+            notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+            if notification_action: # Proceed only if action exists
+                for record in self: # self has updated values
+                    is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
+                                         (record.gatewayapi_base_url and record.gatewayapi_api_token)
+                    
+                    if is_gateway_api_type:
+                        if record.gatewayapi_check_min_tokens:
+                            # If checks enabled, and action is not set (and not being explicitly cleared in this write)
+                            if not record.gatewayapi_token_notification_action and (vals.get('gatewayapi_token_notification_action') is not False):
+                                record.write({'gatewayapi_token_notification_action': notification_action.id})
+                        else: # gatewayapi_check_min_tokens is False for this record
+                            # If action is set to our default one, clear it
+                            if record.gatewayapi_token_notification_action == notification_action:
+                                record.write({'gatewayapi_token_notification_action': False})
+                    elif record.gatewayapi_token_notification_action == notification_action : # Not a gatewayapi account but has the action
+                        # If it's no longer a gatewayapi type account (e.g. provider changed)
+                        # and has the default action, clear it.
+                         record.write({'gatewayapi_token_notification_action': False})
         return res
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')

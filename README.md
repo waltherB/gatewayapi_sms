@@ -61,7 +61,7 @@ pip install phonenumbers requests
 
 1. Go to **Settings > Technical > IAP Accounts**.
 2. Create a new account or edit an existing one.
-3. Set the Provider to "GatewayAPI" in the dropdown.
+3. Set the Provider to "GatewayAPI" in the dropdown. (Note: If you are creating a new account and directly fill in the GatewayAPI Base URL and API Token below, the 'Provider' field will automatically be set to 'GatewayAPI'.)
 4. Fill in the required fields:
    - **Name**: Give your account a name (e.g., "GatewayAPI SMS")
    - **Service Name**: Must be `sms`.
@@ -172,20 +172,8 @@ AGPL-3
 ### The "GatewayAPI" provider option doesn't appear in selection field
 
 After installation, you should see "GatewayAPI" as an option in the provider selection field.
-If this doesn't appear, try the following steps:
-
-1. Run the provider field fix script:
-   ```
-   python odoo-bin shell -c /path/to/odoo.conf -d your_database
-   >>> exec(open('/path/to/addons/gatewayapi_sms/scripts/fix_provider_field.py').read())
-   ```
-
-2. Update the module:
-   ```
-   python odoo-bin -c /path/to/odoo.conf -d your_database -u gatewayapi_sms
-   ```
-
-3. Restart the Odoo server
+If this doesn't appear, ensure Odoo's app list has been updated ('Update Apps List' in Apps menu with developer mode active) and the Odoo server has been restarted. The module is designed to add 'GatewayAPI' to the provider list automatically. If issues persist with provider visibility on a correctly updated system, further investigation of the Odoo environment or potential conflicts might be needed.
+As a general rule, ensure your Odoo instance and the `gatewayapi_sms` module are up-to-date.
 
 ### Configuration Testing
 

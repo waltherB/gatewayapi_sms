@@ -70,13 +70,19 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
    - Verify output shows correct configuration values
    - Verify balance is displayed correctly
 
-2. **Run Account Fix Script if Needed**
-   - If you encounter issues with GatewayAPI not being selected:
+2. **Run Account Fix Script (Advanced Diagnostics)**
+   - The `scripts/fix_provider_field.py` (previously may have been referred to as `fix_gatewayapi_accounts.py`) is generally no longer needed for initial setup, as the provider field should set automatically when GatewayAPI URL and Token are entered.
+   - This script is retained for:
+     - Advanced diagnostics of persistent configuration problems.
+     - Fixing data integrity issues on existing accounts (e.g., ensuring `service_name` is 'sms').
+     - Use with older, unpatched versions of the module.
+   - Before running, ensure your module is up-to-date. The script itself contains a warning about its use.
+   - If, after ensuring your system is up-to-date and credentials are correctly entered, you still suspect an issue that this script might address:
      ```python
-     exec(open('scripts/fix_gatewayapi_accounts.py').read())
+     exec(open('scripts/fix_provider_field.py').read())
      ```
-   - This will check all accounts, fix any configuration issues, and create a default GatewayAPI account if none exists
-   - Verify the script output shows that at least one GatewayAPI account is available
+   - The script attempts to ensure that accounts with GatewayAPI credentials are correctly marked with the 'sms_api_gatewayapi' provider and have `service_name` set to 'sms'.
+   - Verify its output for any actions taken or accounts checked.
 
 ## Troubleshooting
 
@@ -99,9 +105,10 @@ If you encounter issues:
    - Verify base URL is correct
 
 4. **GatewayAPI Not Being Used**
-   - Verify is_gatewayapi field is True for your account
-   - Run the fix_gatewayapi_accounts.py script to repair any configuration issues
-   - Ensure at least one account has both gatewayapi_base_url and gatewayapi_api_token set
+   - Verify `is_gatewayapi` field is True (or the account is highlighted in blue in the list view) for your account after entering credentials.
+   - If the provider field did not set automatically, first check module version, Odoo logs, and ensure correct credential entry.
+   - The `fix_provider_field.py` script can be used as a last resort for older versions or complex data issues to ensure the provider and service_name are correctly set.
+   - Ensure at least one account has both `gatewayapi_base_url` and `gatewayapi_api_token` set for GatewayAPI functionality.
 
 ## Expected Results
 
