@@ -51,7 +51,6 @@
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
                         <field name="show_token" invisible="1"/>
                         <div class="o_row">
-                        # making it like the odoo way of doing it 
                             <field name="gatewayapi_api_token" password="False"
                                    invisible="not show_token"/>
                             <field name="gatewayapi_api_token" password="True"
