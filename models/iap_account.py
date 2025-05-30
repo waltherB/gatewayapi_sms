@@ -349,7 +349,8 @@ class IapAccount(models.Model):
     def action_toggle_show_token(self):
         for rec in self:
             rec.show_token = not rec.show_token
-        return {'type': 'ir.actions.client', 'tag': 'reload'}
+# wba no reload as it messes up the view 
+#        return {'type': 'ir.actions.client', 'tag': 'reload'}
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):

@@ -51,20 +51,21 @@
                         <label for="gatewayapi_api_token" string="API Token" class="fw-bold"/>
                         <field name="show_token" invisible="1"/>
                         <div class="o_row">
-                            <field name="gatewayapi_api_token" widget="char"
-                                   invisible="not show_token"
-                                   nolabel="1"/>
-                            <field name="gatewayapi_api_token" widget="password"
-                                   invisible="show_token"
-                                   nolabel="1"/>
+                        # making it like the odoo way of doing it 
+                            <field name="gatewayapi_api_token" password="False"
+                                   invisible="not show_token"/>
+                            <field name="gatewayapi_api_token" password="True"
+                                   invisible="show_token"/>
                             <button name="action_toggle_show_token" icon="fa-eye"
-                                    type="object" class="oe_stat_button"
-                                    invisible="not show_token"
-                                    title="Hide Token"/>
-                            <button name="action_toggle_show_token" icon="fa-eye-slash"
-                                    type="object" class="oe_stat_button"
+                                    type="object" 
+                                    class="oe_stat_button"
                                     invisible="show_token"
                                     title="Show Token"/>
+                            <button name="action_toggle_show_token" icon="fa-eye-slash"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    invisible="not show_token"
+                                    title="Hide Token"/>
                         </div>
                     </group>
 
