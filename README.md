@@ -12,6 +12,7 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
 - **Per-Account Credit Check Scheduling**: Configure individual credit check intervals (e.g., daily, hourly) for each GatewayAPI account.
 - **Admin Activity Notifications**: Automatic admin alerts (To-Do activities) when credits run low.
 - **Direct Email Notifications**: Receive low credit alerts at a user-defined email address.
+- **Batch Sending**: Efficiently sends multiple SMS messages to GatewayAPI in batches.
 - **Easy Configuration**: Intuitive form layout and clear help texts.
 - **Odoo 17 Compatible**: Built and tested for Odoo 17.
 
@@ -23,12 +24,13 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
   - `iap_alternative_provider`  
   - `phone_validation`
 - **Python Packages**:  
-  - `phonenumbers`  
+  - `phonenumbers`
   - `requests`
+  - `pyjwt` (for webhook JWT verification)
 
 Install Python dependencies with:
 ```sh
-pip install phonenumbers requests
+pip install phonenumbers requests pyjwt
 ```
 
 ---
@@ -156,6 +158,34 @@ Example of the Admin Activity:
 
 ---
 
+## Delivery Status Updates (Webhooks)
+
+To receive final delivery statuses for your sent SMS messages (e.g., DELIVERED, FAILED, EXPIRED), you need to configure a webhook in your GatewayAPI dashboard. This allows GatewayAPI to send Delivery Reports (DLRs) back to your Odoo instance.
+
+The URL to configure in your GatewayAPI dashboard for DLR webhooks is:
+`https://<your_odoo_domain>/gatewayapi/dlr`
+
+Replace `<your_odoo_domain>` with the actual public domain name or IP address of your Odoo server.
+
+### Securing Your Webhook
+
+It is crucial to secure your public webhook endpoint to ensure that only legitimate requests from GatewayAPI are processed.
+
+-   **Authentication Methods**: GatewayAPI supports sending a JWT (JSON Web Token) in the `X-Gwapi-Signature` header or using Basic Authentication for webhooks. This module uses JWT verification.
+-   **JWT Secret Configuration (Odoo Setup)**: To enable JWT verification, you must configure the shared secret in Odoo:
+    1.  Activate Developer Mode in Odoo.
+    2.  Navigate to **Settings > Technical > Parameters > System Parameters**.
+    3.  Click **Create** (or search if it already exists from a previous setup).
+    4.  Set the **Key** to `gatewayapi.webhook_jwt_secret`.
+    5.  Set the **Value** to the exact same secret token string that you configured in your GatewayAPI dashboard for the webhook's "Authentication token" (often referred to as the "Webhook Secret" or similar in the GatewayAPI interface).
+    6.  **Important**: This secret is critical for security. Ensure it is strong, kept confidential, and matches exactly between your GatewayAPI settings and this Odoo system parameter.
+-   **Current Implementation Status**: The controller endpoint `/gatewayapi/dlr` in this module now implements JWT verification using the `gatewayapi.webhook_jwt_secret` system parameter. If the secret is not set in Odoo or the incoming signature is invalid, the request will be rejected.
+-   **IP Whitelisting**: As an additional security layer, consider configuring your firewall or reverse proxy to only allow requests to the webhook URL from GatewayAPI's known IP addresses. This can provide an extra defense if your webhook endpoint is exposed to the internet.
+
+Please consult the GatewayAPI documentation for details on how to configure webhooks on their platform and how to obtain or set the shared secret for JWT.
+
+---
+
 ## Credits
 
 - Inspired by [smsapisi-odoo/smsapisi_connector](https://github.com/waltherB/smsapisi-odoo/tree/17.0/smsapisi_connector)
@@ -174,6 +204,11 @@ AGPL-3
 After installation, you should see "GatewayAPI" as an option in the provider selection field.
 If this doesn't appear, ensure Odoo's app list has been updated ('Update Apps List' in Apps menu with developer mode active) and the Odoo server has been restarted. The module is designed to add 'GatewayAPI' to the provider list automatically. If issues persist with provider visibility on a correctly updated system, further investigation of the Odoo environment or potential conflicts might be needed.
 As a general rule, ensure your Odoo instance and the `gatewayapi_sms` module are up-to-date.
+
+### IAP Account Warning in SMS Marketing
+
+-   **Warning**: "When using the 'Send Test' feature in SMS Marketing, a warning about a missing IAP SMS account might appear."
+-   **Advice**: If you encounter this, ensure your GatewayAPI account is correctly and fully configured to be the primary SMS provider. This issue can sometimes stem from complex interactions with the `iap_alternative_provider` module or the presence of other conflicting SMS IAP accounts (e.g., an old default Odoo SMS account). Verify your IAP account settings and ensure no other SMS services are unintentionally taking precedence.
 
 ### Configuration Testing
 

@@ -19,12 +19,13 @@
         'iap_alternative_provider'
     ],
     'external_dependencies': {
-        'python': ['phonenumbers', 'requests']
+        'python': ['phonenumbers', 'requests', 'pyjwt']
     },
     'data': [
         'security/ir.model.access.csv',
         'data/iap_account_data.xml',
         'data/ir_cron.xml',
+        'data/ir_config_parameter_data.xml',
         'views/iap_account.xml',
         'views/sms_sms.xml',
         'views/sms_resend.xml'

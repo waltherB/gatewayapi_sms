@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # We need the models module for the app to function correctly
 from . import models
+from . import controllers
 
 
 def post_init_hook(first_param, registry=None):

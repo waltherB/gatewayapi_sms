@@ -154,23 +154,43 @@ class IapAccount(models.Model):
 
     @api.model
     def _get_sms_account(self):
-        account = self.get("sms")
-        if account.provider == 'sms_api_gatewayapi':
-            return account
-        if account.gatewayapi_base_url and account.gatewayapi_api_token:
-            return account
-        gatewayapi_account = self.search([
-            '|',
-            ('provider', '=', 'sms_api_gatewayapi'),
-            '&',
+        """
+        Helper to get the primary GatewayAPI account for sending SMS.
+        Prioritizes explicitly configured GatewayAPI accounts.
+        Falls back to the generic IAP SMS account if no specific one is found.
+        """
+        # Search for accounts that are explicitly configured for GatewayAPI
+        # (have URL and Token). Order by ID descending to prefer more recently created ones
+        # if multiple somehow exist.
+        gatewayapi_configured_accounts = self.search([
             ('service_name', '=', 'sms'),
-            '&',
             ('gatewayapi_base_url', '!=', False),
-            ('gatewayapi_api_token', '!=', False)
-        ], limit=1)
-        if gatewayapi_account:
-            return gatewayapi_account
-        return account
+            ('gatewayapi_base_url', '!=', ''),
+            ('gatewayapi_api_token', '!=', False),
+            ('gatewayapi_api_token', '!=', ''),
+            # We could also check ('provider', '=', 'sms_api_gatewayapi'),
+            # but URL and token are stronger indicators of a configured account.
+            # The provider field should be set automatically by create/write if these are set.
+        ], order='id desc', limit=1)
+
+        if gatewayapi_configured_accounts:
+            # Ensure provider is set if this account is to be used.
+            # This should ideally be handled by onchange/write, but as a safeguard:
+            if gatewayapi_configured_accounts.provider != 'sms_api_gatewayapi':
+                _logger.info(
+                    f"Account {gatewayapi_configured_accounts.name} (ID: {gatewayapi_configured_accounts.id}) "
+                    f"has GatewayAPI credentials but provider is '{gatewayapi_configured_accounts.provider}'. "
+                    f"Consider reviewing its configuration."
+                )
+                # Not changing it here to avoid unexpected writes in a 'get' method.
+                # The create/write methods should have already handled this.
+            return gatewayapi_configured_accounts
+
+        # If no GatewayAPI-specific account is found by the above criteria,
+        # fall back to Odoo's standard IAP mechanism for the 'sms' service.
+        # This might return an empty recordset or an account for a different provider.
+        _logger.info("No specifically configured GatewayAPI account found by _get_sms_account helper, falling back to self.get('sms').")
+        return self.get("sms")
 
     @api.model
     def check_gatewayapi_credit_balance(self):
@@ -281,7 +301,7 @@ class IapAccount(models.Model):
             # Set default for show_token
             if 'show_token' not in vals_item:
                 vals_item['show_token'] = False
-            
+
             # Set default for gatewayapi_last_credit_check_time
             if vals_item.get('gatewayapi_check_min_tokens') and 'gatewayapi_last_credit_check_time' not in vals_item:
                 vals_item['gatewayapi_last_credit_check_time'] = False
@@ -290,14 +310,14 @@ class IapAccount(models.Model):
             if vals_item.get('gatewayapi_base_url') and vals_item.get('gatewayapi_api_token'):
                 if vals_item.get('provider') != 'sms_api_gatewayapi':
                     vals_item['provider'] = 'sms_api_gatewayapi'
-            
+
             if isinstance(vals_list, dict): # If original was a dict, use the modified item directly
                 processed_vals_list = vals_item
                 break # only one item to process
             processed_vals_list.append(vals_item)
 
         records = super(IapAccount, self).create(processed_vals_list)
-        
+
         notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
         if notification_action: # Check if action exists
             for record in records:
@@ -318,7 +338,7 @@ class IapAccount(models.Model):
             for record in self:
                 base_url_to_be = vals.get('gatewayapi_base_url', record.gatewayapi_base_url)
                 token_to_be = vals.get('gatewayapi_api_token', record.gatewayapi_api_token)
-                
+
                 if base_url_to_be and token_to_be and \
                    record.provider != 'sms_api_gatewayapi' and \
                    vals.get('provider') != 'sms_api_gatewayapi':
@@ -337,7 +357,7 @@ class IapAccount(models.Model):
             # If disabling checks, also ensure the action is cleared if not being explicitly set to something else
             if 'gatewayapi_token_notification_action' not in vals or vals.get('gatewayapi_token_notification_action') is None:
                  vals['gatewayapi_token_notification_action'] = False
-        
+
         res = super(IapAccount, self).write(vals)
 
         # Post-write logic to ensure server action is correctly set or cleared
@@ -350,7 +370,7 @@ class IapAccount(models.Model):
                 for record in self: # self has updated values
                     is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
                                          (record.gatewayapi_base_url and record.gatewayapi_api_token)
-                    
+
                     if is_gateway_api_type:
                         if record.gatewayapi_check_min_tokens:
                             # If checks enabled, and action is not set (and not being explicitly cleared in this write)
