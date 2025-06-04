@@ -21,7 +21,7 @@
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
-                       invisible="not is_gatewayapi"
+                       attrs="{'invisible': [('is_gatewayapi', '=', False)]}"
                        col="1">
 
                     <group>
