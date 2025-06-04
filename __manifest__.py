@@ -16,7 +16,8 @@
         'mail',
         'phone_validation',
         'sms',
-        'iap_alternative_provider'
+        'iap_alternative_provider',
+        'iap', # Added line
     ],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests', 'pyjwt']
