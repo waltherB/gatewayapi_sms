@@ -41,4 +41,66 @@
 </div>
 
 <h2>Support</h2>
-<p>For more information, see the <a href="https://gatewayapi.com/docs/">GatewayAPI documentation</a> or visit the <a href="https://github.com/waltherB/gatewayapi_sms">project repository</a>.</p> 
+<p>For more information, see the <a href="https://gatewayapi.com/docs/">GatewayAPI documentation</a> or visit the <a href="https://github.com/waltherB/gatewayapi_sms">project repository</a>.</p>
+
+<div class="oe_row oe_spaced">
+    <h2 class="oe_slogan" style="color:#875A7B;">Delivery Status Updates (Webhooks)</h2>
+    <h3 class="oe_slogan">Receive real-time SMS delivery status updates</h3>
+    <div class="oe_span12">
+        <p class="oe_mt32">
+            Configure webhooks in your GatewayAPI dashboard to receive delivery status updates for your SMS messages.
+            The module processes these updates and updates the SMS status in Odoo accordingly.
+        </p>
+        <div class="oe_span12">
+            <h4>Webhook Configuration</h4>
+            <ul>
+                <li>Webhook URL: <code>https://&lt;your_odoo_domain&gt;/gatewayapi/dlr</code></li>
+                <li>Authentication: JWT (JSON Web Token) in X-Gwapi-Signature header</li>
+                <li>Status Mapping:
+                    <ul>
+                        <li>DELIVERED/ACCEPTED → sent</li>
+                        <li>UNDELIVERABLE → error (sms_unregistered)</li>
+                        <li>REJECTED → error (sms_blacklist)</li>
+                        <li>EXPIRED/SKIPPED → error (sms_other)</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div class="oe_span12">
+            <h4>Security Setup</h4>
+            <ol>
+                <li>Activate Developer Mode in Odoo</li>
+                <li>Go to Settings > Technical > Parameters > System Parameters</li>
+                <li>Create parameter:
+                    <ul>
+                        <li>Key: <code>gatewayapi.webhook_jwt_secret</code></li>
+                        <li>Value: Your GatewayAPI webhook secret</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        <div class="oe_span12">
+            <h4>Nginx Configuration Example</h4>
+            <p>
+                For production environments, we recommend using Nginx as a reverse proxy with the following security features:
+            </p>
+            <ul>
+                <li>SSL/TLS encryption</li>
+                <li>IP whitelisting for GatewayAPI servers</li>
+                <li>Rate limiting</li>
+                <li>Proper buffer and timeout settings</li>
+            </ul>
+            <p>
+                A complete Nginx configuration example is available in <code>docs/nginx_webhook_example.conf</code>.
+                This configuration includes:
+            </p>
+            <ul>
+                <li>SSL/TLS configuration with modern cipher suites</li>
+                <li>IP-based access control for GatewayAPI servers</li>
+                <li>Rate limiting (10 requests/second with burst of 20)</li>
+                <li>Optimized proxy settings for Odoo</li>
+                <li>HTTP to HTTPS redirection</li>
+            </ul>
+        </div>
+    </div>
+</div> 
