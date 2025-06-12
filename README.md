@@ -162,27 +162,88 @@ Example of the Admin Activity:
 
 To receive final delivery statuses for your sent SMS messages (e.g., DELIVERED, FAILED, EXPIRED), you need to configure a webhook in your GatewayAPI dashboard. This allows GatewayAPI to send Delivery Reports (DLRs) back to your Odoo instance.
 
-The URL to configure in your GatewayAPI dashboard for DLR webhooks is:
-`https://<your_odoo_domain>/gatewayapi/dlr`
+### Webhook Configuration
 
-Replace `<your_odoo_domain>` with the actual public domain name or IP address of your Odoo server.
+1. **Webhook URL**:
+   ```
+   https://<your_odoo_domain>/gatewayapi/dlr
+   ```
+   Replace `<your_odoo_domain>` with the actual public domain name or IP address of your Odoo server.
 
-### Securing Your Webhook
+2. **JWT Authentication**:
+   - The module uses JWT (JSON Web Token) verification for webhook security
+   - GatewayAPI sends the JWT in the `X-Gwapi-Signature` header
+   - The token is verified using a shared secret configured in Odoo
 
-It is crucial to secure your public webhook endpoint to ensure that only legitimate requests from GatewayAPI are processed.
+3. **JWT Secret Setup**:
+   1. Activate Developer Mode in Odoo
+   2. Go to **Settings > Technical > Parameters > System Parameters**
+   3. Create or edit the parameter with:
+      - Key: `gatewayapi.webhook_jwt_secret`
+      - Value: Your GatewayAPI webhook secret (must match the secret in GatewayAPI dashboard)
+   4. Save the parameter
 
--   **Authentication Methods**: GatewayAPI supports sending a JWT (JSON Web Token) in the `X-Gwapi-Signature` header or using Basic Authentication for webhooks. This module uses JWT verification.
--   **JWT Secret Configuration (Odoo Setup)**: To enable JWT verification, you must configure the shared secret in Odoo:
-    1.  Activate Developer Mode in Odoo.
-    2.  Navigate to **Settings > Technical > Parameters > System Parameters**.
-    3.  Click **Create** (or search if it already exists from a previous setup).
-    4.  Set the **Key** to `gatewayapi.webhook_jwt_secret`.
-    5.  Set the **Value** to the exact same secret token string that you configured in your GatewayAPI dashboard for the webhook's "Authentication token" (often referred to as the "Webhook Secret" or similar in the GatewayAPI interface).
-    6.  **Important**: This secret is critical for security. Ensure it is strong, kept confidential, and matches exactly between your GatewayAPI settings and this Odoo system parameter.
--   **Current Implementation Status**: The controller endpoint `/gatewayapi/dlr` in this module now implements JWT verification using the `gatewayapi.webhook_jwt_secret` system parameter. If the secret is not set in Odoo or the incoming signature is invalid, the request will be rejected.
--   **IP Whitelisting**: As an additional security layer, consider configuring your firewall or reverse proxy to only allow requests to the webhook URL from GatewayAPI's known IP addresses. This can provide an extra defense if your webhook endpoint is exposed to the internet.
+### Status Mapping
 
-Please consult the GatewayAPI documentation for details on how to configure webhooks on their platform and how to obtain or set the shared secret for JWT.
+The module maps GatewayAPI delivery statuses to Odoo's SMS states:
+
+| GatewayAPI Status | Odoo State | Failure Type (if error) |
+|-------------------|------------|------------------------|
+| DELIVERED         | sent       | -                      |
+| ACCEPTED          | sent       | -                      |
+| UNDELIVERABLE     | error      | sms_unregistered       |
+| REJECTED          | error      | sms_blacklist          |
+| EXPIRED           | error      | sms_other              |
+| SKIPPED           | error      | sms_other              |
+
+### Error Handling
+
+- Invalid or missing JWT tokens result in 401/403 responses
+- Missing JWT secret configuration results in 503 response
+- Invalid payload format results in 400 response
+- All errors are logged with detailed information
+- Successful DLR processing returns 200 OK
+
+### Security Recommendations
+
+1. **JWT Secret**:
+   - Use a strong, unique secret
+   - Keep it confidential
+   - Rotate it periodically
+   - Never share it in logs or error messages
+
+2. **Network Security**:
+   - Configure your firewall to only allow requests from GatewayAPI IPs
+   - Use HTTPS for all webhook communications
+   - Consider implementing rate limiting
+
+3. **Monitoring**:
+   - Monitor webhook logs for unauthorized access attempts
+   - Set up alerts for failed JWT verifications
+   - Track DLR processing errors
+
+### Nginx Configuration
+
+For production environments, we recommend using Nginx as a reverse proxy with the following security features:
+
+1. **SSL/TLS Configuration**:
+   - Modern cipher suites
+   - HTTP/2 support
+   - Proper SSL session handling
+
+2. **Access Control**:
+   - IP whitelisting for GatewayAPI servers
+   - Rate limiting (10 requests/second with burst of 20)
+   - HTTP to HTTPS redirection
+
+3. **Proxy Settings**:
+   - Optimized buffer sizes
+   - Appropriate timeouts
+   - Proper header forwarding
+
+A complete Nginx configuration example is available in `docs/nginx_webhook_example.conf`. This configuration includes all the necessary security features and is ready to use after adjusting the domain name and SSL certificate paths.
+
+For more details on GatewayAPI's webhook implementation, refer to their [official documentation](https://gatewayapi.com/docs/).
 
 ---
 

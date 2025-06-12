@@ -9,21 +9,20 @@ _logger = logging.getLogger(__name__)
 
 class GatewayApiWebhookController(http.Controller):
 
-    @http.route('/gatewayapi/dlr', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/gatewayapi/dlr', type='http', auth='public', methods=['POST'], csrf=False)
     def gatewayapi_dlr_webhook(self, **kwargs):
         """Webhook to receive Delivery Reports (DLRs) from GatewayAPI."""
-
-        # --- Start of JWT Verification ---
+        
+        # JWT Verification
         auth_header = request.httprequest.headers.get('X-Gwapi-Signature')
         if not auth_header:
             _logger.warning("GatewayAPI DLR: Missing X-Gwapi-Signature header. Unauthorized.")
-            raise Unauthorized("Missing X-Gwapi-Signature header.")
+            return json.dumps({'status': 'error', 'message': 'Missing X-Gwapi-Signature header'}), 401
 
         jwt_secret = request.env['ir.config_parameter'].sudo().get_param('gatewayapi.webhook_jwt_secret')
         if not jwt_secret:
             _logger.error("GatewayAPI DLR: JWT secret not configured in Odoo (gatewayapi.webhook_jwt_secret). Service unavailable.")
-            # Return 503 to indicate service is temporarily unavailable due to misconfiguration
-            raise ServiceUnavailable("JWT secret not configured on server.")
+            return json.dumps({'status': 'error', 'message': 'JWT secret not configured on server'}), 503
 
         try:
             # The token is the value of the X-Gwapi-Signature header
@@ -35,30 +34,45 @@ class GatewayApiWebhookController(http.Controller):
 
         except jwt.ExpiredSignatureError:
             _logger.warning("GatewayAPI DLR: JWT verification failed - ExpiredSignatureError.")
-            raise Unauthorized("Token has expired.")
+            return json.dumps({'status': 'error', 'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError as e:
             _logger.warning("GatewayAPI DLR: JWT verification failed - InvalidTokenError: %s", str(e))
-            raise Forbidden("Invalid token.") # 403 as the token is malformed or signature mismatch
+            return json.dumps({'status': 'error', 'message': 'Invalid token'}), 403
         except Exception as e:
             _logger.error("GatewayAPI DLR: An unexpected error occurred during JWT verification: %s", str(e))
-            raise ServiceUnavailable("Error during token verification.")
-        # --- End of JWT Verification ---
+            return json.dumps({'status': 'error', 'message': 'Error during token verification'}), 503
 
-        # Now get the data, as JWT is valid
-        data = request.jsonrequest
-        # Log full data as string and specific ID for traceability
-        _logger.info("GatewayAPI DLR Webhook received data (JWT verified): %s for message ID %s",
-                     json.dumps(data), data.get('id'))
+        # Parse JSON data
+        try:
+            _logger.info("GatewayAPI DLR: Attempting to parse JSON data from request")
+            data = request.get_json_data()
+            _logger.info("GatewayAPI DLR: Successfully parsed JSON data: %s", data)
+            if not data:
+                _logger.error("GatewayAPI DLR: Empty JSON data received")
+                return json.dumps({'status': 'error', 'message': 'Empty JSON data'}), 400
+        except Exception as e:
+            _logger.error("GatewayAPI DLR: Failed to parse JSON data: %s", str(e))
+            return json.dumps({'status': 'error', 'message': 'Invalid JSON data'}), 400
 
+        # Validate required fields
+        if not all(k in data for k in ['id', 'status']):
+            _logger.warning("GatewayAPI DLR: Missing required fields in payload. Data: %s", data)
+            return json.dumps({'status': 'error', 'message': 'Missing required fields (id, status)'}), 400
 
+        # Extract all possible fields from GatewayAPI payload
         gw_message_id = data.get('id')
-        status = data.get('status') # e.g., DELIVERED, EXPIRED, UNDELIVERABLE, REJECTED
-        error_description = data.get('error')
-        # timestamp = data.get('time') # UNIX timestamp
+        status = data.get('status')
+        msisdn = data.get('msisdn')
+        time = data.get('time')
+        error = data.get('error')
+        code = data.get('code')
+        userref = data.get('userref')
+        callback_url = data.get('callback_url')
+        api = data.get('api')
 
-        if not gw_message_id or not status:
-            _logger.warning("GatewayAPI DLR: 'id' or 'status' missing in payload. Data: %s", data)
-            return {'status': 'error', 'message': 'Missing id or status'}
+        # Log full data for traceability
+        _logger.info("GatewayAPI DLR Webhook received data (JWT verified): %s for message ID %s",
+                     json.dumps(data), gw_message_id)
 
         SmsMessage = request.env['sms.sms'].sudo()
         # Ensure gw_message_id is searched as a string, as it's stored as Char
@@ -67,7 +81,7 @@ class GatewayApiWebhookController(http.Controller):
         if not sms_message:
             _logger.warning("GatewayAPI DLR: No sms.sms record found for gatewayapi_message_id: %s", gw_message_id)
             # Returning 200 OK anyway so GatewayAPI doesn't keep retrying for a message we don't know
-            return {'status': 'ok', 'message': 'SMS not found but acknowledged'}
+            return json.dumps({'status': 'ok', 'message': 'SMS not found but acknowledged'}), 200
 
         # Basic status mapping (can be expanded)
         # Odoo states: 'outgoing', 'sent', 'error', 'canceled'
@@ -120,14 +134,10 @@ class GatewayApiWebhookController(http.Controller):
         elif new_odoo_state == 'sent': # Clear failure type on success
             update_vals['failure_type'] = False
 
-
-        if error_description and new_odoo_state == 'error':
+        if error and new_odoo_state == 'error':
             # Store the error description if provided and the message is marked as error
-            # This could be appended to an existing field or stored in a new dedicated field.
-            # For now, just logging it. A custom field like 'gateway_delivery_error_details' would be better.
-            _logger.info("GatewayAPI DLR: Error details for GW ID %s (SMS ID %s): %s", gw_message_id, sms_message.id, error_description)
-            # Example: update_vals['gateway_delivery_error_details'] = error_description
-
+            _logger.info("GatewayAPI DLR: Error details for GW ID %s (SMS ID %s): %s", gw_message_id, sms_message.id, error)
+            # Example: update_vals['gateway_delivery_error_details'] = error
 
         if update_vals: # only write if there are changes
             sms_message.write(update_vals)
@@ -141,5 +151,5 @@ class GatewayApiWebhookController(http.Controller):
                 sms_message.id, gw_message_id, original_odoo_state, status
             )
 
-        # Acknowledge receipt to GatewayAPI
-        return {'status': 'ok', 'message': 'DLR processed'}
+        # Acknowledge receipt to GatewayAPI with proper HTTP status code
+        return json.dumps({'status': 'ok', 'message': 'DLR processed'}), 200

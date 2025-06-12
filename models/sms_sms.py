@@ -4,6 +4,7 @@ from odoo import fields, models, tools
 import logging
 import requests
 import re
+from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
@@ -33,12 +34,16 @@ class Sms(models.Model):
             "\U00002600-\U000026FF"  # Misc symbols
             "]+", flags=re.UNICODE)
 
+        # Get the base URL for the webhook
+        base_url = request.httprequest.url_root.rstrip('/')
+        callback_url = f"{base_url}/gatewayapi/dlr"
+
         payload = {
             "sender": iap_account.gatewayapi_sender or iap_account.service_name or "Odoo",
             "message": self.body,
             "recipients": [{"msisdn": int(self.number)}], # Assuming self.number is sanitized
             "userref": self.uuid,
-            # "callback_url": "..." # Optional: if we want per-message DLR URLs
+            "callback_url": callback_url
         }
 
         if emoji_pattern.search(self.body):
