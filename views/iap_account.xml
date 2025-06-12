@@ -22,7 +22,7 @@
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
                        name="group_sms_api_gatewayapi"
-                       invisible="provider != 'sms_api_gatewayapi'"
+                       invisible="[('provider', '!=', 'sms_api_gatewayapi')]"
                        col="1">
 
                     <group>
