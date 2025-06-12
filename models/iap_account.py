@@ -16,7 +16,9 @@ class IapAccount(models.Model):
     name = fields.Char(copy=False)
     provider = fields.Selection(
         selection_add=[('sms_api_gatewayapi', 'GatewayAPI')],
-        ondelete={'sms_api_gatewayapi': 'set default'}
+        ondelete={'sms_api_gatewayapi': 'set default'},
+        required=True,
+        default='sms_api_gatewayapi'
     )
     is_gatewayapi = fields.Boolean(
         string="Is GatewayAPI",
