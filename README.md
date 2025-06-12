@@ -222,6 +222,27 @@ The module maps GatewayAPI delivery statuses to Odoo's SMS states:
    - Set up alerts for failed JWT verifications
    - Track DLR processing errors
 
+### Nginx Configuration
+
+For production environments, we recommend using Nginx as a reverse proxy with the following security features:
+
+1. **SSL/TLS Configuration**:
+   - Modern cipher suites
+   - HTTP/2 support
+   - Proper SSL session handling
+
+2. **Access Control**:
+   - IP whitelisting for GatewayAPI servers
+   - Rate limiting (10 requests/second with burst of 20)
+   - HTTP to HTTPS redirection
+
+3. **Proxy Settings**:
+   - Optimized buffer sizes
+   - Appropriate timeouts
+   - Proper header forwarding
+
+A complete Nginx configuration example is available in `docs/nginx_webhook_example.conf`. This configuration includes all the necessary security features and is ready to use after adjusting the domain name and SSL certificate paths.
+
 For more details on GatewayAPI's webhook implementation, refer to their [official documentation](https://gatewayapi.com/docs/).
 
 ---
