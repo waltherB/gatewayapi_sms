@@ -7,8 +7,9 @@
         <field name="arch" type="xml">
             <!-- Add provider field -->
             <xpath expr="//field[@name='service_name']" position="before">
-                <field name="provider" widget="selection"
-                       options="{'no_create': True, 'no_open': True}"/>
+                <field name="provider" widget="selection" required="1"
+                       options="{'no_create': True, 'no_open': True}"
+                       default="sms_api_gatewayapi"/>
             </xpath>
 
             <!-- Make name required -->
@@ -20,7 +21,7 @@
             <xpath expr="//group[@name='account']" position="after">
                 <field name="is_gatewayapi" invisible="1"/>
                 <group string="GatewayAPI account"
-		       name="group_sms_api_gatewayapi"
+                       name="group_sms_api_gatewayapi"
                        invisible="[('provider', '!=', 'sms_api_gatewayapi')]"
                        col="1">
 
