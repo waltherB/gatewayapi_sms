@@ -57,6 +57,4 @@ Features include:
     - A master scheduled action (cron job) runs frequently (configurable, e.g., every 10 minutes) to trigger checks for due accounts based on their individual settings.
 - Easy configuration and integration within IAP accounts.
 """,
-    'post_init_hook': 'post_init_hook',
-    'uninstall_hook': 'uninstall_hook',
 }
