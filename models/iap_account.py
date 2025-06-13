@@ -63,7 +63,7 @@ class IapAccount(models.Model):
     gatewayapi_token_notification_action = fields.Many2one(
         'ir.actions.server',
         string="Credits notification action",
-        help="Action to be performed when the number of credits is less than min_tokens."
+        help="Action to be performed when the number of credits is less than min_tokens. Select: Send GatewayAPI Low Credits Notification"
     )
     gatewayapi_last_credit_check_time = fields.Datetime(
         string="Last Credit Check Time",
