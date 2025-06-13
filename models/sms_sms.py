@@ -4,7 +4,7 @@ from odoo import fields, models, tools
 import logging
 import requests
 import re
-import request
+from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
