@@ -4,7 +4,6 @@ from odoo import fields, models, tools
 import logging
 import requests
 import re
-from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
@@ -15,15 +14,26 @@ class Sms(models.Model):
     _inherit = "sms.sms"
 
     sms_api_error = fields.Char()
-    gatewayapi_message_id = fields.Char(string="GatewayAPI Message ID", copy=False, readonly=True, index=True)
+    gatewayapi_message_id = fields.Char(
+        string="GatewayAPI Message ID",
+        copy=False,
+        readonly=True,
+        index=True
+    )
 
-    def _prepare_gatewayapi_payload_item(self, iap_account):
+    def _is_sent_with_gatewayapi(self):
+        """Check if SMS should be sent via GatewayAPI.
+        Returns True if any record in the recordset should be sent via GatewayAPI.
+        """
+        iap_account = self.env['iap.account']._get_sms_account()
+        return bool(iap_account and iap_account.gatewayapi_api_token and iap_account.gatewayapi_base_url)
+
+    def _prepare_gatewayapi_payload_item(self, iap_account, base_url):
         self.ensure_one()
-        if not self.number: # Should be pre-validated, but as a safeguard
+        if not self.number:  # Should be pre-validated, but as a safeguard
             return None
 
         # Emoji detection regex (covers most emoji ranges)
-        # Moved from old _send_sms_with_gatewayapi
         emoji_pattern = re.compile(
             "[\U0001F600-\U0001F64F"  # emoticons
             "\U0001F300-\U0001F5FF"  # symbols & pictographs
@@ -35,13 +45,12 @@ class Sms(models.Model):
             "]+", flags=re.UNICODE)
 
         # Get the base URL for the webhook
-        base_url = request.httprequest.url_root.rstrip('/')
         callback_url = f"{base_url}/gatewayapi/dlr"
 
         payload = {
             "sender": iap_account.gatewayapi_sender or iap_account.service_name or "Odoo",
             "message": self.body,
-            "recipients": [{"msisdn": int(self.number)}], # Assuming self.number is sanitized
+            "recipients": [{"msisdn": int(self.number)}],  # Assuming self.number is sanitized
             "userref": self.uuid,
             "callback_url": callback_url
         }
@@ -65,31 +74,49 @@ class Sms(models.Model):
                 for sms_record in self:
                     sms_record.sms_api_error = "GatewayAPI account misconfiguration"
                     results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
+                self._postprocess_iap_sent_sms(
+                    results, unlink_failed=unlink_failed, unlink_sent=unlink_sent
+                )
                 return
 
             batch_payload_items = []
-            sms_records_in_batch = self.env['sms.sms'] # To keep track of records for response mapping
+            # To keep track of records for response mapping
+            sms_records_in_batch = self.env['sms.sms']
+
+            # Get webhook URL from system parameter
+            webhook_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
+            if not webhook_url:
+                _logger.error("GatewayAPI: web.base.url system parameter not set")
+                for sms_record in self:
+                    sms_record.sms_api_error = "System configuration error: web.base.url not set"
+                    results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
+                self._postprocess_iap_sent_sms(
+                    results, unlink_failed=unlink_failed, unlink_sent=unlink_sent
+                )
+                return
+
+            base_url = webhook_url.rstrip('/')
 
             for sms_record in self:
                 if not sms_record.number:
                     _logger.warning(f"SMS {sms_record.uuid} has no number, skipping.")
                     results.append({'uuid': sms_record.uuid, 'state': 'wrong_number_format'})
                     sms_record.sms_api_error = "Missing recipient number"
-                    continue # Skip this record from batch
+                    continue  # Skip this record from batch
 
-                payload_item = sms_record._prepare_gatewayapi_payload_item(iap_account)
+                payload_item = sms_record._prepare_gatewayapi_payload_item(iap_account, base_url)
                 if payload_item:
                     batch_payload_items.append(payload_item)
                     sms_records_in_batch |= sms_record
-                else: # Should not happen if number check is done
+                else:  # Should not happen if number check is done
                     results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
                     sms_record.sms_api_error = "Payload preparation failed"
 
-
-            if not batch_payload_items: # All records in self might have been skipped
-                if results: # If some were skipped due to no number
-                     self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
+            if not batch_payload_items:  # All records in self might have been skipped
+                if results:  # If some were skipped due to no number
+                    self._postprocess_iap_sent_sms(
+                        results, unlink_failed=unlink_failed, unlink_sent=unlink_sent
+                    )
                 # else: no records to process, no results to postprocess.
                 return
 
@@ -99,7 +126,7 @@ class Sms(models.Model):
             try:
                 _logger.debug(f"Sending SMS batch to GatewayAPI: url={url}, count={len(batch_payload_items)}")
                 response = requests.post(url, json=batch_payload_items, auth=(token, ""))
-                response.raise_for_status() # Raises HTTPError for 4xx/5xx
+                response.raise_for_status()  # Raises HTTPError for 4xx/5xx
                 response_content = response.json()
                 _logger.debug(f"GatewayAPI batch response: {response_content}")
 
@@ -110,9 +137,9 @@ class Sms(models.Model):
                     responded_sms_map = {
                         item['userref']: {
                             'gw_msg_id': item.get('id'),
-                            'status_text': item.get('recipients', [{}])[0].get('status'), # First recipient status
+                            'status_text': item.get('recipients', [{}])[0].get('status'),  # First recipient status
                             'error_code': item.get('recipients', [{}])[0].get('error_code'),
-                            'accepted': item.get('recipients', [{}])[0].get('status') == 'SENT_OK' # Example
+                            'accepted': item.get('recipients', [{}])[0].get('status') == 'SENT_OK'  # Example
                         } for item in response_content['details']['messages'] if 'userref' in item
                     }
 
@@ -141,55 +168,34 @@ class Sms(models.Model):
                         # Assuming direct 'ids' list implies acceptance by gateway for all
                         results.append({'uuid': sms_record.uuid, 'state': 'success'})
                         sms_record.sms_api_error = False
-
-                else: # Unexpected response structure
-                    _logger.error(f"GatewayAPI batch response structure not recognized or mismatched: {response_content}")
+                else:
+                    # Fallback: Mark all as error if response format is unexpected
+                    _logger.error("GatewayAPI batch response: unexpected format. Data: %s", response_content)
                     for sms_record in sms_records_in_batch:
                         results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                        sms_record.sms_api_error = "GatewayAPI: Unrecognized batch response"
+                        sms_record.sms_api_error = "Unexpected GatewayAPI response format"
 
             except requests.exceptions.RequestException as e:
-                _logger.error(f"GatewayAPI batch error: {e}, response: {getattr(e, 'response', None)}")
-                error_message = f"GatewayAPI RequestException: {str(e)}"
-                if hasattr(e, 'response') and e.response is not None:
-                    try:
-                        error_details = e.response.json()
-                        error_message += f" - Details: {error_details}"
-                    except ValueError: # If response is not JSON
-                        error_message += f" - Content: {e.response.text}"
-
-                for sms_record in sms_records_in_batch: # Use sms_records_in_batch here
-                    sms_record.sms_api_error = error_message
+                _logger.error("GatewayAPI batch request failed: %s", str(e))
+                for sms_record in sms_records_in_batch:
                     results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                if raise_exception: # Should this be inside or outside the loop? Usually outside for batch.
-                    raise
-
-            # Ensure results are complete for all original `self` records, including those skipped earlier
-            processed_uuids = {r['uuid'] for r in results}
-            for sms_record in self:
-                if sms_record.uuid not in processed_uuids:
-                    # This case should ideally be covered by the initial skipping or error handling
-                    # but as a safeguard if a record from `self` was not added to `sms_records_in_batch`
-                    # and also not explicitly handled with an error state in `results`.
-                    _logger.warning(f"SMS {sms_record.uuid} was in original batch but not processed. Marking as error.")
+                    sms_record.sms_api_error = f"GatewayAPI request failed: {str(e)}"
+            except Exception as e:
+                _logger.exception("GatewayAPI batch processing failed")
+                for sms_record in sms_records_in_batch:
                     results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                    sms_record.sms_api_error = "Unprocessed in batch"
+                    sms_record.sms_api_error = f"GatewayAPI processing error: {str(e)}"
 
+            self._postprocess_iap_sent_sms(
+                results, unlink_failed=unlink_failed, unlink_sent=unlink_sent
+            )
+            return
 
-            _logger.info('Send batch %s SMS via GatewayAPI: %s gave %s results', len(self.ids), self.ids, len(results))
-            self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
-
-        else: # Not GatewayAPI
-            return super()._send(
-                unlink_failed=unlink_failed, unlink_sent=unlink_sent,
-                raise_exception=raise_exception)
-
-    def _is_sent_with_gatewayapi(self):
-        account = self.env['iap.account']._get_sms_account()
-        # Check explicitly for GatewayAPI provider or configuration
-        return account and account.provider == 'sms_api_gatewayapi' and \
-               account.gatewayapi_base_url and account.gatewayapi_api_token
-               # Made this check more stringent to ensure account is usable
+        return super(Sms, self)._send(
+            unlink_failed=unlink_failed,
+            unlink_sent=unlink_sent,
+            raise_exception=raise_exception
+        )
 
     def _split_batch(self):
         if self._is_sent_with_gatewayapi():

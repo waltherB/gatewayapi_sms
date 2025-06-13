@@ -92,14 +92,6 @@
                     </div>
 
                     <group invisible="not gatewayapi_check_min_tokens">
-                        <field name="gatewayapi_enable_email_notification"/>
-                        <label for="gatewayapi_low_credit_notification_email" 
-                               invisible="not gatewayapi_enable_email_notification"/>
-                        <field name="gatewayapi_low_credit_notification_email" 
-                               nolabel="1"
-                               invisible="not gatewayapi_enable_email_notification"
-                               placeholder="Enter email address for alerts"/>
-
                         <label for="gatewayapi_min_tokens" string="Minimum credits" class="fw-bold"/>
                         <field name="gatewayapi_min_tokens" nolabel="1"/>
                         <label for="gatewayapi_token_notification_action" string="Credits notification action" class="fw-bold"/>
@@ -108,6 +100,14 @@
                         <field name="gatewayapi_cron_interval_number" nolabel="1"/>
                         <label for="gatewayapi_cron_interval_type" string="Interval type" class="fw-bold"/>
                         <field name="gatewayapi_cron_interval_type" nolabel="1"/>
+
+                        <field name="gatewayapi_enable_email_notification"/>
+                        <label for="gatewayapi_low_credit_notification_email" 
+                               invisible="not gatewayapi_enable_email_notification"/>
+                        <field name="gatewayapi_low_credit_notification_email" 
+                               nolabel="1"
+                               invisible="not gatewayapi_enable_email_notification"
+                               placeholder="Enter email address for alerts"/>
                     </group>
 
                 </group>
