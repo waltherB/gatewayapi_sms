@@ -44,7 +44,13 @@ class GatewayApiWebhookController(http.Controller):
 
         # Parse JSON data
         try:
-            data = request.get_json_data()
+            if hasattr(request, 'jsonrequest'):
+                data = request.jsonrequest
+            else:
+                data = request.get_json_data()
+            if not data:
+                _logger.error("GatewayAPI DLR: Empty JSON data received")
+                return json.dumps({'status': 'error', 'message': 'Empty JSON data'}), 400
         except Exception as e:
             _logger.error("GatewayAPI DLR: Failed to parse JSON data: %s", str(e))
             return json.dumps({'status': 'error', 'message': 'Invalid JSON data'}), 400
