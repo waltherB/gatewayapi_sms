@@ -347,27 +347,31 @@ class IapAccount(models.Model):
 
         res = super(IapAccount, self).write(vals)
 
-        # Post-write logic to ensure server action is correctly set or cleared
-        if 'gatewayapi_check_min_tokens' in vals or 'provider' in vals:
-            notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
-            if notification_action: # Proceed only if action exists
-                for record in self: # self has updated values
-                    is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
-                                         (record.gatewayapi_base_url and record.gatewayapi_api_token)
+        # Get the notification action reference
+        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+        if not notification_action:
+            _logger.error("GatewayAPI low credits notification action not found!")
+            return res
 
-                    if is_gateway_api_type:
-                        if record.gatewayapi_check_min_tokens:
-                            # If checks enabled, and action is not set (and not being explicitly cleared in this write)
-                            if not record.gatewayapi_token_notification_action and (vals.get('gatewayapi_token_notification_action') is not False):
-                                record.write({'gatewayapi_token_notification_action': notification_action.id})
-                        else: # gatewayapi_check_min_tokens is False for this record
-                            # If action is set to our default one, clear it
-                            if record.gatewayapi_token_notification_action == notification_action:
-                                record.write({'gatewayapi_token_notification_action': False})
-                    elif record.gatewayapi_token_notification_action == notification_action : # Not a gatewayapi account but has the action
-                        # If it's no longer a gatewayapi type account (e.g. provider changed)
-                        # and has the default action, clear it.
-                         record.write({'gatewayapi_token_notification_action': False})
+        # Post-write logic to ensure server action is correctly set or cleared
+        for record in self:  # self has updated values
+            is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
+                                 (record.gatewayapi_base_url and record.gatewayapi_api_token)
+
+            if is_gateway_api_type:
+                if record.gatewayapi_check_min_tokens:
+                    # Always ensure the notification action is set when checks are enabled
+                    if record.gatewayapi_token_notification_action != notification_action:
+                        _logger.info(f"Setting notification action for account {record.name}")
+                        record.write({'gatewayapi_token_notification_action': notification_action.id})
+                else:  # gatewayapi_check_min_tokens is False for this record
+                    # If action is set to our default one, clear it
+                    if record.gatewayapi_token_notification_action == notification_action:
+                        record.write({'gatewayapi_token_notification_action': False})
+            elif record.gatewayapi_token_notification_action == notification_action:  # Not a gatewayapi account but has the action
+                # If it's no longer a gatewayapi type account (e.g. provider changed)
+                # and has the default action, clear it.
+                record.write({'gatewayapi_token_notification_action': False})
 
         # Trigger immediate credit check if minimum tokens threshold was changed
         if 'gatewayapi_min_tokens' in vals:
