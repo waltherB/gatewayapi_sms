@@ -299,6 +299,11 @@ class IapAccount(models.Model):
             # Handle list of dicts case
             vals_list_internal = vals_list
 
+        # Get the notification action reference
+        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+        if not notification_action:
+            _logger.error("GatewayAPI low credits notification action not found!")
+
         for vals_item in vals_list_internal:
             # Set default for show_token
             if 'show_token' not in vals_item:
@@ -313,6 +318,14 @@ class IapAccount(models.Model):
                 if vals_item.get('provider') != 'sms_api_gatewayapi':
                     vals_item['provider'] = 'sms_api_gatewayapi'
 
+            # Set default notification action for GatewayAPI accounts
+            is_gateway_api_type = vals_item.get('provider') == 'sms_api_gatewayapi' or \
+                                 (vals_item.get('gatewayapi_base_url') and vals_item.get('gatewayapi_api_token'))
+            if is_gateway_api_type and notification_action:
+                if vals_item.get('gatewayapi_check_min_tokens') and not vals_item.get('gatewayapi_token_notification_action'):
+                    vals_item['gatewayapi_token_notification_action'] = notification_action.id
+                    _logger.info("Setting default notification action for new GatewayAPI account")
+
             if isinstance(vals_list, dict): # If original was a dict, use the modified item directly
                 processed_vals_list = vals_item
                 break # only one item to process
@@ -320,15 +333,16 @@ class IapAccount(models.Model):
 
         records = super(IapAccount, self).create(processed_vals_list)
 
-        notification_action = self.env.ref('gatewayapi_sms.low_credits_notification_action', raise_if_not_found=False)
+        # Post-create logic to ensure server action is correctly set
         if notification_action: # Check if action exists
             for record in records:
-                # Check if it's a gatewayapi account based on provider or credentials (is_gatewayapi might not be updated yet)
+                # Check if it's a gatewayapi account based on provider or credentials
                 is_gateway_api_type = record.provider == 'sms_api_gatewayapi' or \
                                      (record.gatewayapi_base_url and record.gatewayapi_api_token)
                 if is_gateway_api_type and record.gatewayapi_check_min_tokens:
-                     if not record.gatewayapi_token_notification_action: # Only set if not already set (e.g. by vals)
+                    if not record.gatewayapi_token_notification_action: # Only set if not already set
                         record.write({'gatewayapi_token_notification_action': notification_action.id})
+                        _logger.info(f"Set notification action for new account {record.name}")
                 elif not record.gatewayapi_check_min_tokens and record.gatewayapi_token_notification_action == notification_action:
                     # If checks are disabled and action is our default one, clear it
                     record.write({'gatewayapi_token_notification_action': False})
