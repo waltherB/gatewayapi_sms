@@ -368,6 +368,12 @@ class IapAccount(models.Model):
                         # If it's no longer a gatewayapi type account (e.g. provider changed)
                         # and has the default action, clear it.
                          record.write({'gatewayapi_token_notification_action': False})
+
+        # Trigger immediate credit check if minimum tokens threshold was changed
+        if 'gatewayapi_min_tokens' in vals:
+            _logger.info("Triggering immediate credit check after threshold change")
+            self.env['iap.account'].check_gatewayapi_credit_balance()
+
         return res
 
     @api.depends('gatewayapi_api_token', 'gatewayapi_base_url')
