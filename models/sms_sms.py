@@ -17,7 +17,7 @@ class Sms(models.Model):
     sms_api_error = fields.Char()
     gatewayapi_message_id = fields.Char(string="GatewayAPI Message ID", copy=False, readonly=True, index=True)
 
-    def _prepare_gatewayapi_payload_item(self, iap_account):
+    def _prepare_gatewayapi_payload_item(self, iap_account, base_url):
         self.ensure_one()
         if not self.number: # Should be pre-validated, but as a safeguard
             return None
@@ -35,7 +35,6 @@ class Sms(models.Model):
             "]+", flags=re.UNICODE)
 
         # Get the base URL for the webhook
-        base_url = request.httprequest.url_root.rstrip('/')
         callback_url = f"{base_url}/gatewayapi/dlr"
 
         payload = {
@@ -51,41 +50,42 @@ class Sms(models.Model):
 
         return payload
 
-    def _send(self, unlink_failed=False, unlink_sent=True, raise_exception=False):
-        """
-        This method tries to send SMS after checking the number (presence and formatting).
-        For GatewayAPI, it now sends messages in batches.
-        """
-        if self._is_sent_with_gatewayapi():
-            results = []
-            iap_account = self.env['iap.account']._get_sms_account()
+def _send(self, unlink_failed=False, unlink_sent=True, raise_exception=False):
+    """
+    This method tries to send SMS after checking the number (presence and formatting).
+    For GatewayAPI, it now sends messages in batches.
+    """
+    if self._is_sent_with_gatewayapi():
+        results = []
+        iap_account = self.env['iap.account']._get_sms_account()
 
-            if not iap_account or not iap_account.gatewayapi_api_token or not iap_account.gatewayapi_base_url:
-                _logger.error("GatewayAPI: Account not configured or missing token/base_url.")
-                for sms_record in self:
-                    sms_record.sms_api_error = "GatewayAPI account misconfiguration"
-                    results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
-                return
-
-            batch_payload_items = []
-            sms_records_in_batch = self.env['sms.sms'] # To keep track of records for response mapping
-
+        if not iap_account or not iap_account.gatewayapi_api_token or not iap_account.gatewayapi_base_url:
+            _logger.error("GatewayAPI: Account not configured or missing token/base_url.")
             for sms_record in self:
-                if not sms_record.number:
-                    _logger.warning(f"SMS {sms_record.uuid} has no number, skipping.")
-                    results.append({'uuid': sms_record.uuid, 'state': 'wrong_number_format'})
-                    sms_record.sms_api_error = "Missing recipient number"
-                    continue # Skip this record from batch
+                sms_record.sms_api_error = "GatewayAPI account misconfiguration"
+                results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
+            self._postprocess_iap_sent_sms(results, unlink_failed=unlink_failed, unlink_sent=unlink_sent)
+            return
 
-                payload_item = sms_record._prepare_gatewayapi_payload_item(iap_account)
-                if payload_item:
-                    batch_payload_items.append(payload_item)
-                    sms_records_in_batch |= sms_record
-                else: # Should not happen if number check is done
-                    results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
-                    sms_record.sms_api_error = "Payload preparation failed"
+        batch_payload_items = []
+        sms_records_in_batch = self.env['sms.sms'] # To keep track of records for response mapping
 
+        base_url = request.httprequest.url_root.rstrip('/')  # Get the base URL for the webhook
+
+        for sms_record in self:
+            if not sms_record.number:
+                _logger.warning(f"SMS {sms_record.uuid} has no number, skipping.")
+                results.append({'uuid': sms_record.uuid, 'state': 'wrong_number_format'})
+                sms_record.sms_api_error = "Missing recipient number"
+                continue # Skip this record from batch
+
+            payload_item = sms_record._prepare_gatewayapi_payload_item(iap_account, base_url)
+            if payload_item:
+                batch_payload_items.append(payload_item)
+                sms_records_in_batch |= sms_record
+            else: # Should not happen if number check is done
+                results.append({'uuid': sms_record.uuid, 'state': 'server_error'})
+                sms_record.sms_api_error = "Payload preparation failed"
 
             if not batch_payload_items: # All records in self might have been skipped
                 if results: # If some were skipped due to no number
