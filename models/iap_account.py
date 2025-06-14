@@ -359,6 +359,11 @@ class IapAccount(models.Model):
             vals['gatewayapi_last_credit_check_time'] = False
             _logger.info(f"Minimum tokens threshold changed to {vals['gatewayapi_min_tokens']}. Forcing credit check.")
 
+        # If disabling credit checks, clear the notification action
+        if 'gatewayapi_check_min_tokens' in vals and not vals['gatewayapi_check_min_tokens']:
+            vals['gatewayapi_token_notification_action'] = False
+            _logger.info("Credit checks disabled. Clearing notification action.")
+
         res = super(IapAccount, self).write(vals)
 
         # Get the notification action reference
