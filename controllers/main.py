@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import json
 import logging
 import jwt # For JWT decoding
 from werkzeug.exceptions import Forbidden, Unauthorized, ServiceUnavailable # For HTTP errors
 from odoo import http
-from odoo.http import request
+from odoo.http import request, Response
 
 _logger = logging.getLogger(__name__)
 
@@ -13,16 +15,27 @@ class GatewayApiWebhookController(http.Controller):
     def gatewayapi_dlr_webhook(self, **kwargs):
         """Webhook to receive Delivery Reports (DLRs) from GatewayAPI."""
         
-        # JWT Verification
+        # Get the JWT secret from system parameters
+        jwt_secret = request.env['ir.config_parameter'].sudo().get_param(
+            'gatewayapi.webhook_jwt_secret'
+        )
+        if not jwt_secret:
+            _logger.error("GatewayAPI DLR: JWT secret not configured")
+            return Response(
+                json.dumps({'status': 'error', 'message': 'JWT secret not configured'}),
+                status=500,
+                mimetype='application/json'
+            )
+
+        # Get the authorization header
         auth_header = request.httprequest.headers.get('X-Gwapi-Signature')
         if not auth_header:
             _logger.warning("GatewayAPI DLR: Missing X-Gwapi-Signature header. Unauthorized.")
-            return json.dumps({'status': 'error', 'message': 'Missing X-Gwapi-Signature header'}), 401
-
-        jwt_secret = request.env['ir.config_parameter'].sudo().get_param('gatewayapi.webhook_jwt_secret')
-        if not jwt_secret:
-            _logger.error("GatewayAPI DLR: JWT secret not configured in Odoo (gatewayapi.webhook_jwt_secret). Service unavailable.")
-            return json.dumps({'status': 'error', 'message': 'JWT secret not configured on server'}), 503
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Missing X-Gwapi-Signature header'}),
+                status=401,
+                mimetype='application/json'
+            )
 
         try:
             # The token is the value of the X-Gwapi-Signature header
@@ -34,13 +47,25 @@ class GatewayApiWebhookController(http.Controller):
 
         except jwt.ExpiredSignatureError:
             _logger.warning("GatewayAPI DLR: JWT verification failed - ExpiredSignatureError.")
-            return json.dumps({'status': 'error', 'message': 'Token has expired'}), 401
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Token has expired'}),
+                status=401,
+                mimetype='application/json'
+            )
         except jwt.InvalidTokenError as e:
             _logger.warning("GatewayAPI DLR: JWT verification failed - InvalidTokenError: %s", str(e))
-            return json.dumps({'status': 'error', 'message': 'Invalid token'}), 403
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Invalid token'}),
+                status=403,
+                mimetype='application/json'
+            )
         except Exception as e:
             _logger.error("GatewayAPI DLR: An unexpected error occurred during JWT verification: %s", str(e))
-            return json.dumps({'status': 'error', 'message': 'Error during token verification'}), 503
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Error during token verification'}),
+                status=503,
+                mimetype='application/json'
+            )
 
         # Parse JSON data
         try:
@@ -49,15 +74,27 @@ class GatewayApiWebhookController(http.Controller):
             _logger.info("GatewayAPI DLR: Successfully parsed JSON data: %s", data)
             if not data:
                 _logger.error("GatewayAPI DLR: Empty JSON data received")
-                return json.dumps({'status': 'error', 'message': 'Empty JSON data'}), 400
+                return Response(
+                    json.dumps({'status': 'error', 'message': 'Empty JSON data'}),
+                    status=400,
+                    mimetype='application/json'
+                )
         except Exception as e:
             _logger.error("GatewayAPI DLR: Failed to parse JSON data: %s", str(e))
-            return json.dumps({'status': 'error', 'message': 'Invalid JSON data'}), 400
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Invalid JSON data'}),
+                status=400,
+                mimetype='application/json'
+            )
 
         # Validate required fields
         if not all(k in data for k in ['id', 'status']):
             _logger.warning("GatewayAPI DLR: Missing required fields in payload. Data: %s", data)
-            return json.dumps({'status': 'error', 'message': 'Missing required fields (id, status)'}), 400
+            return Response(
+                json.dumps({'status': 'error', 'message': 'Missing required fields (id, status)'}),
+                status=400,
+                mimetype='application/json'
+            )
 
         # Extract all possible fields from GatewayAPI payload
         gw_message_id = data.get('id')
