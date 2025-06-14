@@ -21,6 +21,12 @@ class Sms(models.Model):
         index=True
     )
 
+    def _is_sent_with_gatewayapi(self):
+        """Check if this SMS should be sent via GatewayAPI."""
+        self.ensure_one()
+        iap_account = self.env['iap.account']._get_sms_account()
+        return bool(iap_account and iap_account.gatewayapi_api_token and iap_account.gatewayapi_base_url)
+
     def _prepare_gatewayapi_payload_item(self, iap_account, base_url):
         self.ensure_one()
         if not self.number:  # Should be pre-validated, but as a safeguard
@@ -198,13 +204,6 @@ class Sms(models.Model):
                 return super()._send(
                     unlink_failed=unlink_failed, unlink_sent=unlink_sent,
                     raise_exception=raise_exception)
-
-        def _is_sent_with_gatewayapi(self):
-            account = self.env['iap.account']._get_sms_account()
-            # Check explicitly for GatewayAPI provider or configuration
-            return account and account.provider == 'sms_api_gatewayapi' and \
-                   account.gatewayapi_base_url and account.gatewayapi_api_token
-                   # Made this check more stringent to ensure account is usable
 
         def _split_batch(self):
             if self._is_sent_with_gatewayapi():
