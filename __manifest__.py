@@ -7,7 +7,7 @@
     'license': 'AGPL-3',
     'category': 'Tools',
     'version': '17.0.3.0.0',
-    'icon': 'static/description/icon.png',
+    'web_icon': 'static/description/icon.png',  # For Odoo 17 and higher
     'application': False,
     'installable': True,
     'auto_install': False,
@@ -17,7 +17,7 @@
         'phone_validation',
         'sms',
         'iap_alternative_provider',
-        'iap', # Added line
+        'iap',
     ],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests', 'pyjwt']
@@ -42,7 +42,8 @@
     'description': """\
 GatewayAPI SMS Connector for Odoo 17
 ------------------------------------
-Send SMS via GatewayAPI directly from Odoo. This module enhances IAP accounts for use with GatewayAPI.
+Send SMS via GatewayAPI directly from Odoo. This module enhances IAP
+    accounts for use with GatewayAPI.
 
 Features include:
 - Secure API Token management with a show/hide toggle.
@@ -53,8 +54,11 @@ Features include:
     - Automatic To-Do activity created for the admin user.
     - Option to send an email alert to a configured email address.
 - Per-Account Credit Check Scheduling:
-    - Define check frequency (e.g., every 10 minutes, hourly, daily) on each IAP account.
-    - A master scheduled action (cron job) runs frequently (configurable, e.g., every 10 minutes) to trigger checks for due accounts based on their individual settings.
+    - Define check frequency (e.g., every 10 minutes, hourly, daily) on
+        each IAP account.
+    - A master scheduled action (cron job) runs frequently
+        (configurable, e.g., every 10 minutes) to trigger checks for
+        due accounts based on their individual settings.
 - Easy configuration and integration within IAP accounts.
-""",
+"""
 }
