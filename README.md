@@ -127,11 +127,11 @@ After saving this change, you must restart your Odoo server and update the `gate
 |---------------|----------------|--------------|---------|
 | ![Configuration Example](static/description/screenshot_01_config.png) | ![Test Connection Example](static/description/screenshot_02_test_connection.png) | ![Notification](static/description/screenshot_03_notification.png) | ![Balance Example](static/description/screenshot_04_balance.png) |
 
-### Example: Low Credits Notification Activity
+### Example: JWT Verification Screenshot
 
-This is what the admin will see in the Odoo activity stream when credits fall below the minimum threshold:
+This screenshot shows the JWT verification process:
 
-![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
+![JWT Verification](static/description/Screenshot_05_jwt.png)
 
 ---
 
@@ -151,10 +151,6 @@ When an account's credit balance falls below its configured "Minimum Credits" th
     *   The "from" address for this email is determined by Odoo's standard email configuration (company email, then current user's email, then system mail server's default).
 
 The specific actions performed (like creating the activity and sending the email) are triggered by the "Credits notification action" (field `gatewayapi_token_notification_action`) configured on the IAP Account. By default, this is set to "GatewayAPI: Send Low Credits Notification" (`gatewayapi_sms.low_credits_notification_action`), which calls the `send_low_credits_notification` method on the `iap.account` model.
-
-Example of the Admin Activity:
-
-![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
 
 ---
 
