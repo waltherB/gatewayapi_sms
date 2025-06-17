@@ -32,13 +32,16 @@ def normalize_url(url):
     """Ensure URL has the correct scheme."""
     parsed = urlparse(url)
     if not parsed.scheme:
-        # If no scheme is provided, use http
-        url = f"http://{url}"
+        # If no scheme is provided, use https
+        url = f"https://{url}"
+    elif parsed.scheme == 'http':
+        # Convert http to https
+        url = url.replace('http://', 'https://', 1)
     return url
 
 def get_odoo_config():
     """Get Odoo configuration from environment variables."""
-    odoo_url = os.getenv('ODOO_URL', 'http://localhost:8069')
+    odoo_url = os.getenv('ODOO_URL', 'https://localhost:8069')
     odoo_db = os.getenv('ODOO_DB', '')
     odoo_user = os.getenv('ODOO_USER', 'admin')
     odoo_password = os.getenv('ODOO_PASSWORD', 'admin')
@@ -47,7 +50,7 @@ def get_odoo_config():
         logger.error("ODOO_DB environment variable not set")
         sys.exit(1)
     
-    # Normalize URL
+    # Normalize URL to use HTTPS
     odoo_url = normalize_url(odoo_url)
     
     return {
@@ -77,7 +80,18 @@ def check_jwt_secret(config):
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
-        response = session.post(auth_url, json=auth_data, headers=headers)
+        
+        # Disable SSL verification if needed
+        verify_ssl = os.getenv('VERIFY_SSL', 'true').lower() == 'true'
+        if not verify_ssl:
+            logger.warning("SSL verification is disabled")
+        
+        response = session.post(
+            auth_url, 
+            json=auth_data, 
+            headers=headers,
+            verify=verify_ssl
+        )
         
         if response.status_code != 200:
             logger.error(f"Authentication failed with status {response.status_code}")
@@ -96,7 +110,12 @@ def check_jwt_secret(config):
         }
         
         logger.info("Checking for JWT secret in system parameters")
-        response = session.post(search_url, json=search_data, headers=headers)
+        response = session.post(
+            search_url, 
+            json=search_data, 
+            headers=headers,
+            verify=verify_ssl
+        )
         
         if response.status_code != 200:
             logger.error(f"Failed to search system parameters: {response.status_code}")
@@ -119,6 +138,9 @@ def check_jwt_secret(config):
             logger.info("2. Create parameter with key 'gatewayapi.webhook_jwt_secret'")
             logger.info("3. Set the value to your GatewayAPI webhook secret")
         
+    except requests.exceptions.SSLError as e:
+        logger.error(f"SSL Error: {str(e)}")
+        logger.error("If you're using a self-signed certificate, set VERIFY_SSL=false")
     except requests.exceptions.RequestException as e:
         logger.error(f"Network error: {str(e)}")
         logger.error("Please check if your Odoo instance is accessible")
@@ -158,8 +180,16 @@ def test_webhook_endpoint(config, jwt_secret):
             'X-Gwapi-Signature': token
         }
         
+        # Disable SSL verification if needed
+        verify_ssl = os.getenv('VERIFY_SSL', 'true').lower() == 'true'
+        
         logger.info(f"Sending test webhook to {webhook_url}")
-        response = requests.post(webhook_url, json=dlr_data, headers=headers)
+        response = requests.post(
+            webhook_url, 
+            json=dlr_data, 
+            headers=headers,
+            verify=verify_ssl
+        )
         
         if response.status_code == 200:
             logger.info("✅ Webhook test successful")
@@ -168,6 +198,9 @@ def test_webhook_endpoint(config, jwt_secret):
             logger.error(f"❌ Webhook test failed with status {response.status_code}")
             logger.error(f"Response: {response.text}")
             
+    except requests.exceptions.SSLError as e:
+        logger.error(f"SSL Error during webhook test: {str(e)}")
+        logger.error("If you're using a self-signed certificate, set VERIFY_SSL=false")
     except requests.exceptions.RequestException as e:
         logger.error(f"Network error during webhook test: {str(e)}")
     except Exception as e:
