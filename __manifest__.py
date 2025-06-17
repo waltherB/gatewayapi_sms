@@ -33,11 +33,11 @@
     ],
     'images': [
         'static/description/banner.png',
-        'static/description/icon.png',
         'static/description/screenshot_01_config.png',
         'static/description/screenshot_02_test_connection.png',
         'static/description/screenshot_03_notification.png',
         'static/description/screenshot_04_balance.png',
+        'static/description/Screenshot_05_jwt.png',
     ],
     'description': """\
 GatewayAPI SMS Connector for Odoo 17
