@@ -131,6 +131,7 @@ def check_jwt_secret(config):
             return None
             
         result = response.json()
+        logger.info(f"Raw API response for JWT secret search: {result}")
         
         if result.get('result'):
             secret = result['result'][0]['value']
