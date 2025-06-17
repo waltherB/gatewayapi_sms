@@ -65,13 +65,18 @@ def check_jwt_secret(config):
     try:
         # Authenticate with Odoo
         session = requests.Session()
-        auth_url = f"{config['url']}/web/session/authenticate"
+        auth_url = f"{config['url']}/jsonrpc"
         auth_data = {
             'jsonrpc': '2.0',
+            'method': 'call',
             'params': {
-                'db': config['db'],
-                'login': config['username'],
-                'password': config['password']
+                'service': 'common',
+                'method': 'login',
+                'args': [
+                    config['db'],
+                    config['username'],
+                    config['password']
+                ]
             }
         }
         
@@ -99,19 +104,22 @@ def check_jwt_secret(config):
             return None
             
         # Get JWT secret from system parameters
-        search_url = f"{config['url']}/web/dataset/search_read"
         search_data = {
             'jsonrpc': '2.0',
+            'method': 'call',
             'params': {
                 'model': 'ir.config_parameter',
-                'domain': [('key', '=', 'gatewayapi.webhook_jwt_secret')],
-                'fields': ['key', 'value']
+                'method': 'search_read',
+                'args': [
+                    [('key', '=', 'gatewayapi.webhook_jwt_secret')],
+                    ['key', 'value']
+                ]
             }
         }
         
         logger.info("Checking for JWT secret in system parameters")
         response = session.post(
-            search_url, 
+            auth_url, 
             json=search_data, 
             headers=headers,
             verify=verify_ssl
