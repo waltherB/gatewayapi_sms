@@ -13,6 +13,30 @@ logging.basicConfig(level=logging.DEBUG)
 class Sms(models.Model):
     _inherit = "sms.sms"
 
+    IAP_TO_SMS_STATE_SUCCESS = {
+        'success': 'sent',  # GatewayAPI accepted and delivered -> Odoo 'sent' (Leveret)
+        'sent': 'sent',     # Explicitly handle 'sent' if it comes through from other IAP
+    }
+
+    IAP_TO_SMS_FAILURE_TYPE = {
+        'credit': 'sms_credit',
+        'server_error': 'sms_server_error',
+        'json_rpc_error': 'sms_server_error',
+        'unauthorized': 'sms_server_error',
+        'wrong_number_format': 'sms_number_format',
+        'too_many_requests': 'sms_server_error',
+        'unregistered': 'sms_unregistered',
+        'cancelled': 'sms_canceled',  # Odoo has sms_cancel, sms_canceled
+        'blacklist': 'sms_blacklist',
+        'bounce': 'sms_bounce',  # General bounce, maybe not used by GatewayAPI
+        'error': 'sms_other',  # General error
+        # GatewayAPI specific DLR statuses mapped to Odoo failure types
+        'UNDELIVERABLE': 'sms_unregistered',  # From controllers/main.py
+        'REJECTED': 'sms_blacklist',  # From controllers/main.py
+        'EXPIRED': 'sms_other',  # From controllers/main.py
+        'SKIPPED': 'sms_other',  # From controllers/main.py
+    }
+
     sms_api_error = fields.Char()
     gatewayapi_message_id = fields.Char(
         string="GatewayAPI Message ID",
