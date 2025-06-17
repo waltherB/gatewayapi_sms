@@ -45,6 +45,7 @@ def get_odoo_config():
     odoo_db = os.getenv('ODOO_DB', '')
     odoo_user = os.getenv('ODOO_USER', 'admin')
     odoo_password = os.getenv('ODOO_PASSWORD', 'admin')
+    odoo_api_key = os.getenv('ODOO_API_KEY', '')
     
     if not odoo_db:
         logger.error("ODOO_DB environment variable not set")
@@ -57,7 +58,8 @@ def get_odoo_config():
         'url': odoo_url,
         'db': odoo_db,
         'username': odoo_user,
-        'password': odoo_password
+        'password': odoo_password,
+        'api_key': odoo_api_key
     }
 
 def check_jwt_secret(config):
@@ -75,7 +77,7 @@ def check_jwt_secret(config):
                 'args': [
                     config['db'],
                     config['username'],
-                    config['password']
+                    config['api_key'] if config['api_key'] else config['password']
                 ]
             }
         }
@@ -104,6 +106,8 @@ def check_jwt_secret(config):
             return None
             
         login_result = response.json()
+        logger.info(f"Raw API response for authentication: {login_result}")
+        
         if not login_result.get('result'):
             logger.error(f"Failed to log in: {login_result.get('error', {}).get('message', 'Unknown error')}")
             return None
@@ -120,7 +124,7 @@ def check_jwt_secret(config):
                 'args': [
                     config['db'],
                     uid,
-                    config['password'],
+                    config['api_key'] if config['api_key'] else config['password'],
                     'ir.config_parameter',
                     'search_read',
                     [[('key', '=', 'gatewayapi.webhook_jwt_secret')], ['key', 'value']]
