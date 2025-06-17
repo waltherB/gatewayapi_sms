@@ -19,6 +19,7 @@ import requests
 import logging
 from datetime import datetime
 import jwt
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +27,14 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+def normalize_url(url):
+    """Ensure URL has the correct scheme."""
+    parsed = urlparse(url)
+    if not parsed.scheme:
+        # If no scheme is provided, use http
+        url = f"http://{url}"
+    return url
 
 def get_odoo_config():
     """Get Odoo configuration from environment variables."""
@@ -37,6 +46,9 @@ def get_odoo_config():
     if not odoo_db:
         logger.error("ODOO_DB environment variable not set")
         sys.exit(1)
+    
+    # Normalize URL
+    odoo_url = normalize_url(odoo_url)
     
     return {
         'url': odoo_url,
@@ -59,9 +71,15 @@ def check_jwt_secret(config):
                 'password': config['password']
             }
         }
-        response = session.post(auth_url, json=auth_data)
-        response.raise_for_status()
         
+        logger.info(f"Attempting to authenticate at {auth_url}")
+        response = session.post(auth_url, json=auth_data)
+        
+        if response.status_code != 200:
+            logger.error(f"Authentication failed with status {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            return None
+            
         # Get JWT secret from system parameters
         search_url = f"{config['url']}/web/dataset/search_read"
         search_data = {
@@ -72,8 +90,15 @@ def check_jwt_secret(config):
                 'fields': ['key', 'value']
             }
         }
+        
+        logger.info("Checking for JWT secret in system parameters")
         response = session.post(search_url, json=search_data)
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+            logger.error(f"Failed to search system parameters: {response.status_code}")
+            logger.error(f"Response: {response.text}")
+            return None
+            
         result = response.json()
         
         if result.get('result'):
@@ -85,7 +110,14 @@ def check_jwt_secret(config):
                 logger.error("❌ JWT secret is empty")
         else:
             logger.error("❌ JWT secret not found in system parameters")
+            logger.info("Please set the JWT secret in Odoo:")
+            logger.info("1. Go to Settings > Technical > Parameters > System Parameters")
+            logger.info("2. Create parameter with key 'gatewayapi.webhook_jwt_secret'")
+            logger.info("3. Set the value to your GatewayAPI webhook secret")
         
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error: {str(e)}")
+        logger.error("Please check if your Odoo instance is accessible")
     except Exception as e:
         logger.error(f"Error checking JWT secret: {str(e)}")
     
@@ -132,6 +164,8 @@ def test_webhook_endpoint(config, jwt_secret):
             logger.error(f"❌ Webhook test failed with status {response.status_code}")
             logger.error(f"Response: {response.text}")
             
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error during webhook test: {str(e)}")
     except Exception as e:
         logger.error(f"Error testing webhook: {str(e)}")
 
