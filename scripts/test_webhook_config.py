@@ -181,12 +181,17 @@ def test_webhook_endpoint(config, jwt_secret):
     
     try:
         # Create a test JWT token
+        # Convert to integer Unix timestamps for JWT
+        current_time_utc = int(datetime.utcnow().timestamp())
+        expiry_time_utc = current_time_utc + (24 * 3600)
         payload = {
-            'iat': datetime.utcnow().timestamp(),
-            'exp': datetime.utcnow().timestamp() + 3600,  # 1 hour expiry
+            'iat': current_time_utc,
+            'exp': expiry_time_utc,  # 24 hours expiry
             'iss': 'gatewayapi'
         }
         token = jwt.encode(payload, jwt_secret, algorithm='HS256')
+        logger.info(f"JWT 'iat' (issued at): {datetime.fromtimestamp(current_time_utc)} UTC ({current_time_utc})")
+        logger.info(f"JWT 'exp' (expires at): {datetime.fromtimestamp(expiry_time_utc)} UTC ({expiry_time_utc})")
         
         # Prepare test DLR data
         dlr_data = {
