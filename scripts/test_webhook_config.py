@@ -103,16 +103,27 @@ def check_jwt_secret(config):
             logger.error(f"Response: {response.text}")
             return None
             
+        login_result = response.json()
+        if not login_result.get('result'):
+            logger.error(f"Failed to log in: {login_result.get('error', {}).get('message', 'Unknown error')}")
+            return None
+
+        uid = login_result['result']
+
         # Get JWT secret from system parameters
         search_data = {
             'jsonrpc': '2.0',
             'method': 'call',
             'params': {
-                'model': 'ir.config_parameter',
-                'method': 'search_read',
+                'service': 'object',
+                'method': 'execute_kw',
                 'args': [
-                    [('key', '=', 'gatewayapi.webhook_jwt_secret')],
-                    ['key', 'value']
+                    config['db'],
+                    uid,
+                    config['password'],
+                    'ir.config_parameter',
+                    'search_read',
+                    [[('key', '=', 'gatewayapi.webhook_jwt_secret')], ['key', 'value']]
                 ]
             }
         }
