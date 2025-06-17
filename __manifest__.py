@@ -6,8 +6,7 @@
     'website': "https://github.com/waltherB/gatewayapi_sms",
     'license': 'AGPL-3',
     'category': 'Tools',
-    'version': '17.0.3.0.0',
-    'icon': 'static/description/icon.png',
+    'version': '17.0.3.0.1',
     'application': False,
     'installable': True,
     'auto_install': False,
@@ -17,7 +16,7 @@
         'phone_validation',
         'sms',
         'iap_alternative_provider',
-        'iap', # Added line
+        'iap',
     ],
     'external_dependencies': {
         'python': ['phonenumbers', 'requests', 'pyjwt']
@@ -33,16 +32,17 @@
     ],
     'images': [
         'static/description/banner.png',
-#        'static/description/icon.png',
         'static/description/screenshot_01_config.png',
         'static/description/screenshot_02_test_connection.png',
         'static/description/screenshot_03_notification.png',
         'static/description/screenshot_04_balance.png',
+        'static/description/Screenshot_05_jwt.png',
     ],
     'description': """\
 GatewayAPI SMS Connector for Odoo 17
 ------------------------------------
-Send SMS via GatewayAPI directly from Odoo. This module enhances IAP accounts for use with GatewayAPI.
+Send SMS via GatewayAPI directly from Odoo. This module enhances IAP
+    accounts for use with GatewayAPI.
 
 Features include:
 - Secure API Token management with a show/hide toggle.
@@ -53,8 +53,11 @@ Features include:
     - Automatic To-Do activity created for the admin user.
     - Option to send an email alert to a configured email address.
 - Per-Account Credit Check Scheduling:
-    - Define check frequency (e.g., every 10 minutes, hourly, daily) on each IAP account.
-    - A master scheduled action (cron job) runs frequently (configurable, e.g., every 10 minutes) to trigger checks for due accounts based on their individual settings.
+    - Define check frequency (e.g., every 10 minutes, hourly, daily) on
+        each IAP account.
+    - A master scheduled action (cron job) runs frequently
+        (configurable, e.g., every 10 minutes) to trigger checks for
+        due accounts based on their individual settings.
 - Easy configuration and integration within IAP accounts.
-""",
+"""
 }

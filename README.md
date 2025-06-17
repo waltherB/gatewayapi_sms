@@ -8,11 +8,12 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
 
 - **Send SMS via GatewayAPI**: Seamless integration with GatewayAPI for reliable SMS delivery.
 - **Secure API Token Management**: Show/hide your API token in the form with a single click.
+- **Secure webhook JWT token for delivery reports**: Delivery report webhooks are protected using a JWT token, ensuring only authorized requests from GatewayAPI are processed.
 - **Credit Balance Monitoring**: Set minimum credit thresholds and receive notifications when your balance is low.
 - **Per-Account Credit Check Scheduling**: Configure individual credit check intervals (e.g., daily, hourly) for each GatewayAPI account.
 - **Admin Activity Notifications**: Automatic admin alerts (To-Do activities) when credits run low.
 - **Direct Email Notifications**: Receive low credit alerts at a user-defined email address.
-- **Batch Sending**: Efficiently sends multiple SMS messages to GatewayAPI in batches.
+- **Batch Sending**: Efficiently send multiple SMS messages to GatewayAPI in batches.
 - **Easy Configuration**: Intuitive form layout and clear help texts.
 - **Odoo 17 Compatible**: Built and tested for Odoo 17.
 
@@ -20,15 +21,15 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
 
 ## Requirements
 
-- **Odoo Apps**:  
-  - `iap_alternative_provider`  
+- **Odoo Apps**:
+  - `iap_alternative_provider`
   - `phone_validation`
-- **Python Packages**:  
+- **Python Packages**:
   - `phonenumbers`
   - `requests`
   - `pyjwt` (for webhook JWT verification)
 
-Install Python dependencies with:
+Install Python dependencies, probably in your python venv, with:
 ```sh
 pip install phonenumbers requests pyjwt
 ```
@@ -63,7 +64,7 @@ pip install phonenumbers requests pyjwt
 
 1. Go to **Settings > Technical > IAP Accounts**.
 2. Create a new account or edit an existing one.
-3. Set the Provider to "GatewayAPI" in the dropdown. (Note: If you are creating a new account and directly fill in the GatewayAPI Base URL and API Token below, the 'Provider' field will automatically be set to 'GatewayAPI'.)
+3. Set the Provider to "GatewayAPI" in the dropdown. (If you fill in the GatewayAPI Base URL and API Token directly, the 'Provider' field will automatically be set to 'GatewayAPI'.)
 4. Fill in the required fields:
    - **Name**: Give your account a name (e.g., "GatewayAPI SMS")
    - **Service Name**: Must be `sms`.
@@ -127,11 +128,11 @@ After saving this change, you must restart your Odoo server and update the `gate
 |---------------|----------------|--------------|---------|
 | ![Configuration Example](static/description/screenshot_01_config.png) | ![Test Connection Example](static/description/screenshot_02_test_connection.png) | ![Notification](static/description/screenshot_03_notification.png) | ![Balance Example](static/description/screenshot_04_balance.png) |
 
-### Example: Low Credits Notification Activity
+### Example: JWT Verification Screenshot
 
-This is what the admin will see in the Odoo activity stream when credits fall below the minimum threshold:
+This screenshot shows the JWT verification process:
 
-![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
+![JWT Verification](static/description/Screenshot_05_jwt.png)
 
 ---
 
@@ -152,10 +153,6 @@ When an account's credit balance falls below its configured "Minimum Credits" th
 
 The specific actions performed (like creating the activity and sending the email) are triggered by the "Credits notification action" (field `gatewayapi_token_notification_action`) configured on the IAP Account. By default, this is set to "GatewayAPI: Send Low Credits Notification" (`gatewayapi_sms.low_credits_notification_action`), which calls the `send_low_credits_notification` method on the `iap.account` model.
 
-Example of the Admin Activity:
-
-![Low credits notification activity](static/description/screenshot_05_low_credits_notification.png)
-
 ---
 
 ## Delivery Status Updates (Webhooks)
@@ -171,17 +168,17 @@ To receive final delivery statuses for your sent SMS messages (e.g., DELIVERED, 
    Replace `<your_odoo_domain>` with the actual public domain name or IP address of your Odoo server.
 
 2. **JWT Authentication**:
-   - The module uses JWT (JSON Web Token) verification for webhook security
-   - GatewayAPI sends the JWT in the `X-Gwapi-Signature` header
-   - The token is verified using a shared secret configured in Odoo
+   - The module uses JWT (JSON Web Token) verification for webhook security.
+   - GatewayAPI sends the JWT in the `X-Gwapi-Signature` header.
+   - The token is verified using a shared secret configured in Odoo.
 
 3. **JWT Secret Setup**:
-   1. Activate Developer Mode in Odoo
-   2. Go to **Settings > Technical > Parameters > System Parameters**
+   1. Activate Developer Mode in Odoo.
+   2. Go to **Settings > Technical > Parameters > System Parameters**.
    3. Create or edit the parameter with:
       - Key: `gatewayapi.webhook_jwt_secret`
       - Value: Your GatewayAPI webhook secret (must match the secret in GatewayAPI dashboard)
-   4. Save the parameter
+   4. Save the parameter.
 
 ### Status Mapping
 
@@ -198,48 +195,48 @@ The module maps GatewayAPI delivery statuses to Odoo's SMS states:
 
 ### Error Handling
 
-- Invalid or missing JWT tokens result in 401/403 responses
-- Missing JWT secret configuration results in 503 response
-- Invalid payload format results in 400 response
-- All errors are logged with detailed information
-- Successful DLR processing returns 200 OK
+- Invalid or missing JWT tokens result in 401/403 responses.
+- Missing JWT secret configuration results in 503 response.
+- Invalid payload format results in 400 response.
+- All errors are logged with detailed information.
+- Successful DLR processing returns 200 OK.
 
 ### Security Recommendations
 
 1. **JWT Secret**:
-   - Use a strong, unique secret
-   - Keep it confidential
-   - Rotate it periodically
-   - Never share it in logs or error messages
+   - Use a strong, unique secret.
+   - Keep it confidential.
+   - Rotate it periodically.
+   - Never share it in logs or error messages.
 
 2. **Network Security**:
-   - Configure your firewall to only allow requests from GatewayAPI IPs
-   - Use HTTPS for all webhook communications
-   - Consider implementing rate limiting
+   - Configure your firewall to only allow requests from GatewayAPI IPs.
+   - Use HTTPS for all webhook communications.
+   - Consider implementing rate limiting.
 
 3. **Monitoring**:
-   - Monitor webhook logs for unauthorized access attempts
-   - Set up alerts for failed JWT verifications
-   - Track DLR processing errors
+   - Monitor webhook logs for unauthorized access attempts.
+   - Set up alerts for failed JWT verifications.
+   - Track DLR processing errors.
 
 ### Nginx Configuration
 
 For production environments, we recommend using Nginx as a reverse proxy with the following security features:
 
 1. **SSL/TLS Configuration**:
-   - Modern cipher suites
-   - HTTP/2 support
-   - Proper SSL session handling
+   - Modern cipher suites.
+   - HTTP/2 support.
+   - Proper SSL session handling.
 
 2. **Access Control**:
-   - IP whitelisting for GatewayAPI servers
-   - Rate limiting (10 requests/second with burst of 20)
-   - HTTP to HTTPS redirection
+   - IP whitelisting for GatewayAPI servers.
+   - Rate limiting (10 requests/second with burst of 20).
+   - HTTP to HTTPS redirection.
 
 3. **Proxy Settings**:
-   - Optimized buffer sizes
-   - Appropriate timeouts
-   - Proper header forwarding
+   - Optimized buffer sizes.
+   - Appropriate timeouts.
+   - Proper header forwarding.
 
 A complete Nginx configuration example is available in `docs/nginx_webhook_example.conf`. This configuration includes all the necessary security features and is ready to use after adjusting the domain name and SSL certificate paths.
 
