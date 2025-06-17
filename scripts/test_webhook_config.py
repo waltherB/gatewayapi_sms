@@ -73,7 +73,11 @@ def check_jwt_secret(config):
         }
         
         logger.info(f"Attempting to authenticate at {auth_url}")
-        response = session.post(auth_url, json=auth_data)
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        response = session.post(auth_url, json=auth_data, headers=headers)
         
         if response.status_code != 200:
             logger.error(f"Authentication failed with status {response.status_code}")
@@ -92,7 +96,7 @@ def check_jwt_secret(config):
         }
         
         logger.info("Checking for JWT secret in system parameters")
-        response = session.post(search_url, json=search_data)
+        response = session.post(search_url, json=search_data, headers=headers)
         
         if response.status_code != 200:
             logger.error(f"Failed to search system parameters: {response.status_code}")
