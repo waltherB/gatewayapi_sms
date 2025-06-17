@@ -103,4 +103,60 @@
             </ul>
         </div>
     </div>
+</div>
+<h2 class="oe_slogan" style="color:#875A7B;">Testing Webhook Configuration</h2>
+<h3 class="oe_slogan">Verify your webhook setup</h3>
+<div class="oe_span12">
+    <p class="oe_mt32">
+        To verify your Odoo instance's ability to receive and process GatewayAPI webhooks, including JWT authentication, you can use the provided Python script: <code>scripts/test_webhook_config.py</code>.
+    </p>
+    <div class="oe_span12">
+        <h4>Purpose of the Script</h4>
+        <ul>
+            <li>Confirm if the <code>gatewayapi.webhook_jwt_secret</code> system parameter is correctly configured in your Odoo instance.</li>
+            <li>Test the accessibility and JWT authentication of your <code>/gatewayapi/dlr</code> webhook endpoint.</li>
+            <li>Simulate a Delivery Report (DLR) request from GatewayAPI, including a properly signed JWT token.</li>
+        </ul>
+    </div>
+    <div class="oe_span12">
+        <h4>Usage</h4>
+        <ol>
+            <li>
+                <strong>Install Required Python Packages</strong>:<br/>
+                If you haven't already, install the necessary Python libraries:
+                <pre><code>pip install requests pyjwt</code></pre>
+            </li>
+            <li>
+                <strong>Set Environment Variables</strong>:<br/>
+                Configure the script by setting the following environment variables. Replace placeholders with your actual Odoo instance details.
+                <pre><code>export ODOO_URL="example.com"             # Your Odoo domain (e.g., example.com)
+export ODOO_DB="your_database_name"     # Your Odoo database name
+export ODOO_USER="your_admin_username" # An Odoo user with API access (e.g., admin)
+export ODOO_API_KEY='YOUR_GENERATED_API_KEY' # Generate an API key for the ODOO_USER in Odoo (My Profile -> Account Security -> API Keys)
+unset ODOO_PASSWORD                     # Recommended: Unset password if using API key
+export VERIFY_SSL="false"               # Set to "true" or "false" based on your SSL certificate setup</code></pre>
+                <em>Note: If your Odoo user has 2FA enabled, using an API Key (<code>ODOO_API_KEY</code>) is highly recommended as the script does not support 2FA codes directly.</em>
+            </li>
+            <li>
+                <strong>Run the Script</strong>:<br/>
+                Execute the script from your terminal:
+                <pre><code>python3 scripts/test_webhook_config.py</code></pre>
+            </li>
+        </ol>
+    </div>
+    <div class="oe_span12">
+        <h4>Expected Output</h4>
+        <p>
+            The script will provide detailed logs indicating:
+        </p>
+        <ul>
+            <li>Whether authentication with Odoo was successful.</li>
+            <li>If the JWT secret is found and correctly configured.</li>
+            <li>The exact <code>iat</code> (issued at) and <code>exp</code> (expires at) timestamps embedded in the test JWT token, which can help diagnose time synchronization issues.</li>
+            <li>The status of the simulated webhook call to your Odoo instance (e.g., 200 OK, 401 Unauthorized, etc.).</li>
+        </ul>
+        <p>
+            A successful run will show messages indicating that the JWT secret is configured and the webhook test was successful with a 200 OK response from Odoo.
+        </p>
+    </div>
 </div> 

@@ -247,6 +247,55 @@ For more details on GatewayAPI's webhook implementation, refer to their [officia
 
 ---
 
+## Testing Webhook Configuration
+
+To verify your Odoo instance's ability to receive and process GatewayAPI webhooks, including JWT authentication, you can use the provided Python script: `scripts/test_webhook_config.py`.
+
+### Purpose of the Script
+
+This script helps you:
+-   Confirm if the `gatewayapi.webhook_jwt_secret` system parameter is correctly configured in your Odoo instance.
+-   Test the accessibility and JWT authentication of your `/gatewayapi/dlr` webhook endpoint.
+-   Simulate a Delivery Report (DLR) request from GatewayAPI, including a properly signed JWT token.
+
+### Usage
+
+1.  **Install Required Python Packages**:
+    If you haven't already, install the necessary Python libraries:
+    ```sh
+    pip install requests pyjwt
+    ```
+
+2.  **Set Environment Variables**:
+    Configure the script by setting the following environment variables. Replace placeholders with your actual Odoo instance details.
+    ```bash
+    export ODOO_URL="example.com"             # Your Odoo domain (e.g., example.com)
+    export ODOO_DB="your_database_name"     # Your Odoo database name
+    export ODOO_USER="your_admin_username" # An Odoo user with API access (e.g., admin)
+    export ODOO_API_KEY='YOUR_GENERATED_API_KEY' # Generate an API key for the ODOO_USER in Odoo (My Profile -> Account Security -> API Keys)
+    unset ODOO_PASSWORD                     # Recommended: Unset password if using API key
+    export VERIFY_SSL="false"               # Set to "true" or "false" based on your SSL certificate setup
+    ```
+    *Note: If your Odoo user has 2FA enabled, using an API Key (`ODOO_API_KEY`) is highly recommended as the script does not support 2FA codes directly.*
+
+3.  **Run the Script**:
+    Execute the script from your terminal:
+    ```bash
+    python3 scripts/test_webhook_config.py
+    ```
+
+### Expected Output
+
+The script will provide detailed logs indicating:
+-   Whether authentication with Odoo was successful.
+-   If the JWT secret is found and correctly configured.
+-   The exact `iat` (issued at) and `exp` (expires at) timestamps embedded in the test JWT token, which can help diagnose time synchronization issues.
+-   The status of the simulated webhook call to your Odoo instance (e.g., 200 OK, 401 Unauthorized, etc.).
+
+A successful run will show messages indicating that the JWT secret is configured and the webhook test was successful with a 200 OK response from Odoo.
+
+---
+
 ## Credits
 
 - Inspired by [smsapisi-odoo/smsapisi_connector](https://github.com/waltherB/smsapisi-odoo/tree/17.0/smsapisi_connector)
