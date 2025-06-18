@@ -21,7 +21,7 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
    - Fill in the following fields:
      - Name: GatewayAPI
      - Service Name: sms (must be exactly this value)
-     - GatewayAPI Base URL: https://gatewayapi.eu
+     - GatewayAPI Base URL: <https://gatewayapi.eu> or <https://gatewayapi.com>
      - Sender Name: Your preferred sender name
      - API Token: Your GatewayAPI API token
    - Click the "Test Connection" button.
@@ -60,13 +60,17 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
 
 1. **Run Diagnostic Script**
    - Access the Odoo shell:
-     ```
+
+     ```bash
      python odoo-bin shell -c /path/to/odoo.conf -d your_database --addons-path=/path/to/addons
      ```
+
    - Execute:
+
      ```python
      exec(open('scripts/check_gatewayapi_config.py').read())
      ```
+
    - Verify the output shows correct configuration values.
    - Verify the balance is displayed correctly.
 
@@ -77,10 +81,13 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
      - Install required Python packages: `pip install requests pyjwt`
    - **Usage**:
      - Navigate to the module's script directory in your terminal:
+
        ```bash
        cd /path/to/your/odoo/custom_addons/gatewayapi_sms/scripts
        ```
+
      - Set the following environment variables (replace placeholders):
+
        ```bash
        export ODOO_URL="https://your_odoo_domain.com" # e.g., example.com or localhost:8069
        export ODOO_DB="your_database_name"        # Your Odoo database name
@@ -89,11 +96,14 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
        unset ODOO_PASSWORD                        # Recommended: Unset password if using API key
        export VERIFY_SSL="true"                    # Set to "true" or "false" based on your SSL certificate setup
        ```
+
        *Note: If your Odoo user has 2FA enabled, using an API Key (`ODOO_API_KEY`) is highly recommended as the script does not support 2FA codes directly.*
      - Run the script:
+
        ```bash
        python3 test_webhook_config.py
        ```
+
    - **Expected Output**:
      - The script will provide detailed logs, including:
        - Confirmation of successful authentication with Odoo.
@@ -115,9 +125,11 @@ This document outlines steps to test and verify the GatewayAPI SMS module functi
      - Use with older, unpatched versions of the module.
    - Before running, ensure your module is up-to-date. The script itself contains a warning about its use.
    - If, after ensuring your system is up-to-date and credentials are correctly entered, you still suspect an issue that this script might address:
+
      ```python
      exec(open('scripts/fix_provider_field.py').read())
      ```
+
    - The script attempts to ensure that accounts with GatewayAPI credentials are correctly marked with the 'sms_api_gatewayapi' provider and have `service_name` set to 'sms'.
    - Verify its output for any actions taken or accounts checked.
 
@@ -152,4 +164,4 @@ If you encounter issues:
 - GatewayAPI account properly connects to the API.
 - SMS messages are successfully sent.
 - Special characters and emojis are handled correctly.
-- Credit notifications are displayed when credits are low. 
+- Credit notifications are displayed when credits are low.
