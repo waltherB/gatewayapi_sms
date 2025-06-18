@@ -30,6 +30,7 @@ Send SMS messages directly from Odoo using the GatewayAPI service. This module r
   - `pyjwt` (for webhook JWT verification)
 
 Install Python dependencies, probably in your python venv, with:
+
 ```sh
 pip install phonenumbers requests pyjwt
 ```
@@ -49,9 +50,11 @@ pip install phonenumbers requests pyjwt
 ### From GitHub
 
 1. Clone the repository:
+
    ```sh
    git clone https://github.com/waltherB/gatewayapi_sms.git
    ```
+
 2. Move the `gatewayapi_sms` folder to your Odoo `addons` or `custom addons` directory.
 3. Install the required Python packages (see above).
 4. Restart your Odoo server.
@@ -109,6 +112,7 @@ For example, if you set an account's check interval to 10 minutes, but the "Gate
 The schedule for the "GatewayAPI: Check credit balance" (ID: `ir_cron_check_tokens`) is defined in the file `data/ir_cron.xml` within the `gatewayapi_sms` module.
 
 To change its frequency, you can edit this file. For example, to make it run every 10 minutes:
+
 ```xml
 <record id="ir_cron_check_tokens" model="ir.cron">
     ...
@@ -162,9 +166,11 @@ To receive final delivery statuses for your sent SMS messages (e.g., DELIVERED, 
 ### Webhook Configuration
 
 1. **Webhook URL**:
-   ```
+
+   ```sh
    https://<your_odoo_domain>/gatewayapi/dlr
    ```
+
    Replace `<your_odoo_domain>` with the actual public domain name or IP address of your Odoo server.
 
 2. **JWT Authentication**:
@@ -267,12 +273,14 @@ This script helps you:
 
 1.  **Install Required Python Packages**:
     If you haven't already, install the necessary Python libraries:
+
     ```sh
     pip install requests pyjwt
     ```
 
 2.  **Set Environment Variables**:
     Configure the script by setting the following environment variables. Replace placeholders with your actual Odoo instance details.
+
     ```bash
     export ODOO_URL="example.com"             # Your Odoo domain (e.g., example.com)
     export ODOO_DB="your_database_name"     # Your Odoo database name
@@ -281,10 +289,12 @@ This script helps you:
     unset ODOO_PASSWORD                     # Recommended: Unset password if using API key
     export VERIFY_SSL="false"               # Set to "true" or "false" based on your SSL certificate setup
     ```
+
     *Note: If your Odoo user has 2FA enabled, using an API Key (`ODOO_API_KEY`) is highly recommended as the script does not support 2FA codes directly.*
 
 3.  **Run the Script**:
     Execute the script from your terminal:
+
     ```bash
     python3 scripts/test_webhook_config.py
     ```
@@ -328,7 +338,8 @@ As a general rule, ensure your Odoo instance and the `gatewayapi_sms` module are
 ### Configuration Testing
 
 If you want to test your GatewayAPI configuration, you can use the diagnostic script:
-```
+
+```sh
 python odoo-bin shell -c /path/to/odoo.conf -d your_database
 >>> exec(open('/path/to/addons/gatewayapi_sms/scripts/check_provider_selection.py').read())
 ```
