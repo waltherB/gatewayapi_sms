@@ -6,8 +6,7 @@
     'website': "https://github.com/waltherB/gatewayapi_sms",
     'license': 'AGPL-3',
     'category': 'Tools',
-    'version': '17.0.3.0.0',
-    'web_icon': 'static/description/icon.png',  # For Odoo 17 and higher
+    'version': '17.0.3.0.1',
     'application': False,
     'installable': True,
     'auto_install': False,
