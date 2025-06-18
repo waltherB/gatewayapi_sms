@@ -180,6 +180,14 @@ To receive final delivery statuses for your sent SMS messages (e.g., DELIVERED, 
       - Value: Your GatewayAPI webhook secret (must match the secret in GatewayAPI dashboard)
    4. Save the parameter.
 
+4. **Optional: Disable JWT Verification** (for testing or development):
+   - If you want to disable JWT verification (not recommended for production), create another parameter:
+     - Key: `gatewayapi.webhook_require_jwt`
+     - Value: `false`
+   - When disabled, the webhook will accept requests without the `X-Gwapi-Signature` header.
+   - This is useful for testing webhook functionality without JWT setup.
+   - **Security Note**: Only disable JWT verification in development/testing environments.
+
 ### Status Mapping
 
 The module maps GatewayAPI delivery statuses to Odoo's SMS states:
